@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Outsourcer {
+  id                String   @id @default(cuid())
+  name              String
+  serviceName       String?
+  contact           String?
+  availableTasks    String?
+  longVideoPrice    Int?
+  shortsPrice       Int?
+  thumbnailPrice    Int?
+  deliveryDays      Int?
+  software          String?
+  voicevoxCapable   Boolean  @default(false)
+  materialCapable   Boolean  @default(false)
+  thumbnailCapable  Boolean  @default(false)
+  continuationOk    Boolean  @default(true)
+  continuationStatus String  @default("テスト継続")
+  notes             String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  videos Video[]
+  orders Order[]
+}
+
+model Video {
+  id              String   @id @default(cuid())
+  projectName     String
+  title           String?
+  videoType       String   @default("長尺")
+  seriesName      String?
+  theme           String?
+  outsourcerId    String?
+  outsourcer      Outsourcer? @relation(fields: [outsourcerId], references: [id])
+  requestDate     DateTime?
+  firstDraftDue   DateTime?
+  deliveryDue     DateTime?
+  postDate        DateTime?
+  publicUrl       String?
+  status          String   @default("企画中")
+
+  scriptCost      Int      @default(0)
+  editingCost     Int      @default(0)
+  shortsEditCost  Int      @default(0)
+  thumbnailCost   Int      @default(0)
+  materialCost    Int      @default(0)
+  bgmCost         Int      @default(0)
+  otherCost       Int      @default(0)
+  totalCost       Int      @default(0)
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  metrics         VideoMetrics?
+  shortsMetrics   VideoShortsMetrics?
+  quality         VideoQuality?
+  risks           VideoRisk[]
+  orders          Order[]
+}
+
+model VideoMetrics {
+  id                String @id @default(cuid())
+  videoId           String @unique
+  video             Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  views24h          Int?
+  views48h          Int?
+  views7d           Int?
+  views30d          Int?
+  totalViews        Int?
+  impressions       Int?
+  ctr               Float?
+  avgWatchTime      Float?
+  avgRetention      Float?
+  likes             Int?
+  comments          Int?
+  subscribersGained Int?
+  estimatedRevenue  Float?
+  rpm               Float?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model VideoShortsMetrics {
+  id                String @id @default(cuid())
+  videoId           String @unique
+  video             Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  feedImpressions   Int?
+  selectRate        Float?
+  swipeAwayRate     Float?
+  avgPlayRate       Float?
+  hasLoopViews      Boolean @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model VideoQuality {
+  id                  String @id @default(cuid())
+  videoId             String @unique
+  video               Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  firstDraftRevisions Int    @default(0)
+  majorRevisions      Int    @default(0)
+  minorRevisions      Int    @default(0)
+  typoErrors          Int    @default(0)
+  voiceMisreads       Int    @default(0)
+  subtitleMismatch    Int    @default(0)
+  materialMismatch    Int    @default(0)
+  aiGeneratedImages   Boolean @default(false)
+  unknownRightsMaterial Boolean @default(false)
+  bgmIssues           Int    @default(0)
+  deliveryDelay       Boolean @default(false)
+  communicationDelay  Boolean @default(false)
+  reviewTime          Float?
+  finalScore          Float?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+model VideoRisk {
+  id                    String @id @default(cuid())
+  videoId               String
+  video                 Video  @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  aiGeneratedRoyal      Boolean @default(false)
+  faceModification      Boolean @default(false)
+  unknownRightsPhoto    Boolean @default(false)
+  tvFootage             Boolean @default(false)
+  longNewsFootage       Boolean @default(false)
+  otherChannelReuse     Boolean @default(false)
+  watermarkedMaterial   Boolean @default(false)
+  unknownSourceMaterial Boolean @default(false)
+  reuseContentRisk      Boolean @default(false)
+  exaggeration          Boolean @default(false)
+  innerThoughtClaim     Boolean @default(false)
+  politicalClaim        Boolean @default(false)
+  adSuitabilityRisk     Boolean @default(false)
+  riskLevel             String  @default("低")
+  notes                 String?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  videoId         String?
+  video           Video?   @relation(fields: [videoId], references: [id])
+  outsourcerId    String
+  outsourcer      Outsourcer @relation(fields: [outsourcerId], references: [id])
+  description     String
+  deliverable     String
+  price           Int
+  deadline        DateTime?
+  instructionUrl  String?
+  referenceUrl    String?
+  bgmUrl          String?
+  startDate       DateTime?
+  firstDraftDue   DateTime?
+  revisionDate    DateTime?
+  deliveryDate    DateTime?
+  paymentStatus   String   @default("未払い")
+  reviewStatus    String   @default("未検収")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Setting {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
