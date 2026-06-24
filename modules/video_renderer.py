@@ -8,7 +8,10 @@ import subprocess
 import tempfile
 import json
 from pathlib import Path
-from .config import VIDEO_SPEC, BGM_VOLUME_DB
+from .config import (
+    VIDEO_SPEC, BGM_VOLUME_DB, NARRATION_VOLUME_DB,
+    BGM_FADE_IN_SEC, BGM_FADE_OUT_SEC,
+)
 
 FFMPEG_BIN = None
 
@@ -136,21 +139,32 @@ def _mix_audio_with_bgm(
         return output_path
 
     bgm_volume = 10 ** (BGM_VOLUME_DB / 20)
+    narr_volume = 10 ** (NARRATION_VOLUME_DB / 20)
+    fade_out_start = max(0.0, duration - BGM_FADE_OUT_SEC)
+
+    filter_complex = (
+        f"[1:a]volume={bgm_volume:.4f},"
+        f"afade=t=in:st=0:d={BGM_FADE_IN_SEC:.2f},"
+        f"afade=t=out:st={fade_out_start:.3f}:d={BGM_FADE_OUT_SEC:.2f},"
+        f"atrim=duration={duration:.3f}[bgm];"
+        f"[0:a]volume={narr_volume:.4f}[nar];"
+        f"[nar][bgm]amix=inputs=2:duration=first[out]"
+    )
 
     cmd = [
         ffmpeg, "-y",
         "-i", narration_path,
         "-stream_loop", "-1", "-i", bgm_path,
-        "-filter_complex",
-        f"[1:a]volume={bgm_volume:.4f},atrim=duration={duration:.3f}[bgm];[0:a][bgm]amix=inputs=2:duration=first[out]",
+        "-filter_complex", filter_complex,
         "-map", "[out]",
         "-acodec", "aac",
         "-ar", "44100",
+        "-ac", "2",
         output_path,
     ]
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
-        print(f"  BGMミックス失敗（ナレーションのみ使用）: {result.stderr[-500:]}")
+        print(f"  BGMミックス失敗: {result.stderr[-500:]}")
         import shutil
         shutil.copy(narration_path, output_path)
 

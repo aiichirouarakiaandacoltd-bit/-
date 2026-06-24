@@ -30,7 +30,18 @@ def main():
     parser.add_argument("--output", default="./output", help="出力ディレクトリ")
     parser.add_argument("--bgm", default="./assets/bgm/UNL1337.wav", help="BGMファイルパス")
     parser.add_argument("--no-video", action="store_true", help="動画レンダリングをスキップ")
+    parser.add_argument(
+        "--voicevox-speed", type=float, default=None,
+        help="VOICEVOX話速（0.85〜0.90 推奨、省略時はconfig.pyの値を使用）"
+    )
     args = parser.parse_args()
+
+    from modules.config import REQUIRE_VOICEVOX, REQUIRE_BGM, VOICEVOX_SPEED_SCALE
+    import modules.config as _cfg
+
+    # VOICEVOX話速の上書き
+    if args.voicevox_speed is not None:
+        _cfg.VOICEVOX_SPEED_SCALE = args.voicevox_speed
 
     theme = args.theme
     output_dir = Path(args.output).resolve()
@@ -47,6 +58,47 @@ def main():
     print(f"テーマ: {theme}")
     print(f"出力先: {output_dir.resolve()}")
     print("=" * 60)
+
+    # ── 事前チェック（失敗時は即停止）────────────────────
+    # VOICEVOX 接続確認（--no-video でも narration は生成するため常にチェック）
+    from modules.narration import _voicevox_available
+    if not _voicevox_available():
+        if REQUIRE_VOICEVOX:
+            print(
+                "\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                "エラー: VOICEVOXに接続できません（http://localhost:50021）\n\n"
+                "解決方法:\n"
+                "  1. VOICEVOXアプリを起動してください\n"
+                "  2. 起動後、再度コマンドを実行してください\n\n"
+                "開発用の代替音声（低品質）を使用する場合:\n"
+                "  modules/config.py の REQUIRE_VOICEVOX = False に変更してください\n"
+                "  ※代替音声で生成した動画は本番投稿に使用しないでください\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+            return 1
+        else:
+            print("  [警告] VOICEVOX未起動 → 開発用espeak-ngを使用します（REQUIRE_VOICEVOX=False）")
+    else:
+        print(f"  [確認] VOICEVOX 接続OK / 話者: 青山龍星 / 話速: {_cfg.VOICEVOX_SPEED_SCALE}")
+
+    # BGMファイル確認（動画レンダリング時のみ必要）
+    if not skip_video and not os.path.exists(bgm_path):
+        if REQUIRE_BGM:
+            print(
+                f"\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n"
+                f"エラー: BGMファイルが見つかりません\n"
+                f"  パス: {bgm_path}\n\n"
+                f"解決方法:\n"
+                f"  1. {bgm_path} にBGMファイルを配置してください\n"
+                f"  2. または --bgm オプションで別のパスを指定してください\n\n"
+                f"BGMなしで生成する場合:\n"
+                f"  modules/config.py の REQUIRE_BGM = False に変更してください\n"
+                f"  ※BGMなしで生成した動画は本番投稿に使用しないでください\n"
+                "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            )
+            return 1
+        else:
+            print(f"  [警告] BGMファイルが見つかりません → BGMなしで続行（REQUIRE_BGM=False）")
 
     print("\n[1/8] 台本を生成中...")
     from modules.script_generator import generate_script
@@ -115,8 +167,6 @@ def main():
         from modules.video_renderer import render_video
         video_path = str(output_dir / "final_video.mp4")
         bgm_actual = bgm_path if os.path.exists(bgm_path) else None
-        if not bgm_actual:
-            print(f"  BGMファイルが見つかりません: {bgm_path} → BGMなしで続行")
         render_video(
             script,
             all_slides,

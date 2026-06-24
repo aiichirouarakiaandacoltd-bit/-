@@ -245,6 +245,9 @@ def generate_all_slides(script: dict, output_dir: str) -> dict[str, list[str]]:
     output_dir.mkdir(parents=True, exist_ok=True)
     all_slides = {}
 
+    # スクリプトに per-video 画像説明文があればそちらを優先する
+    script_image_desc = script.get("image_descriptions", {})
+
     chapter_names = list(script["chapters"].keys())
 
     for i, (chapter_name, chapter_data) in enumerate(script["chapters"].items()):
@@ -255,7 +258,11 @@ def generate_all_slides(script: dict, output_dir: str) -> dict[str, list[str]]:
         generate_chapter_title_slide(chapter_name, chapter_num, title_path)
         slides.append(title_path)
 
-        descriptions = IMAGE_DESCRIPTIONS.get(chapter_name, ["昭和・平成の記憶", "時代の風景"])
+        descriptions = (
+            script_image_desc.get(chapter_name)
+            or IMAGE_DESCRIPTIONS.get(chapter_name)
+            or ["昭和・平成の記憶", "時代の風景"]
+        )
         is_reiwa = chapter_name == "令和比較"
 
         for j, desc in enumerate(descriptions[:3]):
