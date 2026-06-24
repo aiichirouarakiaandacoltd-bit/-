@@ -1,0 +1,149 @@
+{
+  "series": [
+    {
+      "id": "kieta_nihon",
+      "name": "消えた日本シリーズ",
+      "description": "かつて存在したが今は消えた日本の風景・文化・場所",
+      "opening_phrase": "あの頃、日本にはまだ——",
+      "themes": [
+        "駄菓子屋",
+        "銭湯",
+        "商店街",
+        "チンドン屋",
+        "紙芝居屋",
+        "リヤカー行商",
+        "公衆電話",
+        "電報",
+        "集会所・公民館文化",
+        "路面電車"
+      ],
+      "color_theme": "#8B4513",
+      "thumbnail_style": "sepia_with_color_accent"
+    },
+    {
+      "id": "chiiki_community",
+      "name": "失われた地域コミュニティシリーズ",
+      "description": "昭和平成の近所付き合い・地域のつながり",
+      "opening_phrase": "隣の人の名前を知っていますか——",
+      "themes": [
+        "町内会・自治会の全盛期",
+        "向こう三軒両隣",
+        "お裾分け文化",
+        "子ども会",
+        "盆踊り・夏祭り",
+        "共同井戸・洗い場"
+      ],
+      "color_theme": "#2F4F4F"
+    },
+    {
+      "id": "tv_culture",
+      "name": "昭和平成テレビ文化シリーズ",
+      "description": "一億総テレビ時代の記憶",
+      "opening_phrase": "あの夜、日本中が同じ画面を見ていた——",
+      "themes": [
+        "8時だョ！全員集合",
+        "水曜スペシャル川口浩探検隊",
+        "テレビ欄争奪戦",
+        "家族全員でのNHK紅白",
+        "ドラマ視聴率50%時代",
+        "深夜ラジオ文化"
+      ],
+      "color_theme": "#1C1C8C"
+    },
+    {
+      "id": "kurashi",
+      "name": "昭和平成の暮らしシリーズ",
+      "description": "当たり前だったけど今はない日常の風景",
+      "opening_phrase": "その頃の暮らしは——",
+      "themes": [
+        "電話交換手",
+        "牛乳配達",
+        "氷屋・氷冷蔵庫",
+        "たらい洗濯・洗濯板",
+        "囲炉裏・火鉢・こたつ文化",
+        "昭和の台所"
+      ],
+      "color_theme": "#556B2F"
+    },
+    {
+      "id": "geinou",
+      "name": "昭和平成芸能文化シリーズ",
+      "description": "芸能・エンタメの歴史（ゴシップなし・文化として）",
+      "opening_phrase": "あの時代の熱気は——",
+      "themes": [],
+      "color_theme": "#8B0000",
+      "note": "著作権・肖像権に特に注意。文化・社会現象として語る"
+    },
+    {
+      "id": "ongaku",
+      "name": "昭和平成音楽文化シリーズ",
+      "description": "音楽が社会を変えた時代",
+      "opening_phrase": "あの曲が流れていたあの頃——",
+      "themes": [],
+      "color_theme": "#4B0082",
+      "note": "音源使用不可。歌詞引用も要注意。文化・社会現象として語る"
+    },
+    {
+      "id": "shokuhin",
+      "name": "食文化シリーズ",
+      "description": "昭和平成の食卓・食べ物文化",
+      "opening_phrase": "あの味を覚えていますか——",
+      "themes": [
+        "給食",
+        "駄菓子",
+        "昭和の喫茶店モーニング",
+        "大衆食堂",
+        "インスタント食品の誕生"
+      ],
+      "color_theme": "#FF8C00"
+    },
+    {
+      "id": "school",
+      "name": "学校シリーズ",
+      "description": "昭和平成の学校生活",
+      "opening_phrase": "あの校舎で——",
+      "themes": [],
+      "color_theme": "#006400"
+    },
+    {
+      "id": "asobi",
+      "name": "遊びシリーズ",
+      "description": "デジタル以前の子どもの遊び",
+      "opening_phrase": "あの空き地が遊び場だった——",
+      "themes": [],
+      "color_theme": "#DAA520"
+    },
+    {
+      "id": "family",
+      "name": "家族シリーズ",
+      "description": "昭和平成の家族の形",
+      "opening_phrase": "あの頃の家族は——",
+      "themes": [],
+      "color_theme": "#8FBC8F"
+    },
+    {
+      "id": "fashion",
+      "name": "ファッションシリーズ",
+      "description": "昭和平成のファッション変遷",
+      "opening_phrase": "あの服が流行っていた頃——",
+      "themes": [],
+      "color_theme": "#FF69B4"
+    },
+    {
+      "id": "norimono",
+      "name": "乗り物シリーズ",
+      "description": "昭和平成の交通・乗り物文化",
+      "opening_phrase": "あの乗り物が走っていた頃——",
+      "themes": [],
+      "color_theme": "#4682B4"
+    },
+    {
+      "id": "sports",
+      "name": "スポーツシリーズ",
+      "description": "昭和平成のスポーツ文化・記憶",
+      "opening_phrase": "あの熱狂の記憶——",
+      "themes": [],
+      "color_theme": "#B22222"
+    }
+  ]
+}
