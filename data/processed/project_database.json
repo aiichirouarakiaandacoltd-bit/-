@@ -1,0 +1,32 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-06-24T23:31:26.213976",
+  "next_id": 2,
+  "projects": [
+    {
+      "id": "KOSHI-0001",
+      "title": "愛子さまが地方公務で見せた一礼",
+      "persons": [
+        "愛子さま"
+      ],
+      "source_url": "https://www.kunaicho.go.jp/example",
+      "related_urls": [],
+      "format": "Shorts",
+      "status": "外注依頼済み",
+      "assignee": "",
+      "planned_post_date": null,
+      "post_url": null,
+      "metrics": {
+        "views": null,
+        "ctr": null,
+        "avg_watch_time": null,
+        "retention": null,
+        "subscribers_gained": null,
+        "estimated_revenue": null
+      },
+      "memo": "",
+      "created_at": "2026-06-24T23:31:20.360039",
+      "updated_at": "2026-06-24T23:31:26.213962"
+    }
+  ]
+}

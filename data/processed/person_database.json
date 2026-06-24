@@ -1,0 +1,19 @@
+{
+  "version": "1.0",
+  "last_updated": null,
+  "persons": {
+    "天皇陛下": { "category": "天皇家", "entries": [] },
+    "皇后陛下": { "category": "天皇家", "entries": [] },
+    "天皇皇后両陛下": { "category": "天皇家", "entries": [] },
+    "愛子さま": { "category": "天皇家", "entries": [] },
+    "秋篠宮殿下": { "category": "秋篠宮家", "entries": [] },
+    "紀子さま": { "category": "秋篠宮家", "entries": [] },
+    "佳子さま": { "category": "秋篠宮家", "entries": [] },
+    "悠仁さま": { "category": "秋篠宮家", "entries": [] },
+    "秋篠宮ご一家": { "category": "秋篠宮家", "entries": [] },
+    "上皇陛下": { "category": "上皇家", "entries": [] },
+    "上皇后陛下": { "category": "上皇家", "entries": [] },
+    "上皇ご夫妻": { "category": "上皇家", "entries": [] },
+    "その他皇族": { "category": "その他", "entries": [] }
+  }
+}

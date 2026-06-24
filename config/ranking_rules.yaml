@@ -1,0 +1,136 @@
+# AI企画ランキング 評価ルール
+# 100点満点でスコア化
+
+scoring:
+  max_score: 100
+
+  categories:
+    速報性:
+      weight: 12
+      description: "公式発表からの経過時間が短いほど高スコア"
+      rules:
+        - condition: "24時間以内"
+          score: 12
+        - condition: "48時間以内"
+          score: 9
+        - condition: "7日以内"
+          score: 6
+        - condition: "7日超"
+          score: 3
+
+    人物人気:
+      weight: 10
+      description: "対象人物の視聴者関心度"
+      person_scores:
+        愛子さま: 10
+        天皇皇后両陛下: 9
+        皇后陛下: 9
+        天皇陛下: 8
+        佳子さま: 8
+        悠仁さま: 7
+        上皇后陛下: 7
+        秋篠宮殿下: 6
+        紀子さま: 6
+        上皇陛下: 6
+        秋篠宮ご一家: 5
+        上皇ご夫妻: 5
+        その他皇族: 4
+
+    公式素材の使いやすさ:
+      weight: 8
+      description: "公式写真・映像が利用可能か"
+      rules:
+        - condition: "公式写真あり"
+          score: 8
+        - condition: "公式映像あり"
+          score: 7
+        - condition: "公式テキストのみ"
+          score: 4
+        - condition: "素材なし"
+          score: 1
+
+    shorts適性:
+      weight: 8
+      description: "Shorts向きかどうか"
+      criteria:
+        - "冒頭3秒で引きが作れるか"
+        - "1分以内にまとまるか"
+        - "ビジュアルインパクトがあるか"
+
+    長尺適性:
+      weight: 8
+      description: "長尺動画向きかどうか"
+      criteria:
+        - "背景解説に広げられるか"
+        - "10分以上の構成が可能か"
+        - "関連情報が豊富か"
+
+    tiktok適性:
+      weight: 6
+      description: "TikTok向きかどうか"
+      criteria:
+        - "若年層にも関心があるか"
+        - "テンポの良い構成が可能か"
+
+    65歳以上女性視聴者との相性:
+      weight: 12
+      description: "メインターゲットとの相性"
+      criteria:
+        - "温かみのあるエピソードか"
+        - "感情に訴えるか"
+        - "上品な内容か"
+        - "共感しやすいか"
+
+    安全性:
+      weight: 10
+      description: "炎上リスクの低さ"
+      criteria:
+        - "事実のみで構成可能か"
+        - "推測を含まないか"
+        - "対立を煽らないか"
+        - "内心を断定しないか"
+
+    権利リスクの低さ:
+      weight: 10
+      description: "著作権・肖像権リスク"
+      criteria:
+        - "公式素材のみで制作可能か"
+        - "権利不明素材を使わないか"
+        - "AI生成顔を使わないか"
+
+    感情訴求:
+      weight: 8
+      description: "視聴者の感情に響くか"
+      criteria:
+        - "感動的なエピソードか"
+        - "心温まる場面があるか"
+        - "歴史的意義があるか"
+
+    検索需要:
+      weight: 4
+      description: "検索ボリュームの見込み"
+      criteria:
+        - "関連キーワードの検索需要"
+        - "トレンド性"
+
+    制作しやすさ:
+      weight: 4
+      description: "制作の容易さ"
+      criteria:
+        - "外注指示書が作りやすいか"
+        - "素材収集が容易か"
+        - "台本作成が短時間で可能か"
+
+# フォーマット推奨ルール
+format_recommendation:
+  shorts_first_then_long:
+    condition: "Shorts適性が高く長尺適性も高い場合"
+    recommendation: "Shorts先行 → 長尺化 → TikTok転用"
+
+  long_only:
+    condition: "長尺適性が高くShorts適性が低い場合"
+    recommendation: "長尺のみ制作"
+
+  shorts_only:
+    condition: "Shorts適性が高く長尺適性が低い場合"
+    recommendation: "Shortsのみ制作 → TikTok転用"

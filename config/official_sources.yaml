@@ -1,0 +1,68 @@
+# 公式情報ソース定義
+# Phase 1: 宮内庁HP
+# Phase 2: Instagram, YouTube
+# Phase 5: 首相官邸, 外務省, 自治体, 訪問先
+
+sources:
+  kunaicho:
+    name: "宮内庁公式HP"
+    url: "https://www.kunaicho.go.jp"
+    news_url: "https://www.kunaicho.go.jp/page/gonittei/top/1"
+    schedule_url: "https://www.kunaicho.go.jp/page/gonittei/top/1"
+    enabled: true
+    phase: 1
+    fetch_module: "fetch_kunaicho"
+
+  kunaicho_instagram:
+    name: "宮内庁公式Instagram"
+    url: "https://www.instagram.com/kunaicho_jp/"
+    enabled: false
+    phase: 2
+    fetch_module: "fetch_instagram"
+    note: "Phase 2で手動確認URL欄として実装"
+
+  kunaicho_youtube:
+    name: "宮内庁公式YouTube"
+    url: "https://www.youtube.com/@kunaicho"
+    enabled: false
+    phase: 2
+    fetch_module: "fetch_youtube"
+    note: "Phase 2で手動確認URL欄として実装"
+
+  kantei:
+    name: "首相官邸公式サイト"
+    url: "https://www.kantei.go.jp"
+    enabled: false
+    phase: 5
+    fetch_module: "fetch_government"
+
+  mofa:
+    name: "外務省公式サイト"
+    url: "https://www.mofa.go.jp"
+    enabled: false
+    phase: 5
+    fetch_module: "fetch_government"
+
+  local_government:
+    name: "地方自治体公式サイト"
+    url: ""
+    enabled: false
+    phase: 5
+    fetch_module: "fetch_government"
+    note: "訪問先に応じて動的に追加"
+
+  visit_facility:
+    name: "訪問先施設・主催団体公式サイト"
+    url: ""
+    enabled: false
+    phase: 5
+    fetch_module: "fetch_government"
+    note: "訪問先に応じて動的に追加"
+
+# 信頼できない情報源（一次情報として扱わない）
+excluded_sources:
+  - "個人ブログ"
+  - "Wikipedia"
+  - "週刊誌"
+  - "まとめサイト"
+  - "出典不明SNS"
