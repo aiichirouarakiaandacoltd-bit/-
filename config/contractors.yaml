@@ -1,0 +1,73 @@
+# 外注者情報
+# YouTube「日本が誇る皇室物語」チャンネルの外注者データ
+
+contractors:
+  川口祐太:
+    service_name: ""
+    contact: ""
+    available_tasks:
+      - "速報Shorts編集"
+    long_video_price: null
+    shorts_price: 3000
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: false
+    continuation_ok: true
+    continuation_status: "テスト継続"
+    notes: ""
+
+  エルシー:
+    service_name: ""
+    contact: ""
+    available_tasks:
+      - "長尺動画編集"
+      - "サムネイル作成"
+    long_video_price: 7000
+    shorts_price: null
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: true
+    continuation_ok: true
+    continuation_status: "テスト継続"
+    notes: ""
+
+  前進主義 田中:
+    service_name: ""
+    contact: ""
+    available_tasks:
+      - "Shorts編集"
+    long_video_price: null
+    shorts_price: 1500
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: false
+    continuation_ok: true
+    continuation_status: "テスト継続"
+    notes: ""
+
+  漣レン:
+    service_name: ""
+    contact: ""
+    available_tasks:
+      - "長尺動画編集"
+      - "サムネイル作成"
+    long_video_price: 4000
+    shorts_price: null
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: true
+    continuation_ok: true
+    continuation_status: "テスト継続"
+    notes: ""
