@@ -1,0 +1,5 @@
+__pycache__/
+*.pyc
+output/
+final_videoTEMP_MPY_wvf_snd.mp4
+assets/bgm/
