@@ -1,0 +1,81 @@
+# 公式情報ソース設定
+# 重要：一次情報のみ。ブログ・Wikipedia・週刊誌・まとめサイトは使用しない。
+
+channel:
+  name: "日本が誇る皇室物語"
+  concept: "公式事実で、静かな感動を。"
+  target_audience: "55歳以上、特に65歳以上女性"
+
+# フェーズ1: 必須ソース
+kunaicho:
+  name: "宮内庁"
+  base_url: "https://www.kunaicho.go.jp"
+  endpoints:
+    news: "https://www.kunaicho.go.jp/news/index.html"
+    activity: "https://www.kunaicho.go.jp/activity/index.html"
+    schedule: "https://www.kunaicho.go.jp/activity/gokinkyo/index.html"
+    topics: "https://www.kunaicho.go.jp/topics/index.html"
+  official_domain: "kunaicho.go.jp"
+  priority: 1
+  enabled: true
+
+# フェーズ2: SNS確認（手動確認推奨）
+kunaicho_instagram:
+  name: "宮内庁公式Instagram"
+  account: "@kunaicho_jp"
+  profile_url: "https://www.instagram.com/kunaicho_jp/"
+  note: "Instagram APIなしでの自動取得は困難。手動確認欄として出力する。"
+  enabled: false  # Phase2で有効化
+  manual_check: true
+
+kunaicho_youtube:
+  name: "宮内庁公式YouTube"
+  channel_url: "https://www.youtube.com/@kunaicho_jp"
+  channel_id: "UCpwGJbSeBMkOyA1hZ4bT2gA"
+  rss_url: "https://www.youtube.com/feeds/videos.xml?channel_id=UCpwGJbSeBMkOyA1hZ4bT2gA"
+  enabled: true
+  priority: 2
+
+# フェーズ5: 追加ソース
+kantei:
+  name: "首相官邸"
+  base_url: "https://www.kantei.go.jp"
+  news_url: "https://www.kantei.go.jp/jp/tyoukanpress/202506.html"
+  official_domain: "kantei.go.jp"
+  enabled: false  # Phase5で有効化
+
+mofa:
+  name: "外務省"
+  base_url: "https://www.mofa.go.jp"
+  news_url: "https://www.mofa.go.jp/mofaj/press/release/index.html"
+  official_domain: "mofa.go.jp"
+  enabled: false  # Phase5で有効化
+
+# 公式ドメインホワイトリスト（これ以外はOFFICIAL判定不可）
+official_domains:
+  - "kunaicho.go.jp"
+  - "kantei.go.jp"
+  - "mofa.go.jp"
+  - "mhlw.go.jp"
+  - "cao.go.jp"
+  - "env.go.jp"
+  - "bunka.go.jp"
+  - "nhk.or.jp"
+  # 地方自治体は pref.*.jp か city.*.jp パターンで判定
+  - "pref.tokyo.jp"
+  - "metro.tokyo.lg.jp"
+
+# 信頼しないソース（明示的に除外）
+untrusted_sources:
+  - "wikipedia.org"
+  - "twitter.com"
+  - "x.com"
+  - "togetter.com"
+  - "matome"
+  - "livedoor"
+  - "ameba"
+  - "exblog"
+  - "gendai.media"
+  - "bunshun.jp"
+  - "shueisha"
+  - "kodansha"

@@ -1,0 +1,145 @@
+# 人物別キーワード設定
+# popularity_score: 10=最高, 1=最低
+
+persons:
+  TENNO:
+    name: "天皇陛下"
+    aliases: ["天皇", "今上天皇", "陛下", "天皇陛下"]
+    popularity_score: 10
+    audience_affinity_65f: 10  # 65歳以上女性との相性
+    keywords_ja: ["天皇陛下", "陛下が", "天皇が", "今上天皇"]
+    safe_formats: ["長尺", "Shorts"]
+
+  KOGO:
+    name: "皇后陛下"
+    aliases: ["皇后", "雅子さま", "雅子皇后"]
+    popularity_score: 10
+    audience_affinity_65f: 10
+    keywords_ja: ["皇后陛下", "雅子さま", "皇后が", "雅子皇后"]
+    safe_formats: ["長尺", "Shorts", "TikTok"]
+
+  RYOUHEIKA:
+    name: "天皇皇后両陛下"
+    aliases: ["両陛下", "天皇皇后両陛下", "陛下ご夫妻"]
+    popularity_score: 10
+    audience_affinity_65f: 10
+    keywords_ja: ["両陛下", "天皇皇后両陛下", "御二方"]
+    safe_formats: ["長尺", "Shorts", "TikTok"]
+
+  AIKO:
+    name: "愛子さま"
+    aliases: ["愛子内親王", "敬宮愛子内親王", "愛子様"]
+    popularity_score: 10
+    audience_affinity_65f: 10
+    keywords_ja: ["愛子さま", "愛子内親王", "敬宮"]
+    safe_formats: ["長尺", "Shorts", "TikTok"]
+
+  AKISHINO:
+    name: "秋篠宮殿下"
+    aliases: ["秋篠宮", "文仁親王", "秋篠宮皇嗣殿下"]
+    popularity_score: 7
+    audience_affinity_65f: 7
+    keywords_ja: ["秋篠宮", "文仁親王", "皇嗣殿下"]
+    safe_formats: ["長尺"]
+
+  NORIKO:
+    name: "紀子さま"
+    aliases: ["紀子妃殿下", "秋篠宮妃", "紀子さま"]
+    popularity_score: 7
+    audience_affinity_65f: 8
+    keywords_ja: ["紀子さま", "紀子妃", "秋篠宮妃"]
+    safe_formats: ["長尺", "Shorts"]
+
+  KAKO:
+    name: "佳子さま"
+    aliases: ["佳子内親王", "佳子様"]
+    popularity_score: 9
+    audience_affinity_65f: 9
+    keywords_ja: ["佳子さま", "佳子内親王"]
+    safe_formats: ["長尺", "Shorts", "TikTok"]
+
+  HISAHITO:
+    name: "悠仁さま"
+    aliases: ["悠仁親王", "悠仁様"]
+    popularity_score: 8
+    audience_affinity_65f: 8
+    keywords_ja: ["悠仁さま", "悠仁親王"]
+    safe_formats: ["長尺"]
+
+  AKISHINO_FAMILY:
+    name: "秋篠宮ご一家"
+    aliases: ["秋篠宮家", "秋篠宮ご一家"]
+    popularity_score: 7
+    audience_affinity_65f: 7
+    keywords_ja: ["秋篠宮ご一家", "秋篠宮家"]
+    safe_formats: ["長尺"]
+
+  JOKO:
+    name: "上皇陛下"
+    aliases: ["上皇", "明仁上皇", "今上天皇陛下（前）"]
+    popularity_score: 9
+    audience_affinity_65f: 10
+    keywords_ja: ["上皇陛下", "上皇", "明仁"]
+    safe_formats: ["長尺", "Shorts"]
+
+  JOKOGO:
+    name: "上皇后陛下"
+    aliases: ["上皇后", "美智子さま", "美智子上皇后"]
+    popularity_score: 10
+    audience_affinity_65f: 10
+    keywords_ja: ["上皇后陛下", "美智子さま", "上皇后"]
+    safe_formats: ["長尺", "Shorts", "TikTok"]
+
+  JOKO_COUPLE:
+    name: "上皇ご夫妻"
+    aliases: ["上皇上皇后両陛下", "上皇ご夫妻"]
+    popularity_score: 9
+    audience_affinity_65f: 10
+    keywords_ja: ["上皇ご夫妻", "上皇上皇后両陛下"]
+    safe_formats: ["長尺", "Shorts"]
+
+  OTHER:
+    name: "その他皇族"
+    aliases: []
+    popularity_score: 5
+    audience_affinity_65f: 6
+    keywords_ja: ["皇族", "王族", "内親王", "親王"]
+    safe_formats: ["長尺"]
+
+# 行事種別キーワード
+event_types:
+  public_duties:
+    name: "公務・行事"
+    keywords: ["行幸", "行啓", "御用掛", "親授式", "認証式", "拝謁", "会見", "訪問", "視察"]
+    shorts_suitable: true
+    long_suitable: true
+
+  ceremony:
+    name: "式典・儀式"
+    keywords: ["式典", "記念式典", "開会式", "閉会式", "授賞式", "式"]
+    shorts_suitable: false
+    long_suitable: true
+
+  state_guest:
+    name: "国賓・外交"
+    keywords: ["国賓", "首脳", "会談", "晩餐会", "宮中晩餐", "外国要人"]
+    shorts_suitable: true
+    long_suitable: true
+
+  natural_disaster:
+    name: "被災地訪問・慰問"
+    keywords: ["被災地", "慰問", "お見舞い", "激励"]
+    shorts_suitable: true
+    long_suitable: true
+
+  culture_arts:
+    name: "文化・芸術"
+    keywords: ["展覧会", "演奏会", "音楽会", "美術館", "博物館", "文化"]
+    shorts_suitable: false
+    long_suitable: true
+
+  overseas:
+    name: "海外訪問・外国"
+    keywords: ["ご訪問", "外国", "欧州", "アジア", "国際", "海外"]
+    shorts_suitable: true
+    long_suitable: true

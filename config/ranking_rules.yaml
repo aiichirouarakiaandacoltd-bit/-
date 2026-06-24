@@ -1,0 +1,73 @@
+# アイデアランキングルール（100点満点）
+# 各スコアの重みと計算ルールを定義
+
+scoring:
+  max_score: 100
+
+  # ── 1. 人物スコア（最大30点） ──────────────────────────────────────
+  person_score:
+    max: 30
+    weight_popularity: 0.5          # popularity_score の重み
+    weight_audience_affinity: 0.5   # audience_affinity_65f の重み
+    # スコア = (popularity_score * 0.5 + audience_affinity_65f * 0.5) / 10 * 30
+
+  # ── 2. 行事タイプスコア（最大20点） ───────────────────────────────
+  event_type_score:
+    max: 20
+    scores:
+      overseas: 20          # 海外訪問・外国（希少性×関心度 最高）
+      state_guest: 18       # 国賓・外交
+      natural_disaster: 16  # 被災地訪問・慰問（感情的共感）
+      public_duties: 14     # 公務・行事
+      ceremony: 12          # 式典・儀式
+      culture_arts: 10      # 文化・芸術
+      unknown: 8            # 分類不明
+
+  # ── 3. 鮮度スコア（最大20点） ─────────────────────────────────────
+  freshness_score:
+    max: 20
+    days_to_score:
+      0: 20    # 当日
+      1: 18    # 1日前
+      2: 15    # 2日前
+      3: 12    # 3日前
+      7: 8     # 1週間前
+      14: 5    # 2週間前
+      30: 2    # 1ヶ月前
+      9999: 1  # それ以上
+
+  # ── 4. Shorts適合スコア（最大10点） ───────────────────────────────
+  shorts_suitability_score:
+    max: 10
+    # safe_formats に "Shorts" が含まれる人物 × event が shorts_suitable なら満点
+    formats:
+      "Shorts": 10
+      "TikTok": 8
+      "長尺": 5
+
+  # ── 5. 重複ペナルティ（最大 -20点） ───────────────────────────────
+  duplicate_penalty:
+    url_exact_match: -20      # 同じURLを過去に取得済み
+    title_similar: -15        # タイトルが85%以上一致
+    person_event_30days: -10  # 同一人物×同一行事タイプが30日以内に投稿済み
+    person_event_7days: -20   # 同一人物×同一行事タイプが7日以内に投稿済み
+
+  # ── 合計スコアの判定基準 ──────────────────────────────────────────
+  thresholds:
+    A: 80   # 優先制作（KOSHI-XXXX として今週中に着手）
+    B: 60   # 制作候補（来週以降に検討）
+    C: 40   # 資料として保存（制作は判断保留）
+    D: 0    # スキップ（ランキング表示のみ）
+
+# ── 出力設定 ────────────────────────────────────────────────────────
+output:
+  daily_report_top_n: 10    # デイリーレポートに表示する上位N件
+  minimum_score_to_show: 30 # この点数未満は非表示
+  auto_create_todo_threshold: 70  # この点数以上でTODO自動生成
+
+# ── ランキングレポートのラベル ─────────────────────────────────────
+rank_labels:
+  A: "★★★ 優先制作"
+  B: "★★  制作候補"
+  C: "★   保存"
+  D: "    スキップ"

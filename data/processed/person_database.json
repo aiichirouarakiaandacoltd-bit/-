@@ -1,0 +1,87 @@
+{
+  "_meta": {
+    "version": "1.0",
+    "description": "皇室人物データベース — 過去投稿履歴と統計",
+    "last_updated": null
+  },
+  "persons": {
+    "TENNO": {
+      "name": "天皇陛下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "KOGO": {
+      "name": "皇后陛下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "RYOUHEIKA": {
+      "name": "天皇皇后両陛下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "AIKO": {
+      "name": "愛子さま",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "AKISHINO": {
+      "name": "秋篠宮殿下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "NORIKO": {
+      "name": "紀子さま",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "KAKO": {
+      "name": "佳子さま",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "HISAHITO": {
+      "name": "悠仁さま",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "AKISHINO_FAMILY": {
+      "name": "秋篠宮ご一家",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "JOKO": {
+      "name": "上皇陛下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "JOKOGO": {
+      "name": "上皇后陛下",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "JOKO_COUPLE": {
+      "name": "上皇ご夫妻",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    },
+    "OTHER": {
+      "name": "その他皇族",
+      "total_videos": 0,
+      "last_video_date": null,
+      "event_history": []
+    }
+  }
+}
