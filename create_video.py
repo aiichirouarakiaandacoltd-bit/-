@@ -1,0 +1,149 @@
+#!/usr/bin/env python3
+"""
+昭和・平成 なぜそうだったのか — 動画自動生成システム
+
+使い方:
+    python create_video.py --theme "なぜ家族全員で1台のテレビを見ていたのか"
+
+オプション:
+    --theme     動画テーマ（必須）
+    --output    出力ディレクトリ（デフォルト: ./output）
+    --bgm       BGMファイルパス（デフォルト: ./assets/bgm/UNL1337.wav）
+    --no-video  動画レンダリングをスキップ（テキスト・画像のみ生成）
+"""
+
+import argparse
+import os
+import sys
+import time
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent
+sys.path.insert(0, str(BASE_DIR))
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="昭和・平成 なぜそうだったのか — 動画自動生成システム"
+    )
+    parser.add_argument("--theme", required=True, help="動画テーマ")
+    parser.add_argument("--output", default="./output", help="出力ディレクトリ")
+    parser.add_argument("--bgm", default="./assets/bgm/UNL1337.wav", help="BGMファイルパス")
+    parser.add_argument("--no-video", action="store_true", help="動画レンダリングをスキップ")
+    args = parser.parse_args()
+
+    theme = args.theme
+    output_dir = Path(args.output).resolve()
+    bgm_path = str(Path(args.bgm).resolve())
+    skip_video = args.no_video
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    tmp_dir = output_dir / "_tmp"
+    tmp_dir.mkdir(exist_ok=True)
+
+    print("=" * 60)
+    print("昭和・平成 なぜそうだったのか — 動画自動生成システム")
+    print("=" * 60)
+    print(f"テーマ: {theme}")
+    print(f"出力先: {output_dir.resolve()}")
+    print("=" * 60)
+
+    print("\n[1/8] 台本を生成中...")
+    from modules.script_generator import generate_script
+    script = generate_script(theme)
+    print(f"  タイトル: {script['title']}")
+    total_duration = sum(ch.get("duration", 60) for ch in script["chapters"].values())
+    print(f"  推定尺: {total_duration:.0f}秒 ({total_duration/60:.1f}分)")
+
+    print("\n[2/8] ナレーション音声を生成中...")
+    from modules.narration import generate_chapter_narrations
+    narration_dir = tmp_dir / "narration"
+    audio_files = generate_chapter_narrations(script, str(narration_dir))
+
+    audio_durations = {}
+    for chapter_name, audio_path in audio_files.items():
+        if audio_path and os.path.exists(audio_path):
+            from moviepy import AudioFileClip
+            clip = AudioFileClip(audio_path)
+            audio_durations[chapter_name] = clip.duration
+            clip.close()
+            print(f"  {chapter_name}: {audio_durations[chapter_name]:.1f}秒")
+        else:
+            audio_durations[chapter_name] = script["chapters"][chapter_name].get("duration", 60.0)
+            print(f"  {chapter_name}: {audio_durations[chapter_name]:.0f}秒（推定）")
+
+    print("\n[3/8] 字幕（SRT）を生成中...")
+    from modules.subtitle import generate_srt, get_subtitle_entries
+    srt_path = str(output_dir / "subtitle.srt")
+    generate_srt(script, audio_durations, srt_path)
+    subtitle_entries = get_subtitle_entries(script, audio_durations)
+
+    print("\n[4/8] スライド画像を生成中...")
+    from modules.image_generator import generate_all_slides
+    slides_dir = tmp_dir / "slides"
+    all_slides = generate_all_slides(script, str(slides_dir))
+    total_slides = sum(len(v) for v in all_slides.values())
+    print(f"  合計 {total_slides} 枚のスライドを生成")
+
+    print("\n[5/8] サムネイルを生成中...")
+    from modules.thumbnail import generate_thumbnail
+    thumbnail_path = str(output_dir / "thumbnail.png")
+    generate_thumbnail(script["title"], script.get("subtitle", ""), thumbnail_path)
+
+    print("\n[6/8] YouTube投稿用テキストを生成中...")
+    from modules.output_writer import write_all_outputs
+    text_files = write_all_outputs(script, str(output_dir))
+
+    if not skip_video:
+        print("\n[7/8] MP4動画をレンダリング中... (数分かかります)")
+        from modules.video_renderer import render_video
+        video_path = str(output_dir / "final_video.mp4")
+        bgm_actual = bgm_path if os.path.exists(bgm_path) else None
+        if not bgm_actual:
+            print(f"  BGMファイルが見つかりません: {bgm_path} → BGMなしで続行")
+        render_video(
+            script,
+            all_slides,
+            audio_files,
+            audio_durations,
+            subtitle_entries,
+            bgm_actual,
+            video_path,
+        )
+    else:
+        print("\n[7/8] 動画レンダリングをスキップ（--no-video）")
+        video_path = None
+
+    print("\n[8/8] 完了チェック")
+    print("=" * 60)
+    output_files = {
+        "final_video.mp4": output_dir / "final_video.mp4",
+        "thumbnail.png":   output_dir / "thumbnail.png",
+        "subtitle.srt":    output_dir / "subtitle.srt",
+        "title.txt":       output_dir / "title.txt",
+        "description.txt": output_dir / "description.txt",
+        "pinned_comment.txt": output_dir / "pinned_comment.txt",
+        "rights_check.txt":   output_dir / "rights_check.txt",
+    }
+
+    all_ok = True
+    for name, path in output_files.items():
+        exists = path.exists()
+        size = f"({path.stat().st_size // 1024}KB)" if exists else ""
+        status = "✓" if exists else ("SKIP" if name == "final_video.mp4" and skip_video else "✗")
+        print(f"  [{status}] {name} {size}")
+        if not exists and name != "final_video.mp4":
+            all_ok = False
+
+    print("=" * 60)
+    if all_ok or skip_video:
+        print("生成完了！荒木さんが内容を確認してからYouTubeに投稿してください。")
+        print("（自動投稿は行いません）")
+    else:
+        print("一部ファイルの生成に失敗しました。ログを確認してください。")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
