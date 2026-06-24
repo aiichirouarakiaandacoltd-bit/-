@@ -85,6 +85,21 @@ def main():
     total_slides = sum(len(v) for v in all_slides.values())
     print(f"  合計 {total_slides} 枚のスライドを生成")
 
+    narration_out = str(output_dir / "narration.wav")
+    first_audio = next((p for p in audio_files.values() if p and os.path.exists(p)), None)
+    if first_audio:
+        import subprocess as _sp, importlib
+        ffmpeg_mod = importlib.import_module("modules.video_renderer")
+        ffmpeg_bin = ffmpeg_mod._get_ffmpeg()
+        narration_paths = [audio_files.get(ch) for ch in script["chapters"] if audio_files.get(ch) and os.path.exists(audio_files.get(ch))]
+        concat_lines = [f"file '{p}'" for p in narration_paths]
+        import tempfile as _tmp
+        with _tmp.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as _f:
+            _f.write("\n".join(concat_lines)); _concat_file = _f.name
+        _sp.run([ffmpeg_bin, "-y", "-f", "concat", "-safe", "0", "-i", _concat_file, narration_out], capture_output=True)
+        os.unlink(_concat_file)
+        print(f"  [ナレーション統合] → {narration_out}")
+
     print("\n[5/8] サムネイルを生成中...")
     from modules.thumbnail import generate_thumbnail
     thumbnail_path = str(output_dir / "thumbnail.png")
@@ -117,11 +132,12 @@ def main():
     print("\n[8/8] 完了チェック")
     print("=" * 60)
     output_files = {
-        "final_video.mp4": output_dir / "final_video.mp4",
-        "thumbnail.png":   output_dir / "thumbnail.png",
-        "subtitle.srt":    output_dir / "subtitle.srt",
-        "title.txt":       output_dir / "title.txt",
-        "description.txt": output_dir / "description.txt",
+        "final_video.mp4":    output_dir / "final_video.mp4",
+        "thumbnail.png":      output_dir / "thumbnail.png",
+        "subtitle.srt":       output_dir / "subtitle.srt",
+        "narration.wav":      output_dir / "narration.wav",
+        "title.txt":          output_dir / "title.txt",
+        "description.txt":    output_dir / "description.txt",
         "pinned_comment.txt": output_dir / "pinned_comment.txt",
         "rights_check.txt":   output_dir / "rights_check.txt",
     }
