@@ -69,6 +69,10 @@ def _voicevox_tts(text: str, output_path: str, speaker_id: int = 13) -> str:
 
 def _gtts_tts(text: str, output_path: str) -> str:
     try:
+        import imageio_ffmpeg
+        import pydub.utils as _pu
+        _pu.which = lambda x: imageio_ffmpeg.get_ffmpeg_exe() if x in ("ffmpeg", "avconv") else None
+
         from gtts import gTTS
         from pydub import AudioSegment
 
@@ -80,9 +84,13 @@ def _gtts_tts(text: str, output_path: str) -> str:
         if not wav_path.endswith(".wav"):
             wav_path = mp3_path.replace(".mp3", ".wav")
 
-        audio = AudioSegment.from_mp3(mp3_path)
-        audio = audio.set_frame_rate(44100).set_channels(1)
-        audio.export(wav_path, format="wav")
+        import subprocess as _sp
+        ffmpeg_bin = imageio_ffmpeg.get_ffmpeg_exe()
+        _sp.run(
+            [ffmpeg_bin, "-y", "-i", mp3_path, "-ar", "44100", "-ac", "2",
+             "-acodec", "pcm_s16le", wav_path],
+            capture_output=True, check=True,
+        )
 
         if os.path.exists(mp3_path) and mp3_path != wav_path:
             os.remove(mp3_path)

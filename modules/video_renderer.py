@@ -261,6 +261,8 @@ def _merge_video_audio(video_path: str, audio_path: str, output_path: str) -> st
         "-i", audio_path,
         "-c:v", "copy",
         "-c:a", "aac",
+        "-ar", "44100",
+        "-ac", "2",
         "-shortest",
         output_path,
     ]

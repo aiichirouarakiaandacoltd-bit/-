@@ -96,7 +96,8 @@ def main():
         import tempfile as _tmp
         with _tmp.NamedTemporaryFile(mode="w", suffix=".txt", delete=False, encoding="utf-8") as _f:
             _f.write("\n".join(concat_lines)); _concat_file = _f.name
-        _sp.run([ffmpeg_bin, "-y", "-f", "concat", "-safe", "0", "-i", _concat_file, narration_out], capture_output=True)
+        _sp.run([ffmpeg_bin, "-y", "-f", "concat", "-safe", "0", "-i", _concat_file,
+                 "-ar", "44100", "-ac", "2", "-acodec", "pcm_s16le", narration_out], capture_output=True)
         os.unlink(_concat_file)
         print(f"  [ナレーション統合] → {narration_out}")
 
