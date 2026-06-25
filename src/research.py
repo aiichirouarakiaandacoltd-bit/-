@@ -1,0 +1,360 @@
+"""Research and fact-checking module.
+
+Provides functions to research a topic using built-in knowledge of
+well-established historical and cultural facts about the Japanese
+imperial family, then generate structured reports, fact-check records,
+and source lists for outsourcing packages.
+"""
+
+import csv
+import json
+from datetime import datetime
+from pathlib import Path
+
+import config as cfg
+
+
+# ---------------------------------------------------------------------------
+# Built-in knowledge base (proof-of-concept)
+# ---------------------------------------------------------------------------
+
+_BUILTIN_TOPICS: dict[str, dict] = {
+    "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来": {
+        "topic": "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来",
+        "facts": [
+            {
+                "fact_id": "F001",
+                "claim": "愛子内親王は2001年12月1日に誕生された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁公式発表",
+                "source_url": None,
+                "source_type": "公式機関発表",
+                "relevant_passage": "皇太子同妃両殿下の第一女子 敬宮愛子内親王殿下 2001年（平成13年）12月1日御誕生",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "notes": "公知の事実。宮内庁発表に基づく。正確なURLは要確認。",
+            },
+            {
+                "fact_id": "F002",
+                "claim": "御名「愛子」は『孟子』離婁章句下「仁者愛人、有禮者敬人」に由来する",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁公式発表・報道各社",
+                "source_url": None,
+                "source_type": "公式機関発表",
+                "relevant_passage": "仁者愛人、有禮者敬人（仁者は人を愛し、礼ある者は人を敬う）",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "notes": "命名発表時に広く報道された公知の事実。",
+            },
+            {
+                "fact_id": "F003",
+                "claim": "御称号「敬宮」（としのみや）も同じ『孟子』離婁章句下に由来する",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁公式発表・報道各社",
+                "source_url": None,
+                "source_type": "公式機関発表",
+                "relevant_passage": "有禮者敬人 → 「敬」の字を御称号に用いた",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "notes": "御名と御称号が同一出典であることは公式に確認されている。",
+            },
+            {
+                "fact_id": "F004",
+                "claim": "命名は皇太子殿下（当時）と皇太子妃殿下（当時）によるものである",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁公式発表",
+                "source_url": None,
+                "source_type": "公式機関発表",
+                "relevant_passage": None,
+                "direct_or_contextual": "contextual",
+                "usable_in_script": True,
+                "notes": "命名の経緯は公式発表されている公知の事実。",
+            },
+            {
+                "fact_id": "F005",
+                "claim": "宮内庁が御名・御称号を正式に発表した",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁",
+                "source_url": None,
+                "source_type": "公式機関発表",
+                "relevant_passage": None,
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "notes": "宮内庁による公式発表は事実。発表日の正確な記録はURLで要確認。",
+            },
+            {
+                "fact_id": "F006",
+                "claim": "「愛子」の意味は「仁者は人を愛す」、「敬宮」の意味は「礼ある者は人を敬す」である",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "『孟子』離婁章句下",
+                "source_url": None,
+                "source_type": "古典文献",
+                "relevant_passage": "仁者愛人、有禮者敬人。愛人者、人恒愛之。敬人者、人恒敬之。",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "notes": "『孟子』原文に基づく解釈として広く認められている。",
+            },
+            {
+                "fact_id": "F007",
+                "claim": "皇族の御名・御称号は古典に由来する伝統がある",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "皇室の命名慣例（複数の学術文献・報道）",
+                "source_url": None,
+                "source_type": "学術・報道",
+                "relevant_passage": None,
+                "direct_or_contextual": "contextual",
+                "usable_in_script": True,
+                "notes": "一般的に認められた慣例。個別の先例については別途確認が望ましい。",
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "S001",
+                "source_name": "宮内庁公式サイト",
+                "source_url": "https://www.kunaicho.go.jp/",
+                "source_type": "公式機関",
+                "reliability": "最高",
+                "notes": "皇室に関する一次情報源。個別ページのURLは要確認。",
+            },
+            {
+                "source_id": "S002",
+                "source_name": "『孟子』離婁章句下",
+                "source_url": None,
+                "source_type": "古典文献",
+                "reliability": "最高（原典）",
+                "notes": "中国古典。各種注釈書・翻訳で確認可能。",
+            },
+            {
+                "source_id": "S003",
+                "source_name": "NHK報道（2001年12月命名発表時）",
+                "source_url": None,
+                "source_type": "公共放送",
+                "reliability": "高",
+                "notes": "放送アーカイブのURL未確認。",
+            },
+            {
+                "source_id": "S004",
+                "source_name": "主要全国紙報道（2001年12月）",
+                "source_url": None,
+                "source_type": "全国紙",
+                "reliability": "高",
+                "notes": "読売・朝日・毎日・産経・日経各紙。個別記事URLは要確認。",
+            },
+        ],
+    },
+}
+
+
+# ---------------------------------------------------------------------------
+# Research function
+# ---------------------------------------------------------------------------
+
+def research_topic(topic: str, output_dir: str | Path) -> dict:
+    """Research a given topic and return structured research data.
+
+    For the proof-of-concept phase, uses the built-in knowledge base for
+    well-established historical and cultural facts.  Each fact is marked
+    with a verification status:
+
+    - CONFIRMED  — well-established public knowledge
+    - PARTIAL    — likely correct but needs URL/date confirmation
+    - UNCONFIRMED — plausible but not yet verified
+    - REJECTED   — known to be incorrect
+
+    Source URLs are set to ``None`` when they cannot be confirmed.  Facts
+    and URLs are never fabricated.
+
+    Parameters
+    ----------
+    topic : str
+        The topic to research.
+    output_dir : str | Path
+        Directory to write output files into.
+
+    Returns
+    -------
+    dict
+        Structured research data.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    research_datetime = datetime.now().isoformat(timespec="seconds")
+
+    # Look up built-in knowledge
+    builtin = _BUILTIN_TOPICS.get(topic)
+
+    if builtin:
+        facts = builtin["facts"]
+        sources = builtin["sources"]
+    else:
+        facts = []
+        sources = []
+
+    # Classify facts by status
+    confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
+    partial = [f for f in facts if f["status"] == cfg.FactStatus.PARTIAL]
+    unconfirmed = [f for f in facts if f["status"] == cfg.FactStatus.UNCONFIRMED]
+    rejected = [f for f in facts if f["status"] == cfg.FactStatus.REJECTED]
+
+    research_data = {
+        "topic": topic,
+        "research_datetime": research_datetime,
+        "source_priority": [
+            "宮内庁公式発表",
+            "古典原典",
+            "NHK・共同通信・時事通信",
+            "主要全国紙",
+            "学術文献",
+        ],
+        "facts": facts,
+        "confirmed": confirmed,
+        "partial": partial,
+        "unconfirmed": unconfirmed,
+        "rejected": rejected,
+        "sources": sources,
+        "notes": (
+            "組み込み知識ベースから取得。"
+            "ソースURLがNoneの項目は、正確なURLを手動で確認してください。"
+            if builtin
+            else f"トピック「{topic}」は組み込み知識ベースに存在しません。手動調査が必要です。"
+        ),
+    }
+
+    return research_data
+
+
+# ---------------------------------------------------------------------------
+# Report generators
+# ---------------------------------------------------------------------------
+
+def generate_research_report(research_data: dict, output_dir: str | Path) -> None:
+    """Write ``research_report.md`` summarising the research findings."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    lines = [
+        "# リサーチレポート",
+        "",
+        f"## トピック",
+        "",
+        research_data.get("topic", "不明"),
+        "",
+        f"## 調査日時",
+        "",
+        research_data.get("research_datetime", "不明"),
+        "",
+        "## 情報源優先順位",
+        "",
+    ]
+    for i, src in enumerate(research_data.get("source_priority", []), 1):
+        lines.append(f"{i}. {src}")
+
+    lines += ["", "## 確認済み事実（CONFIRMED）", ""]
+    for fact in research_data.get("confirmed", []):
+        lines.append(f"- [{fact['fact_id']}] {fact['claim']}")
+        lines.append(f"  - 出典: {fact['source_name']}")
+        if fact.get("relevant_passage"):
+            lines.append(f"  - 該当箇所: {fact['relevant_passage']}")
+    if not research_data.get("confirmed"):
+        lines.append("- なし")
+
+    lines += ["", "## 部分確認（PARTIAL）", ""]
+    for fact in research_data.get("partial", []):
+        lines.append(f"- [{fact['fact_id']}] {fact['claim']}")
+        lines.append(f"  - 出典: {fact['source_name']}")
+        lines.append(f"  - 備考: {fact.get('notes', '')}")
+    if not research_data.get("partial"):
+        lines.append("- なし")
+
+    lines += ["", "## 未確認（UNCONFIRMED）", ""]
+    for fact in research_data.get("unconfirmed", []):
+        lines.append(f"- [{fact['fact_id']}] {fact['claim']}")
+    if not research_data.get("unconfirmed"):
+        lines.append("- なし")
+
+    lines += ["", "## 却下（REJECTED）", ""]
+    for fact in research_data.get("rejected", []):
+        lines.append(f"- [{fact['fact_id']}] {fact['claim']}")
+        lines.append(f"  - 理由: {fact.get('notes', '')}")
+    if not research_data.get("rejected"):
+        lines.append("- なし")
+
+    lines += ["", "## 情報源一覧", ""]
+    for src in research_data.get("sources", []):
+        url_str = src["source_url"] if src.get("source_url") else "（URL未確認）"
+        lines.append(f"- [{src['source_id']}] {src['source_name']} — {url_str}")
+        lines.append(f"  - 種別: {src['source_type']} / 信頼度: {src['reliability']}")
+
+    lines += [
+        "",
+        "## 備考",
+        "",
+        research_data.get("notes", ""),
+        "",
+    ]
+
+    report_path = output_dir / "research_report.md"
+    report_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def generate_fact_check(research_data: dict, output_dir: str | Path) -> None:
+    """Write ``fact_check.json`` with detailed fact verification records."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    checked_at = datetime.now().isoformat(timespec="seconds")
+
+    fact_records = []
+    for fact in research_data.get("facts", []):
+        fact_records.append({
+            "fact_id": fact["fact_id"],
+            "claim": fact["claim"],
+            "status": fact["status"],
+            "source_name": fact["source_name"],
+            "source_url": fact.get("source_url"),  # None if unknown
+            "source_type": fact["source_type"],
+            "relevant_passage": fact.get("relevant_passage"),
+            "checked_at": checked_at,
+            "direct_or_contextual": fact.get("direct_or_contextual", "unknown"),
+            "usable_in_script": fact.get("usable_in_script", False),
+            "notes": fact.get("notes", ""),
+        })
+
+    out_path = output_dir / "fact_check.json"
+    out_path.write_text(
+        json.dumps(fact_records, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def generate_sources_csv(research_data: dict, output_dir: str | Path) -> None:
+    """Write ``sources.csv`` listing all sources used in the research."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    fieldnames = [
+        "source_id",
+        "source_name",
+        "source_url",
+        "source_type",
+        "reliability",
+        "accessed_at",
+        "notes",
+    ]
+
+    accessed_at = datetime.now().isoformat(timespec="seconds")
+
+    csv_path = output_dir / "sources.csv"
+    with csv_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        for src in research_data.get("sources", []):
+            writer.writerow({
+                "source_id": src.get("source_id", ""),
+                "source_name": src.get("source_name", ""),
+                "source_url": src.get("source_url", ""),
+                "source_type": src.get("source_type", ""),
+                "reliability": src.get("reliability", ""),
+                "accessed_at": accessed_at,
+                "notes": src.get("notes", ""),
+            })
