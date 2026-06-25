@@ -27,7 +27,7 @@ from modules.preflight import run_preflight, format_preflight_report
 from modules.planner import run_planner
 from modules.researcher import run_researcher
 from modules.scriptwriter import run_scriptwriter
-from modules.voicevox import generate_audio as voicevox_generate_audio
+from modules.voicevox import generate_audio as voicevox_generate_audio, pad_audio_to_duration
 from modules.subtitle import generate_all_subtitles, AudioSegment as SubAudioSegment
 from modules.materials import generate_test_topic_materials, generate_all_materials
 from modules.compositor import VideoCompositor
@@ -210,6 +210,21 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
         logger.error("音声なしのため中止します。")
         return _finalize(output_dir, status_data, steps_log, errors, topic, mode)
 
+    # テストモード: 音声を規定尺までパディング
+    if mode == "test":
+        target_long = config.get("video", {}).get("long", {}).get("target_duration_min", 490)
+        target_short = config.get("video", {}).get("shorts", {}).get("target_duration_min", 48)
+        try:
+            for key, target in [("long", target_long), ("short_01", target_short), ("short_02", target_short)]:
+                ar = audio_results.get(key)
+                if ar and ar.concatenated_path:
+                    new_dur = pad_audio_to_duration(ar.concatenated_path, float(target))
+                    ar.total_duration_seconds = new_dur
+            log_step("テスト音声パディング", True, "規定尺まで延長")
+        except Exception as e:
+            errors.append("音声パディングエラー: %s" % e)
+            log_step("テスト音声パディング", False, str(e))
+
     # ===== Step 5: Subtitle Generation =====
     logger.info("=" * 60)
     logger.info("ステップ5: 字幕生成")
@@ -272,7 +287,11 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
                 if lic.get("commercial_use") and lic.get("youtube_monetization") and lic.get("file_name") in bgm_files:
                     bgm_path = os.path.join(bgm_dir, lic["file_name"])
                     break
-    log_step("BGM処理", True, os.path.basename(bgm_path) if bgm_path else "BGMなし")
+    if mode == "production" and not bgm_path:
+        errors.append("本番モード: 権利確認済みBGMが見つかりません。assets/bgm/ に配置してください。")
+        log_step("BGM処理", False, "権利確認済みBGMなし（本番モード必須）")
+    else:
+        log_step("BGM処理", True, os.path.basename(bgm_path) if bgm_path else "BGMなし（テストモード）")
     status_data["bgm"] = {"file": os.path.basename(bgm_path) if bgm_path else None}
 
     # ===== Step 8: Video Composition =====
@@ -282,10 +301,11 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
     video_files = {}
     try:
         compositor = VideoCompositor(config)
+        prefix = "TEST_ONLY_" if mode == "test" else ""
         for vid_type, akey, skey, fname in [
-            ("long", "long", "long_ass", "final_long.mp4"),
-            ("short", "short_01", "short_01_ass", "final_short_01.mp4"),
-            ("short", "short_02", "short_02_ass", "final_short_02.mp4"),
+            ("long", "long", "long_ass", f"{prefix}final_long.mp4"),
+            ("short", "short_01", "short_01_ass", f"{prefix}final_short_01.mp4"),
+            ("short", "short_02", "short_02_ass", f"{prefix}final_short_02.mp4"),
         ]:
             ar = audio_results.get(akey)
             if not ar or not ar.concatenated_path:
@@ -335,7 +355,7 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
                 generate_screenshots(vp, ss_dir, "shorts" if "short" in vn else "long")
             except Exception:
                 pass
-        generate_report(qc_results, os.path.join(output_dir, "quality_report.json"))
+        generate_report(qc_results, os.path.join(output_dir, "quality_report.json"), mode=mode)
         fails = [r for r in qc_results if not r.passed and r.severity == "error"]
         log_step("品質チェック", not fails, "PASS" if not fails else "FAIL(%d)" % len(fails))
         status_data["quality"] = {"overall": "PASS" if not fails else "FAIL", "failed": len(fails)}

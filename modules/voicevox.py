@@ -632,3 +632,30 @@ def generate_audio(texts: List[str], output_dir: str,
         logger.warning("注意: %s", TEST_WATERMARK)
 
     return result
+
+
+def pad_audio_to_duration(wav_path: str, target_seconds: float) -> float:
+    """結合済みWAVを無音パディングで指定秒数まで延長する。既に十分な長さなら何もしない。"""
+    current = get_wav_duration(wav_path)
+    if current >= target_seconds:
+        logger.info("パディング不要: %.1f秒 >= 目標%.1f秒", current, target_seconds)
+        return current
+    pad_seconds = target_seconds - current
+    logger.info("無音パディング追加: %.1f秒 -> %.1f秒 (+%.1f秒)", current, target_seconds, pad_seconds)
+    padded_path = wav_path + ".padded.wav"
+    cmd = [
+        "ffmpeg", "-y",
+        "-i", wav_path,
+        "-af", f"apad=pad_dur={pad_seconds}",
+        "-acodec", "pcm_s16le",
+        "-ar", "44100",
+        "-ac", "1",
+        padded_path
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+    if result.returncode != 0:
+        raise RuntimeError(f"音声パディングに失敗しました: {result.stderr[:300]}")
+    os.replace(padded_path, wav_path)
+    new_duration = get_wav_duration(wav_path)
+    logger.info("パディング完了: 実測 %.1f秒", new_duration)
+    return new_duration

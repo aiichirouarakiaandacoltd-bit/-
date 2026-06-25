@@ -741,20 +741,27 @@ def generate_screenshots(
 def generate_report(
     results: list[QualityResult],
     output_path: str,
+    mode: str = "test",
 ) -> None:
     """品質レポートをJSONファイルとして書き出す。
 
     Args:
         results: QualityResultのリスト。
         output_path: 出力ファイルのパス。
+        mode: "production" or "test"。
     """
     overall_pass = all(
         r.passed for r in results if r.severity == "error"
     )
+    is_production = mode == "production"
 
     report = {
         "timestamp": datetime.now().isoformat(),
+        "mode": mode,
+        "overall_status": "PASS" if overall_pass else "FAIL",
         "overall_pass": overall_pass,
+        "publishable": is_production and overall_pass,
+        "test_only": not is_production,
         "total_checks": len(results),
         "passed_checks": sum(1 for r in results if r.passed),
         "failed_checks": sum(1 for r in results if not r.passed),
@@ -933,7 +940,7 @@ class QualityChecker:
 
         # レポート生成
         report_path = self.output_dir / "quality_report.json"
-        generate_report(self.results, str(report_path))
+        generate_report(self.results, str(report_path), mode=mode)
 
         overall = all(r.passed for r in self.results if r.severity == "error")
         logger.info(
