@@ -36,7 +36,7 @@ if errorlevel 1 (
     echo   ✓ ffprobe OK
 )
 
-echo [4] VOICEVOX確認...
+echo [4] VOICEVOX確認（話者: 青山龍星 / 速度: 0.95）...
 curl -s --connect-timeout 3 http://localhost:50021/version >nul 2>&1
 if errorlevel 1 (
     echo   ✗ VOICEVOXに接続できません

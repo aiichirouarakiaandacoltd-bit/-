@@ -19,11 +19,10 @@
   },
   "voicevox": {
     "host": "http://localhost:50021",
-    "speaker_name": "四国めたん",
-    "style_name": "ノーマル",
-    "speed_scale": 1.05,
-    "speed_min": 1.00,
-    "speed_max": 1.10
+    "speaker_name": "青山龍星",
+    "speed_scale": 0.95,
+    "dynamic_speaker_lookup": true,
+    "fallback_allowed": false
   },
   "bgm": {
     "volume_ratio": 0.20,

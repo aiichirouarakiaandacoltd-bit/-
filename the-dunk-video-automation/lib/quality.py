@@ -158,12 +158,49 @@ def run_quality_check(video_path, mode="production", tts_info=None):
         if not ok:
             overall_pass = False
 
-    return {"pass": overall_pass, "checks": results, "duration": duration, "probe": probe}
+        ok_speaker = tts_info.get("speaker") == "青山龍星"
+        results.append({"name": "話者", "pass": ok_speaker, "detail": tts_info.get("speaker", "不明")})
+        if not ok_speaker:
+            overall_pass = False
+
+        ok_speed = tts_info.get("speed") == 0.95
+        results.append({"name": "速度", "pass": ok_speed, "detail": f"speedScale={tts_info.get('speed')}"})
+        if not ok_speed:
+            overall_pass = False
+
+        ok_fb = tts_info.get("fallback_used") is False
+        results.append({"name": "フォールバック不使用", "pass": ok_fb, "detail": f"fallback_used={tts_info.get('fallback_used')}"})
+        if not ok_fb:
+            overall_pass = False
+
+    return {"pass": overall_pass, "checks": results, "duration": duration, "probe": probe, "tts_info": tts_info}
 
 
-def save_quality_report(result, output_path):
+def save_quality_report(result, output_path, mode="test"):
+    tts = result.get("tts_info") or {}
+
+    if mode == "production":
+        voice_section = {
+            "mode": "production",
+            "voice_engine": tts.get("engine", "不明"),
+            "speaker_name": tts.get("speaker"),
+            "speaker_id": tts.get("style_id"),
+            "speed_scale": tts.get("speed"),
+            "fallback_used": tts.get("fallback_used", False),
+        }
+    else:
+        voice_section = {
+            "mode": "test",
+            "publishable": False,
+            "test_only": True,
+            "voice_engine": tts.get("engine", "test_tone"),
+            "speaker_name": None,
+            "speed_scale": None,
+        }
+
     report = {
         "pass": result["pass"],
+        "voice": voice_section,
         "checks": result["checks"],
         "duration": result.get("duration"),
     }

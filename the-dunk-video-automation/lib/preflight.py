@@ -55,7 +55,6 @@ def check_voicevox(settings):
 def check_voicevox_speaker(settings):
     host = settings["voicevox"]["host"]
     speaker_name = settings["voicevox"]["speaker_name"]
-    style_name = settings["voicevox"]["style_name"]
     try:
         import urllib.request
         req = urllib.request.Request(f"{host}/speakers", method="GET")
@@ -63,14 +62,26 @@ def check_voicevox_speaker(settings):
             speakers = json.loads(resp.read().decode("utf-8"))
         for sp in speakers:
             if sp["name"] == speaker_name:
-                for st in sp["styles"]:
-                    if st["name"] == style_name:
-                        return {"name": "VOICEVOX話者", "ok": True, "detail": f"{speaker_name} ({style_name}) ID={st['id']}"}
-                styles_available = [s["name"] for s in sp["styles"]]
-                return {"name": "VOICEVOX話者", "ok": False, "detail": f"話者 {speaker_name} のスタイル {style_name} が見つかりません。利用可能: {styles_available}"}
-        return {"name": "VOICEVOX話者", "ok": False, "detail": f"話者 {speaker_name} が見つかりません。"}
+                first_style = sp["styles"][0] if sp["styles"] else None
+                if first_style:
+                    return {"name": "VOICEVOX話者", "ok": True, "detail": f"{speaker_name} ID={first_style['id']} (動的取得)"}
+                return {"name": "VOICEVOX話者", "ok": False, "detail": f"話者 {speaker_name} にスタイルがありません。"}
+        available = [s["name"] for s in speakers]
+        return {"name": "VOICEVOX話者", "ok": False, "detail": f"話者「{speaker_name}」が見つかりません。利用可能: {available[:10]}"}
     except Exception:
         return {"name": "VOICEVOX話者", "ok": False, "detail": "VOICEVOX未接続のため話者を確認できません。"}
+
+
+def check_voicevox_speed(settings):
+    speed = settings["voicevox"]["speed_scale"]
+    ok = speed == 0.95
+    return {"name": "VOICEVOX速度", "ok": ok, "detail": f"speedScale={speed} (期待値: 0.95)"}
+
+
+def check_no_fallback(settings):
+    fallback = settings["voicevox"].get("fallback_allowed", True)
+    ok = fallback is False
+    return {"name": "フォールバック禁止", "ok": ok, "detail": "代替音声なし" if ok else "fallback_allowedがtrueです。falseに設定してください。"}
 
 def check_output_writable():
     out = os.path.join(BASE_DIR, "output")
@@ -119,6 +130,8 @@ def run_preflight(mode="production"):
     if mode == "production":
         checks.append(check_voicevox(settings))
         checks.append(check_voicevox_speaker(settings))
+        checks.append(check_voicevox_speed(settings))
+        checks.append(check_no_fallback(settings))
 
     passed = [c for c in checks if c["ok"]]
     failed = [c for c in checks if not c["ok"]]

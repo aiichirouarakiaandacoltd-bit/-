@@ -16,19 +16,20 @@ def load_settings():
         return json.load(f)
 
 
-def resolve_speaker_id(host, speaker_name, style_name):
+def resolve_speaker_id(host, speaker_name):
     req = urllib.request.Request(f"{host}/speakers", method="GET")
     with urllib.request.urlopen(req, timeout=10) as resp:
         speakers = json.loads(resp.read().decode("utf-8"))
     for sp in speakers:
         if sp["name"] == speaker_name:
-            for st in sp["styles"]:
-                if st["name"] == style_name:
-                    return st["id"], sp["name"], st["name"]
-    return None, speaker_name, style_name
+            if sp["styles"]:
+                first = sp["styles"][0]
+                return first["id"], sp["name"], first["name"]
+            return None, speaker_name, None
+    return None, speaker_name, None
 
 
-def synthesize_voicevox(text, output_path, speaker_id, speed_scale=1.05, host="http://localhost:50021"):
+def synthesize_voicevox(text, output_path, speaker_id, speed_scale=0.95, host="http://localhost:50021"):
     params = urllib.parse.urlencode({"text": text, "speaker": speaker_id})
     req = urllib.request.Request(
         f"{host}/audio_query?{params}",
@@ -91,16 +92,21 @@ def generate_narration(narration_text, output_dir, mode="production"):
     tts_info = {"engine": None, "speaker": None, "style": None, "style_id": None, "speed": None}
 
     if mode == "production":
+        if settings["voicevox"].get("fallback_allowed", False):
+            raise RuntimeError(
+                "fallback_allowedがtrueに設定されています。本番モードではfalseにしてください。"
+            )
+
         host = settings["voicevox"]["host"]
         speaker_name = settings["voicevox"]["speaker_name"]
-        style_name = settings["voicevox"]["style_name"]
         speed = settings["voicevox"]["speed_scale"]
 
-        sid, resolved_name, resolved_style = resolve_speaker_id(host, speaker_name, style_name)
+        sid, resolved_name, resolved_style = resolve_speaker_id(host, speaker_name)
         if sid is None:
             raise RuntimeError(
-                f"VOICEVOX話者 {speaker_name} スタイル {style_name} が見つかりません。"
-                "config/settings.jsonの設定を確認してください。"
+                f"VOICEVOX話者「{speaker_name}」が /speakers から見つかりません。"
+                "VOICEVOXを起動し、config/settings.jsonの話者名を確認してください。"
+                "別話者へのフォールバックは禁止されています。"
             )
 
         tts_info = {
@@ -109,6 +115,7 @@ def generate_narration(narration_text, output_dir, mode="production"):
             "style": resolved_style,
             "style_id": sid,
             "speed": speed,
+            "fallback_used": False,
         }
 
         for i, sentence in enumerate(sentences):
@@ -118,10 +125,11 @@ def generate_narration(narration_text, output_dir, mode="production"):
     else:
         tts_info = {
             "engine": "test_tone",
-            "speaker": "TEST",
-            "style": "TEST",
-            "style_id": -1,
-            "speed": 1.0,
+            "speaker": None,
+            "style": None,
+            "style_id": None,
+            "speed": None,
+            "fallback_used": False,
         }
         for i, sentence in enumerate(sentences):
             wav_path = os.path.join(output_dir, f"narration_{i:03d}.wav")

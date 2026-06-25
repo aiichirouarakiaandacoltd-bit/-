@@ -422,7 +422,7 @@ def run_pipeline(args):
     logger.info("--- 品質検査 ---")
     quality = run_quality_check(video_path, mode, tts_info)
     qr_path = os.path.join(output_dir, "quality_report.json")
-    save_quality_report(quality, qr_path)
+    save_quality_report(quality, qr_path, mode)
 
     for check in quality["checks"]:
         status = "PASS" if check["pass"] else "FAIL"

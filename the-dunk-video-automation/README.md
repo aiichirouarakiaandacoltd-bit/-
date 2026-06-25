@@ -5,7 +5,7 @@
 ## 機能
 
 - 台本自動生成（技術解説・戦術解説・比較・記録など）
-- VOICEVOX音声合成
+- VOICEVOX音声合成（本番話者: 青山龍星、速度: 0.95）
 - 字幕焼き込み（ASS形式）
 - BGMミキシング
 - コート図・テキストカード自動生成
@@ -73,7 +73,7 @@ python main.py --script-file inputs/scripts/script.txt --video inputs/owned_vide
 
 ## モード
 
-- **production**: VOICEVOX必須、権利確認済みBGM必須、全品質チェック
+- **production**: VOICEVOX必須（青山龍星・速度0.95・動的ID取得・代替音声禁止）、権利確認済みBGM必須、全品質チェック
 - **test**: テスト音声使用可、技術検証用（TEST ONLY、投稿不可）
 
 ## 動画仕様
