@@ -157,18 +157,23 @@ def build_video(script_data, video_type, test_mode, logger, bgm_used_ref):
     final_path = out_dir / final_name
 
     bgm_actually_used = False
-    if not test_mode and cfg.BGM_FILE.exists():
-        logger.info(f"[{video_type}] Mixing BGM...")
+    if not test_mode:
+        if not cfg.BGM_FILE.exists():
+            raise RuntimeError(
+                f"Production mode requires BGM file: {cfg.BGM_FILE}\n"
+                "Place UNL1337.wav in assets/bgm/ and retry."
+            )
+        logger.info(f"[{video_type}] Mixing BGM (UNL1337.wav)...")
         vid_duration = get_video_duration(subtitled_video)
         mix_bgm(subtitled_video, cfg.BGM_FILE, final_path, vid_duration)
         bgm_actually_used = True
-    elif test_mode and cfg.BGM_FILE.exists():
-        logger.info(f"[{video_type}] Mixing BGM (test mode)...")
+    elif cfg.BGM_FILE.exists():
+        logger.info(f"[{video_type}] Mixing BGM (test mode, UNL1337.wav available)...")
         vid_duration = get_video_duration(subtitled_video)
         mix_bgm(subtitled_video, cfg.BGM_FILE, final_path, vid_duration)
         bgm_actually_used = True
     else:
-        logger.info(f"[{video_type}] No BGM available, copying subtitled video as final")
+        logger.info(f"[{video_type}] Test mode: no BGM available, copying subtitled video as final")
         import shutil
         shutil.copy2(subtitled_video, final_path)
 
@@ -190,6 +195,7 @@ def build_video(script_data, video_type, test_mode, logger, bgm_used_ref):
     qr = run_quality_check(
         final_path, video_type, test_mode=test_mode,
         bgm_used=bgm_actually_used, voicevox_used=voicevox_used,
+        output_dir=out_dir,
     )
 
     return {

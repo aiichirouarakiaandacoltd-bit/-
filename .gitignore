@@ -6,7 +6,7 @@ logs/
 screenshots/
 *.mp4
 *.wav
-!assets/bgm/.gitkeep
+!assets/bgm/README_bgm.txt
 .env
 venv/
 .venv/

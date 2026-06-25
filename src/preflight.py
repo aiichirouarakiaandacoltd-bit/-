@@ -114,6 +114,37 @@ def check_output_writable():
     return {"name": "Output writable", "ok": True, "detail": "all output dirs writable"}
 
 
+def check_zero_kb_inputs():
+    """Check for 0KB files in input directories."""
+    zero_files = []
+    for d in [cfg.INPUT_DIR, cfg.ASSETS_DIR]:
+        if d.exists():
+            for f in d.rglob("*"):
+                if f.is_file() and f.stat().st_size == 0:
+                    zero_files.append(str(f))
+    if zero_files:
+        return {"name": "0KB input files", "ok": False,
+                "detail": f"{len(zero_files)} zero-byte file(s): {', '.join(zero_files[:5])}"}
+    return {"name": "0KB input files", "ok": True, "detail": "no zero-byte input files"}
+
+
+def check_voicevox_speed():
+    """Verify VOICEVOX speed setting."""
+    ok = cfg.VOICEVOX_SPEED == 0.88
+    return {"name": "VOICEVOX speed", "ok": ok,
+            "detail": f"speed={cfg.VOICEVOX_SPEED} (expected 0.88)"}
+
+
+def check_mode_separation(test_mode):
+    """Verify test and production output directories are separate."""
+    test_dir = cfg.OUTPUT_TEST_DIR
+    prod_long = cfg.OUTPUT_LONG_DIR
+    prod_shorts = cfg.OUTPUT_SHORTS_DIR
+    ok = (str(test_dir) != str(prod_long) and str(test_dir) != str(prod_shorts))
+    return {"name": "Mode separation", "ok": ok,
+            "detail": f"test={test_dir}, prod_long={prod_long}, prod_shorts={prod_shorts}"}
+
+
 def run_preflight(test_mode=False):
     checks = [
         check_python(),
@@ -123,8 +154,11 @@ def run_preflight(test_mode=False):
         check_subtitle_support(),
         check_font(),
         check_voicevox(),
+        check_voicevox_speed(),
         check_bgm(),
         check_output_writable(),
+        check_zero_kb_inputs(),
+        check_mode_separation(test_mode),
     ]
 
     all_ok = True
