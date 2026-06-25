@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+outputs/production/*/
+outputs/test/*/
+logs/*.log
+*.mp4
+*.wav
+*.mp3
+*.ogg
+.DS_Store
+venv/
+.venv/

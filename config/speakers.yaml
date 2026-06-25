@@ -1,0 +1,8 @@
+voicevox:
+  primary:
+    speaker_name: "四国めたん"
+    style_name: "ノーマル"
+  fallback_search_keywords:
+    - "落ち着き"
+    - "解説"
+    - "ナレーション"

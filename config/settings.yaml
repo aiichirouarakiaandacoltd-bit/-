@@ -1,0 +1,94 @@
+project:
+  name: "showa-heisei-video-automation"
+  channel_name: "昭和・平成 なぜそうだったのか"
+  version: "1.0.0"
+
+video:
+  long:
+    width: 1920
+    height: 1080
+    fps: 30
+    min_duration: 480
+    max_duration: 720
+    target_duration_min: 540
+    target_duration_max: 600
+    codec_video: "libx264"
+    codec_audio: "aac"
+    pix_fmt: "yuv420p"
+    aspect: "16:9"
+  shorts:
+    width: 1080
+    height: 1920
+    fps: 30
+    min_duration: 45
+    max_duration: 59.5
+    target_duration_min: 48
+    target_duration_max: 58
+    codec_video: "libx264"
+    codec_audio: "aac"
+    pix_fmt: "yuv420p"
+    aspect: "9:16"
+
+voicevox:
+  host: "http://localhost:50021"
+  speed_scale: 0.92
+  speed_min: 0.90
+  speed_max: 0.95
+
+bgm:
+  volume_ratio: 0.20
+  ducking_enabled: true
+  ducking_threshold: -20
+  ducking_ratio: 0.15
+
+subtitles:
+  font_family: "Noto Sans CJK JP Black"
+  font_path: "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
+  font_size_long: 48
+  font_size_shorts: 56
+  outline_width: 3
+  outline_color: "000000"
+  text_color: "FFFFFF"
+  max_lines: 2
+  max_chars_per_line: 20
+  margin_bottom_long: 60
+  margin_bottom_shorts: 300
+  margin_top_shorts: 150
+  margin_right_shorts: 100
+
+planning:
+  min_score: 70
+  evaluation_criteria:
+    - name: "視聴者適合性"
+      weight: 10
+    - name: "懐かしさ"
+      weight: 10
+    - name: "なぜの深さ"
+      weight: 15
+    - name: "公式資料の有無"
+      weight: 10
+    - name: "素材調達可能性"
+      weight: 10
+    - name: "権利安全性"
+      weight: 10
+    - name: "長尺化情報量"
+      weight: 10
+    - name: "Shorts分解可能性"
+      weight: 5
+    - name: "タイトル・サムネイル"
+      weight: 5
+    - name: "常緑性"
+      weight: 5
+    - name: "競合差別化"
+      weight: 5
+    - name: "制作原価"
+      weight: 2
+    - name: "再現性"
+      weight: 3
+
+adjustment:
+  max_retries: 3
+  long_min: 480
+  long_max: 720
+  shorts_min: 45
+  shorts_max: 59.5
