@@ -1,0 +1,49 @@
+{
+  "channel": {
+    "name": "ザ・ダンク",
+    "name_en": "THE DUNK",
+    "description": "バスケットボールShorts解説チャンネル"
+  },
+  "video": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "min_duration": 45.0,
+    "max_duration": 59.5,
+    "target_duration_min": 48.0,
+    "target_duration_max": 58.0,
+    "codec_video": "libx264",
+    "codec_audio": "aac",
+    "pixel_format": "yuv420p",
+    "container": "mp4"
+  },
+  "voicevox": {
+    "host": "http://localhost:50021",
+    "speaker_name": "四国めたん",
+    "style_name": "ノーマル",
+    "speed_scale": 1.05,
+    "speed_min": 1.00,
+    "speed_max": 1.10
+  },
+  "bgm": {
+    "volume_ratio": 0.20,
+    "ducking_enabled": true,
+    "ducking_ratio": 0.10
+  },
+  "subtitle": {
+    "font_name": "IPAGothic",
+    "font_size": 48,
+    "font_color": "#FFFFFF",
+    "outline_color": "#000000",
+    "outline_width": 3,
+    "position_y_ratio": 0.82,
+    "max_lines": 2,
+    "highlight_color": "#FFD700"
+  },
+  "paths": {
+    "inputs": "inputs",
+    "outputs_production": "outputs/production",
+    "outputs_test": "outputs/test",
+    "output_final": "output/final.mp4"
+  }
+}
