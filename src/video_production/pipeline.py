@@ -1,4 +1,4 @@
-"""動画製作パイプライン（本番統合版）
+"""動画製作パイプライン（厳格版）
 
 本番モード（デフォルト）:
   - VOICEVOX（青山龍星）必須
@@ -6,8 +6,10 @@
   - 利用不可ならエラー終了
 
 テストモード（--test-mode）:
-  - espeak-ng/gTTSフォールバック許可
+  - espeak-ngフォールバック許可
   - BGMなしでも続行可能
+  - ファイル名に TEST_ONLY 付与
+  - 出力先: outputs/videos_test/
 
 使い方:
   # 本番モード
@@ -29,9 +31,12 @@ from datetime import datetime
 from pathlib import Path
 
 from . import config
-from .script_generator import create_long_script, create_shorts_script, save_script, load_script
+from .script_generator import (
+    create_long_script, create_shorts_script,
+    save_script, load_script, shorten_script_for_duration,
+)
 from .tts_engine import (
-    synthesize_sections, verify_voicevox, VOICEVOXNotAvailableError,
+    synthesize_sections, VOICEVOXNotAvailableError,
 )
 from .subtitle_generator import generate_srt, verify_subtitles
 from .image_manager import (
@@ -40,9 +45,10 @@ from .image_manager import (
 )
 from .video_composer import compose_video
 from .quality_checker import (
-    verify_video, verify_bgm_file, scan_zero_kb_files,
+    verify_video, scan_zero_kb_files,
     capture_screenshots, print_report,
 )
+from .preflight import run_preflight, print_preflight_report
 
 
 class PipelineError(Exception):
@@ -67,6 +73,17 @@ def _setup_logger(project_dir: Path) -> logging.Logger:
     return logger
 
 
+def _delete_zero_kb_files(directory: Path) -> int:
+    count = 0
+    if not directory.exists():
+        return count
+    for f in directory.rglob("*"):
+        if f.is_file() and f.stat().st_size == 0:
+            f.unlink()
+            count += 1
+    return count
+
+
 def run_pipeline(
     topic: str,
     main_text: str,
@@ -82,10 +99,15 @@ def run_pipeline(
 ) -> dict:
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     safe_topic = topic[:30].replace(" ", "_").replace("/", "_")
-    mode_tag = "test" if test_mode else "prod"
-    project_name = f"{timestamp}_{video_format}_{mode_tag}_{safe_topic}"
 
-    base = output_base or config.OUTPUTS_DIR
+    if test_mode:
+        mode_tag = "TEST_ONLY"
+        base = output_base or config.OUTPUTS_TEST_DIR
+    else:
+        mode_tag = "prod"
+        base = output_base or config.OUTPUTS_DIR
+
+    project_name = f"{timestamp}_{video_format}_{mode_tag}_{safe_topic}"
     project_dir = base / project_name
     project_dir.mkdir(parents=True, exist_ok=True)
 
@@ -103,8 +125,8 @@ def run_pipeline(
     log = _setup_logger(project_dir)
 
     log.info("=" * 60)
-    log.info(f"動画製作パイプライン開始")
-    log.info(f"モード: {'テスト' if test_mode else '本番'}")
+    log.info("動画製作パイプライン開始")
+    log.info(f"モード: {'テスト（TEST ONLY）' if test_mode else '本番'}")
     log.info(f"プロジェクト: {project_name}")
     log.info(f"フォーマット: {video_format}")
     log.info("=" * 60)
@@ -121,65 +143,40 @@ def run_pipeline(
         "tts_speaker_name": None,
         "tts_speed": None,
         "bgm_file": None,
+        "bgm_mixed": False,
         "materials_used": 0,
         "materials_excluded": 0,
+        "duration_adjustments": 0,
     }
 
-    # === Phase 0: 事前検証 ===
-    log.info("[Phase 0] 事前検証...")
+    # === Phase 0: 統合事前検証 ===
+    log.info("[Phase 0] 統合事前検証...")
+    bgm_file = bgm_path or (config.BGM_DIR / config.BGM_FILE)
+    preflight = run_preflight(test_mode=test_mode, bgm_path=bgm_file)
+    print_preflight_report(preflight)
 
-    if not test_mode:
-        log.info("  VOICEVOX接続確認...")
-        vv = verify_voicevox()
-        if not vv["api_reachable"]:
-            msg = (
-                f"本番モード: VOICEVOX APIに接続できません。\n"
-                f"  接続先: {config.VOICEVOX_HOST}\n"
-                f"  確認コマンド: curl {config.VOICEVOX_HOST}/speakers\n"
-                f"  エラー: {'; '.join(vv['errors'])}"
-            )
-            log.error(msg)
-            _save_final_report(project_dir, execution_info, "FAILED", msg)
-            raise PipelineError(msg)
+    for c in preflight["checks"]:
+        status = "OK" if c["ok"] else "NG"
+        log.info(f"  事前検証 {c['name']}: {status} - {c['detail']}")
 
-        if not vv["target_speaker_found"]:
-            msg = (
-                f"本番モード: 青山龍星 (speaker_id={config.VOICEVOX_SPEAKER_ID}) が見つかりません。\n"
-                f"  別話者への自動変更は行いません。\n"
-                f"  エラー: {'; '.join(vv['errors'])}"
-            )
-            log.error(msg)
-            _save_final_report(project_dir, execution_info, "FAILED", msg)
-            raise PipelineError(msg)
+    if not preflight["passed"]:
+        msg = "事前検証FAILED:\n" + "\n".join(f"  - {e}" for e in preflight["errors"])
+        log.error(msg)
+        _save_final_report(project_dir, execution_info, "FAILED", msg)
+        raise PipelineError(msg)
 
-        log.info("  VOICEVOX: OK (青山龍星確認済み)")
-
-        bgm_file = bgm_path or (config.BGM_DIR / config.BGM_FILE)
-        bgm_check = verify_bgm_file(bgm_file)
-        if not bgm_check["exists"] or not bgm_check["nonzero"] or not bgm_check["readable"]:
-            msg = (
-                f"本番モード: BGMファイルが利用できません。\n"
-                f"  必須ファイル: {bgm_file}\n"
-                f"  存在: {bgm_check['exists']}\n"
-                f"  0KB: {not bgm_check['nonzero'] if bgm_check['exists'] else 'N/A'}\n"
-                f"  読取可: {bgm_check['readable']}\n"
-                f"  無断で別BGMを使用しません。\n"
-                f"  エラー: {'; '.join(bgm_check['errors'])}"
-            )
-            log.error(msg)
-            _save_final_report(project_dir, execution_info, "FAILED", msg)
-            raise PipelineError(msg)
-
-        log.info(f"  BGM: OK ({bgm_file.name})")
-        bgm_path = bgm_file
+    if preflight["bgm"] and preflight["bgm"]["exists"] and preflight["bgm"]["readable"]:
+        bgm_path = Path(preflight["bgm"]["path"])
     else:
-        log.info("  テストモード: VOICEVOX/BGM必須チェックをスキップ")
-        bgm_file = bgm_path or (config.BGM_DIR / config.BGM_FILE)
-        if bgm_file.exists():
-            bgm_path = bgm_file
-        else:
-            bgm_path = None
-            log.info(f"  BGM未配置: {bgm_file} → BGMなしで続行")
+        bgm_path = None
+        if not test_mode:
+            msg = "本番モード: BGMファイルが利用できません"
+            log.error(msg)
+            _save_final_report(project_dir, execution_info, "FAILED", msg)
+            raise PipelineError(msg)
+        log.info("  BGM未配置 → BGMなしで続行（テストモード）")
+
+    bgm_actually_used = bgm_path is not None and bgm_path.exists()
 
     # === Phase 1: 台本 ===
     log.info("[Phase 1/6] 台本生成...")
@@ -197,6 +194,11 @@ def run_pipeline(
             persons=persons,
         )
 
+    if test_mode:
+        test_prefix = "【テスト用】"
+        if not script["title"].startswith(test_prefix):
+            script["title"] = test_prefix + script["title"]
+
     script_file = save_script(script, dirs["scripts"])
 
     if script.get("rights_status") != "OK":
@@ -207,24 +209,56 @@ def run_pipeline(
         _save_final_report(project_dir, execution_info, "FAILED", msg)
         raise PipelineError(msg)
 
-    # === Phase 2: 音声合成 ===
+    # === Phase 2: 音声合成（尺自動調整ループ付き） ===
     log.info("[Phase 2/6] 音声合成...")
-    try:
-        audio_sections = synthesize_sections(
-            script["sections"], dirs["audio"],
-            speed=config.VOICEVOX_SPEED,
-            test_mode=test_mode,
-        )
-    except VOICEVOXNotAvailableError as e:
-        log.error(str(e))
-        _save_final_report(project_dir, execution_info, "FAILED", str(e))
-        raise PipelineError(str(e))
 
-    if not audio_sections:
-        msg = "音声生成に失敗しました。"
-        log.error(msg)
-        _save_final_report(project_dir, execution_info, "FAILED", msg)
-        raise PipelineError(msg)
+    vc = config.VIDEO_LONG if video_format == "long" else config.VIDEO_SHORTS
+    if video_format == "shorts":
+        dur_target_max = config.SHORTS_TARGET_MAX
+    else:
+        dur_target_max = vc["duration_max"]
+    dur_min = vc["duration_min"]
+    max_retries = config.DURATION_ADJUST_MAX_RETRIES
+
+    audio_sections = None
+    total_audio_dur = 0.0
+
+    for attempt in range(max_retries + 1):
+        try:
+            audio_sections = synthesize_sections(
+                script["sections"], dirs["audio"],
+                speed=config.VOICEVOX_SPEED,
+                test_mode=test_mode,
+            )
+        except VOICEVOXNotAvailableError as e:
+            log.error(str(e))
+            _save_final_report(project_dir, execution_info, "FAILED", str(e))
+            raise PipelineError(str(e))
+
+        if not audio_sections:
+            msg = "音声生成に失敗しました。"
+            log.error(msg)
+            _save_final_report(project_dir, execution_info, "FAILED", msg)
+            raise PipelineError(msg)
+
+        total_audio_dur = sum(s["duration"] for s in audio_sections)
+        log.info(f"  音声合成 試行{attempt + 1}: {total_audio_dur:.1f}秒")
+
+        if total_audio_dur <= dur_target_max:
+            break
+
+        if attempt < max_retries:
+            log.info(f"  尺超過 ({total_audio_dur:.1f}秒 > {dur_target_max}秒) → 台本短縮 試行{attempt + 2}")
+            execution_info["duration_adjustments"] = attempt + 1
+            script = shorten_script_for_duration(script, dur_target_max, total_audio_dur)
+
+            deleted = _delete_zero_kb_files(dirs["audio"])
+            if deleted > 0:
+                log.info(f"  0KBファイル{deleted}件削除")
+            for f in dirs["audio"].glob("*.wav"):
+                f.unlink(missing_ok=True)
+        else:
+            log.warning(f"  尺調整{max_retries}回試行後も超過: {total_audio_dur:.1f}秒")
 
     tts_info = audio_sections[0]
     execution_info["tts_engine"] = tts_info.get("tts_engine")
@@ -232,11 +266,12 @@ def run_pipeline(
     execution_info["tts_speaker_name"] = tts_info.get("tts_speaker_name")
     execution_info["tts_speed"] = tts_info.get("tts_speed")
 
-    total_audio_dur = sum(s["duration"] for s in audio_sections)
     log.info(f"  総音声時間: {total_audio_dur:.1f}秒")
     log.info(f"  TTSエンジン: {execution_info['tts_engine']}")
     log.info(f"  話者: {execution_info['tts_speaker_name']} (ID={execution_info['tts_speaker_id']})")
     log.info(f"  速度: {execution_info['tts_speed']}")
+    if execution_info["duration_adjustments"] > 0:
+        log.info(f"  尺調整回数: {execution_info['duration_adjustments']}")
 
     # === Phase 3: 字幕生成 ===
     log.info("[Phase 3/6] 字幕生成...")
@@ -250,7 +285,6 @@ def run_pipeline(
 
     # === Phase 4: 画像準備 ===
     log.info("[Phase 4/6] 画像準備...")
-    vc = config.VIDEO_LONG if video_format == "long" else config.VIDEO_SHORTS
     image_sections, excluded_materials = prepare_section_images(
         script["sections"], dirs["images"], vc, materials=materials,
     )
@@ -267,15 +301,21 @@ def run_pipeline(
     create_title_card(script["title"], title_card, vc["width"], vc["height"])
 
     credits_path = project_dir / "credits.txt"
-    generate_credits_file(image_sections, excluded_materials, credits_path)
+    generate_credits_file(
+        image_sections, excluded_materials, credits_path,
+        bgm_used=bgm_actually_used,
+    )
 
     # === Phase 5: 動画合成 ===
     log.info("[Phase 5/6] 動画合成...")
     final_mp4 = dirs["final"] / f"{project_name}.mp4"
 
-    if bgm_path and bgm_path.exists():
+    if bgm_actually_used:
         execution_info["bgm_file"] = str(bgm_path)
+        execution_info["bgm_mixed"] = True
         log.info(f"  BGM: {bgm_path.name} ({config.BGM_CREDIT})")
+    else:
+        log.info("  BGM: なし")
 
     compose_video(
         audio_sections=audio_sections,
@@ -283,12 +323,28 @@ def run_pipeline(
         srt_path=srt_path,
         output_path=final_mp4,
         video_format=video_format,
-        bgm_path=bgm_path,
+        bgm_path=bgm_path if bgm_actually_used else None,
     )
 
-    # === Phase 6: 品質チェック ===
+    # 0KBファイル削除
+    deleted_zero = _delete_zero_kb_files(project_dir)
+    if deleted_zero > 0:
+        log.info(f"  0KBファイル{deleted_zero}件を削除")
+
+    # === Phase 6: 品質チェック（厳格版） ===
     log.info("[Phase 6/6] 品質チェック...")
-    qc = verify_video(final_mp4, video_format)
+
+    zero_files = scan_zero_kb_files(project_dir)
+
+    qc = verify_video(
+        final_mp4,
+        video_format=video_format,
+        test_mode=test_mode,
+        tts_engine=execution_info["tts_engine"],
+        bgm_mixed=bgm_actually_used,
+        zero_kb_count=len(zero_files),
+        excluded_review_ng=len(excluded_materials),
+    )
     print_report(qc)
 
     for c in qc["checks"]:
@@ -301,15 +357,19 @@ def run_pipeline(
     screenshots = capture_screenshots(final_mp4, dirs["screenshots"])
     log.info(f"  スクリーンショット: {len(screenshots)}枚")
 
-    zero_files = scan_zero_kb_files(project_dir)
     if zero_files:
         log.warning(f"  0KBファイル検出: {len(zero_files)}件")
         for zf in zero_files:
             log.warning(f"    - {zf['path']}")
 
     desc_path = project_dir / "description.txt"
+    desc_text = script.get("description", "")
+    if not bgm_actually_used and config.BGM_CREDIT in desc_text:
+        desc_text = desc_text.replace(f"{config.BGM_CREDIT}\n\n", "")
+        desc_text = desc_text.replace(f"{config.BGM_CREDIT}\n", "")
+        desc_text = desc_text.replace(config.BGM_CREDIT, "")
     with open(desc_path, "w", encoding="utf-8") as f:
-        f.write(script.get("description", ""))
+        f.write(desc_text)
 
     rights_path = project_dir / "rights_report.md"
     _generate_rights_report(rights_path, image_sections, excluded_materials, materials)
@@ -319,10 +379,11 @@ def run_pipeline(
         summary_path, execution_info, qc, sub_check,
         audio_sections, image_sections, excluded_materials,
         zero_files, screenshots, final_mp4, srt_path,
+        bgm_actually_used,
     )
 
     execution_info["completed_at"] = datetime.now().isoformat()
-    overall_pass = qc["passed"] and not qc.get("errors")
+    overall_pass = qc["passed"]
     status = "PASSED" if overall_pass else "FAILED"
 
     _save_final_report(project_dir, execution_info, status)
@@ -334,8 +395,10 @@ def run_pipeline(
     log.info(f"  SRT: {srt_path}")
     log.info(f"  概要欄: {desc_path}")
     log.info(f"  品質: {status}")
-    log.info(f"  モード: {'テスト' if test_mode else '本番'}")
+    log.info(f"  モード: {'テスト（TEST ONLY）' if test_mode else '本番'}")
     log.info(f"  TTS: {execution_info['tts_engine']}")
+    if test_mode:
+        log.info("  ※ TEST ONLY: このファイルは本番投稿には使用できません")
     log.info("=" * 60)
     log.info("※ 最終判断・台本確定・投稿判断は荒木が行います。自動投稿は行いません。")
 
@@ -405,15 +468,18 @@ def _generate_summary(
     audio_sections: list[dict], image_sections: list[dict],
     excluded: list[dict], zero_files: list[dict],
     screenshots: list[Path], mp4_path: Path, srt_path: Path,
+    bgm_used: bool = False,
 ):
     lines = ["# 動画製作サマリー", ""]
-    lines.append(f"## 基本情報")
+    lines.append("## 基本情報")
     lines.append(f"- プロジェクト: {info.get('project_name', '')}")
     lines.append(f"- モード: {info.get('mode', '')}")
     lines.append(f"- テーマ: {info.get('topic', '')}")
     lines.append(f"- タイトル: {info.get('title', '')}")
     lines.append(f"- フォーマット: {info.get('video_format', '')}")
     lines.append(f"- 開始: {info.get('started_at', '')}")
+    if info.get("duration_adjustments", 0) > 0:
+        lines.append(f"- 尺調整回数: {info['duration_adjustments']}")
     lines.append("")
 
     lines.append("## 使用音声")
@@ -424,8 +490,11 @@ def _generate_summary(
     lines.append("")
 
     lines.append("## BGM")
-    lines.append(f"- ファイル: {info.get('bgm_file', '未使用')}")
-    lines.append(f"- クレジット: {config.BGM_CREDIT}")
+    if bgm_used:
+        lines.append(f"- ファイル: {info.get('bgm_file', '不明')}")
+        lines.append(f"- クレジット: {config.BGM_CREDIT}")
+    else:
+        lines.append("- 使用: なし")
     lines.append("")
 
     lines.append("## 素材")
@@ -438,14 +507,14 @@ def _generate_summary(
 
     lines.append("## 品質チェック結果")
     for c in qc.get("checks", []):
-        icon = "✓" if c["ok"] else "✗"
-        lines.append(f"- {icon} {c['name']}: {c['detail']}")
+        icon = "OK" if c["ok"] else "NG"
+        lines.append(f"- [{icon}] {c['name']}: {c['detail']}")
     lines.append("")
 
     lines.append("## 字幕検査")
     for c in sub_check.get("checks", []):
-        icon = "✓" if c["ok"] else "✗"
-        lines.append(f"- {icon} {c['name']}: {c['detail']}")
+        icon = "OK" if c["ok"] else "NG"
+        lines.append(f"- [{icon}] {c['name']}: {c['detail']}")
     lines.append("")
 
     if zero_files:
@@ -481,7 +550,7 @@ def main():
     parser.add_argument("--bgm", help="BGMファイルパス")
     parser.add_argument("--output-dir", help="出力ディレクトリ")
     parser.add_argument("--test-mode", action="store_true",
-                        help="テストモード: espeak-ng/gTTSフォールバック許可、BGM任意")
+                        help="テストモード: espeak-ngフォールバック許可、BGM任意")
     parser.add_argument("--materials-json", help="素材定義JSONファイル")
 
     args = parser.parse_args()
@@ -522,7 +591,7 @@ def main():
         sys.exit(1)
 
     if result.get("overall_result") != "PASSED":
-        print("[WARNING] 品質チェックに一部不合格があります。")
+        print("[WARNING] 品質チェックに不合格項目があります。")
         sys.exit(1)
 
 

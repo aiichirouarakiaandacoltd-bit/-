@@ -1,9 +1,7 @@
 """音声合成エンジン
 
 本番モード: VOICEVOX（青山龍星）必須。利用不可ならエラー終了。
-テストモード (--test-mode): espeak-ng/gTTSフォールバック許可。
-
-最終運用ではVOICEVOXに統一すること。
+テストモード (--test-mode): espeak-ngフォールバック許可。
 """
 
 import subprocess
@@ -34,14 +32,69 @@ def _voicevox_available() -> bool:
         return False
 
 
+def resolve_speaker_id() -> dict:
+    """VOICEVOXから青山龍星のstyle IDを動的に取得する。"""
+    result = {
+        "speaker_name": config.VOICEVOX_SPEAKER_NAME,
+        "style_name": config.VOICEVOX_STYLE_NAME,
+        "style_id": None,
+        "voicevox_version": None,
+        "found": False,
+        "errors": [],
+    }
+
+    try:
+        r = requests.get(f"{config.VOICEVOX_HOST}/version", timeout=3)
+        if r.status_code == 200:
+            result["voicevox_version"] = r.text.strip().strip('"')
+    except Exception:
+        pass
+
+    try:
+        r = requests.get(f"{config.VOICEVOX_HOST}/speakers", timeout=5)
+        if r.status_code != 200:
+            result["errors"].append(f"speakers API: HTTP {r.status_code}")
+            return result
+    except Exception as e:
+        result["errors"].append(f"speakers API接続不可: {e}")
+        return result
+
+    speakers = r.json()
+    target_name = config.VOICEVOX_SPEAKER_NAME
+    target_style = config.VOICEVOX_STYLE_NAME
+
+    for sp in speakers:
+        if sp.get("name") == target_name:
+            for style in sp.get("styles", []):
+                if style.get("name") == target_style:
+                    result["style_id"] = style["id"]
+                    result["found"] = True
+                    return result
+            styles = [s.get("name") for s in sp.get("styles", [])]
+            result["errors"].append(
+                f"話者「{target_name}」にスタイル「{target_style}」がありません。"
+                f" 利用可能: {styles}"
+            )
+            return result
+
+    all_names = [sp.get("name") for sp in speakers]
+    result["errors"].append(
+        f"話者「{target_name}」が見つかりません。別話者への自動変更は行いません。"
+        f" 利用可能話者: {all_names[:10]}"
+    )
+    return result
+
+
 def verify_voicevox() -> dict:
     """VOICEVOX接続確認。本番モードの事前チェック用。"""
     result = {
         "api_reachable": False,
         "speakers_fetched": False,
         "target_speaker_found": False,
-        "target_speaker_id": config.VOICEVOX_SPEAKER_ID,
-        "target_speaker_name": config.VOICEVOX_SPEAKER_NAME,
+        "speaker_name": config.VOICEVOX_SPEAKER_NAME,
+        "style_name": config.VOICEVOX_STYLE_NAME,
+        "style_id": None,
+        "voicevox_version": None,
         "test_synthesis_ok": False,
         "test_wav_exists": False,
         "test_wav_nonzero": False,
@@ -57,35 +110,18 @@ def verify_voicevox() -> dict:
             result["errors"].append(f"VOICEVOX API応答: HTTP {r.status_code}")
             return result
         result["api_reachable"] = True
+        result["speakers_fetched"] = True
     except Exception as e:
         result["errors"].append(f"VOICEVOX API接続不可: {config.VOICEVOX_HOST} ({e})")
         return result
 
-    try:
-        speakers = r.json()
-        result["speakers_fetched"] = True
-
-        found = False
-        for sp in speakers:
-            for style in sp.get("styles", []):
-                if style.get("id") == config.VOICEVOX_SPEAKER_ID:
-                    found = True
-                    actual_name = sp.get("name", "")
-                    result["actual_speaker_name"] = actual_name
-                    break
-            if found:
-                break
-
-        if not found:
-            result["errors"].append(
-                f"青山龍星 (speaker_id={config.VOICEVOX_SPEAKER_ID}) が見つかりません。"
-                f"別話者への自動変更は行いません。"
-            )
-            return result
-        result["target_speaker_found"] = True
-    except Exception as e:
-        result["errors"].append(f"話者一覧解析エラー: {e}")
+    sp_info = resolve_speaker_id()
+    result["voicevox_version"] = sp_info["voicevox_version"]
+    if not sp_info["found"]:
+        result["errors"].extend(sp_info["errors"])
         return result
+    result["target_speaker_found"] = True
+    result["style_id"] = sp_info["style_id"]
 
     import tempfile
     test_text = "テスト音声です"
@@ -93,7 +129,7 @@ def verify_voicevox() -> dict:
         test_path = Path(tmp.name)
 
     try:
-        synthesize_voicevox(test_text, test_path)
+        synthesize_voicevox(test_text, test_path, speaker_id=sp_info["style_id"])
         result["test_synthesis_ok"] = True
 
         if test_path.exists():
@@ -114,14 +150,26 @@ def verify_voicevox() -> dict:
     return result
 
 
-def synthesize_voicevox(text: str, output_path: Path, speed: float | None = None) -> Path:
+def synthesize_voicevox(
+    text: str, output_path: Path,
+    speed: float | None = None,
+    speaker_id: int | None = None,
+) -> Path:
     host = config.VOICEVOX_HOST
-    speaker = config.VOICEVOX_SPEAKER_ID
+    sid = speaker_id
+    if sid is None:
+        sp_info = resolve_speaker_id()
+        if not sp_info["found"]:
+            raise SpeakerNotFoundError(
+                f"青山龍星が見つかりません: {sp_info['errors']}"
+            )
+        sid = sp_info["style_id"]
+
     spd = speed or config.VOICEVOX_SPEED
 
     r = requests.post(
         f"{host}/audio_query",
-        params={"text": text, "speaker": speaker},
+        params={"text": text, "speaker": sid},
         timeout=30,
     )
     r.raise_for_status()
@@ -130,7 +178,7 @@ def synthesize_voicevox(text: str, output_path: Path, speed: float | None = None
 
     r2 = requests.post(
         f"{host}/synthesis",
-        params={"speaker": speaker},
+        params={"speaker": sid},
         json=query,
         timeout=120,
     )
@@ -162,50 +210,36 @@ def synthesize_espeak(text: str, output_path: Path, speed: float | None = None) 
     return wav_path
 
 
-def synthesize_gtts(text: str, output_path: Path) -> Path:
-    from gtts import gTTS
-
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    mp3_path = output_path.with_suffix(".mp3")
-    tts = gTTS(text=text, lang="ja", slow=False)
-    tts.save(str(mp3_path))
-
-    wav_path = output_path.with_suffix(".wav")
-    subprocess.run(
-        ["ffmpeg", "-y", "-i", str(mp3_path), "-ar", "24000", "-ac", "1", str(wav_path)],
-        capture_output=True, check=True,
-    )
-    mp3_path.unlink(missing_ok=True)
-
-    if output_path.suffix == ".wav":
-        return wav_path
-    final_path = output_path
-    if final_path != wav_path:
-        wav_path.rename(final_path)
-    return final_path
-
-
 def synthesize(
     text: str, output_path: Path, speed: float | None = None,
-    test_mode: bool = False,
+    test_mode: bool = False, speaker_id: int | None = None,
 ) -> dict:
     """音声合成。戻り値は使用エンジン情報を含むdict。"""
     info = {
         "engine": None,
         "speaker_id": None,
         "speaker_name": None,
+        "style_name": None,
         "speed": speed or config.VOICEVOX_SPEED,
         "output_path": str(output_path),
     }
 
     if _voicevox_available():
-        info["engine"] = "VOICEVOX"
-        info["speaker_id"] = config.VOICEVOX_SPEAKER_ID
-        info["speaker_name"] = config.VOICEVOX_SPEAKER_NAME
-        print(f"[TTS] VOICEVOX使用（{config.VOICEVOX_SPEAKER_NAME}）")
-        synthesize_voicevox(text, output_path, speed)
-        return info
+        sp_info = resolve_speaker_id()
+        if sp_info["found"]:
+            sid = speaker_id or sp_info["style_id"]
+            info["engine"] = "VOICEVOX"
+            info["speaker_id"] = sid
+            info["speaker_name"] = config.VOICEVOX_SPEAKER_NAME
+            info["style_name"] = sp_info["style_name"]
+            info["voicevox_version"] = sp_info.get("voicevox_version")
+            print(f"[TTS] VOICEVOX使用（{config.VOICEVOX_SPEAKER_NAME}）")
+            synthesize_voicevox(text, output_path, speed, speaker_id=sid)
+            return info
+        elif not test_mode:
+            raise SpeakerNotFoundError(
+                f"本番モード: {sp_info['errors']}"
+            )
 
     if not test_mode:
         raise VOICEVOXNotAvailableError(
@@ -215,18 +249,7 @@ def synthesize(
             "  テストモードで実行するには --test-mode を指定してください。"
         )
 
-    try:
-        print("[TTS] VOICEVOX未検出 → gTTSフォールバック（テストモード）")
-        synthesize_gtts(text, output_path)
-        info["engine"] = "gTTS"
-        info["speaker_name"] = "gTTS-ja"
-        return info
-    except Exception:
-        for ext in [".mp3"]:
-            leftover = output_path.with_suffix(ext)
-            leftover.unlink(missing_ok=True)
-
-    print("[TTS] gTTS不可 → espeak-ngフォールバック（テストモード）")
+    print("[TTS] [TEST ONLY] espeak-ngフォールバック（テストモード・投稿不可）")
     synthesize_espeak(text, output_path, speed)
     info["engine"] = "espeak-ng"
     info["speaker_name"] = "espeak-ng-ja"
@@ -238,6 +261,7 @@ def synthesize_sections(
     output_dir: Path,
     speed: float | None = None,
     test_mode: bool = False,
+    speaker_id: int | None = None,
 ) -> list[dict]:
     output_dir.mkdir(parents=True, exist_ok=True)
     results = []
@@ -251,7 +275,10 @@ def synthesize_sections(
         out_path = output_dir / filename
 
         print(f"[TTS] セクション {i}: {text[:30]}...")
-        tts_info = synthesize(text, out_path, speed, test_mode=test_mode)
+        tts_info = synthesize(
+            text, out_path, speed,
+            test_mode=test_mode, speaker_id=speaker_id,
+        )
 
         duration = get_audio_duration(out_path)
         results.append({
@@ -263,6 +290,7 @@ def synthesize_sections(
             "tts_engine": tts_info["engine"],
             "tts_speaker_id": tts_info.get("speaker_id"),
             "tts_speaker_name": tts_info.get("speaker_name"),
+            "tts_style_name": tts_info.get("style_name"),
             "tts_speed": tts_info.get("speed"),
         })
         print(f"[TTS]   → {duration:.1f}秒 ({tts_info['engine']})")
@@ -300,34 +328,3 @@ def _get_audio_info(path: Path) -> dict:
         }
     except Exception:
         return {}
-
-
-def concatenate_audio(audio_files: list[Path], output_path: Path, pause_ms: int = 500) -> Path:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-
-    list_file = output_path.parent / "_concat_list.txt"
-    silence_path = output_path.parent / "_silence.wav"
-
-    subprocess.run(
-        ["ffmpeg", "-y", "-f", "lavfi", "-i",
-         f"anullsrc=r=24000:cl=mono:d={pause_ms/1000}",
-         "-t", str(pause_ms / 1000), str(silence_path)],
-        capture_output=True, check=True,
-    )
-
-    with open(list_file, "w") as f:
-        for i, audio in enumerate(audio_files):
-            f.write(f"file '{audio.resolve()}'\n")
-            if i < len(audio_files) - 1:
-                f.write(f"file '{silence_path.resolve()}'\n")
-
-    subprocess.run(
-        ["ffmpeg", "-y", "-f", "concat", "-safe", "0",
-         "-i", str(list_file), "-c", "copy", str(output_path)],
-        capture_output=True, check=True,
-    )
-
-    list_file.unlink(missing_ok=True)
-    silence_path.unlink(missing_ok=True)
-
-    return output_path

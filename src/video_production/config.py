@@ -7,6 +7,7 @@ ASSETS_DIR = ROOT / "assets"
 BGM_DIR = ASSETS_DIR / "bgm"
 FONTS_DIR = ASSETS_DIR / "fonts"
 OUTPUTS_DIR = ROOT / "outputs" / "videos"
+OUTPUTS_TEST_DIR = ROOT / "outputs" / "videos_test"
 CONFIG_DIR = ROOT / "config"
 DATA_DIR = ROOT / "data" / "processed"
 
@@ -24,14 +25,18 @@ VIDEO_SHORTS = {
     "height": 1920,
     "fps": 30,
     "duration_min": 45,
-    "duration_max": 60,
+    "duration_max": 59.5,
     "format": "shorts",
 }
 
-VOICEVOX_SPEAKER_ID = 13  # 青山龍星
 VOICEVOX_SPEAKER_NAME = "青山龍星"
+VOICEVOX_STYLE_NAME = "ノーマル"
 VOICEVOX_SPEED = 0.88
 VOICEVOX_HOST = "http://127.0.0.1:50021"
+
+DURATION_ADJUST_MAX_RETRIES = 3
+SHORTS_TARGET_MIN = 48
+SHORTS_TARGET_MAX = 58
 
 BGM_FILE = "UNL1337.wav"
 BGM_CREDIT = "楽曲提供：箕輪レコーズ"

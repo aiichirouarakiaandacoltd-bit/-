@@ -225,11 +225,13 @@ def generate_credits_file(
     image_sections: list[dict],
     excluded: list[dict],
     output_path: Path,
+    bgm_used: bool = False,
 ) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     lines = [f"# クレジット情報 - {config.CHANNEL_NAME}", ""]
-    lines.append(f"{config.BGM_CREDIT}")
-    lines.append("")
+    if bgm_used:
+        lines.append(f"{config.BGM_CREDIT}")
+        lines.append("")
 
     credits_needed = [s for s in image_sections if s.get("credit_required")]
     if credits_needed:

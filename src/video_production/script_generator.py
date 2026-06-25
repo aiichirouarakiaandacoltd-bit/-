@@ -168,13 +168,15 @@ def _build_description(
     title: str,
     persons: list[str] | None,
     source_urls: list[str] | None,
+    bgm_used: bool = True,
 ) -> str:
     lines = [title, ""]
     if persons:
         lines.append(f"関連人物: {'、'.join(persons)}")
         lines.append("")
-    lines.append(f"{config.BGM_CREDIT}")
-    lines.append("")
+    if bgm_used:
+        lines.append(f"{config.BGM_CREDIT}")
+        lines.append("")
     if source_urls:
         lines.append("参考・出典:")
         for url in source_urls:
@@ -191,6 +193,51 @@ def _build_tags(topic: str, persons: list[str] | None) -> list[str]:
     keywords = [w for w in topic.split() if len(w) > 1]
     tags.extend(keywords[:5])
     return list(dict.fromkeys(tags))
+
+
+def shorten_script_for_duration(
+    script: dict, target_max: float, current_duration: float,
+) -> dict:
+    """台本テキストを段階的に短縮して目標尺に近づける。"""
+    if current_duration <= target_max:
+        return script
+
+    ratio = target_max / current_duration
+    sections = script["sections"]
+
+    body_sections = [s for s in sections if s.get("type") == "body"]
+
+    for sec in body_sections:
+        text = sec["text"]
+        sentences = re.split(r"(?<=[。])", text)
+        sentences = [s for s in sentences if s.strip()]
+        if len(sentences) <= 1:
+            continue
+        seen = set()
+        unique = []
+        for s in sentences:
+            if s.strip() not in seen:
+                seen.add(s.strip())
+                unique.append(s)
+        if len(unique) < len(sentences):
+            sec["text"] = "".join(unique)
+
+    if ratio < 0.85:
+        for sec in body_sections:
+            text = sec["text"]
+            sentences = re.split(r"(?<=[。])", text)
+            sentences = [s for s in sentences if s.strip()]
+            keep_count = max(1, int(len(sentences) * ratio))
+            sec["text"] = "".join(sentences[:keep_count])
+
+    for sec in sections:
+        if sec.get("type") == "ending":
+            text = sec["text"]
+            if len(text) > 30:
+                sec["text"] = "ご視聴ありがとうございます。チャンネル登録をお願いいたします。"
+
+    script["sections"] = sections
+    return script
 
 
 def save_script(script: dict, output_dir: Path) -> Path:
