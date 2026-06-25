@@ -28,6 +28,7 @@ from src.voicevox import (
 from src.materials import (
     generate_all_visuals, filter_ok_materials,
     save_materials_json, generate_rights_report,
+    validate_all_materials,
 )
 from src.subtitle import generate_srt
 from src.composer import (
@@ -121,6 +122,16 @@ def build_video(script_data, video_type, test_mode, logger, bgm_used_ref):
     ok_materials, excluded = filter_ok_materials(all_materials)
     if excluded:
         logger.warning(f"[{video_type}] Excluded {len(excluded)} non-OK materials")
+
+    rights_ok, violations = validate_all_materials(all_materials)
+    if not rights_ok:
+        for v in violations:
+            logger.error(f"[{video_type}] Rights violation: {v}")
+        if not test_mode:
+            raise RuntimeError(
+                f"Production mode: {len(violations)} material rights violation(s). "
+                "Fix rights_status or remove prohibited materials before proceeding."
+            )
 
     materials_path = out_dir / "materials.json"
     save_materials_json(all_materials, materials_path)

@@ -145,7 +145,24 @@ def check_mode_separation(test_mode):
             "detail": f"test={test_dir}, prod_long={prod_long}, prod_shorts={prod_shorts}"}
 
 
-def run_preflight(test_mode=False):
+def check_materials_rights(materials=None):
+    """Validate material rights for production use (10-point check)."""
+    if materials is None:
+        return {"name": "Material rights", "ok": True,
+                "detail": "素材未提供（ビルド時に検証）"}
+
+    from src.materials import validate_all_materials
+    ok, violations = validate_all_materials(materials)
+    if ok:
+        return {"name": "Material rights", "ok": True,
+                "detail": f"{len(materials)}素材、全てOK"}
+    detail = f"{len(violations)}件の違反: " + "; ".join(violations[:5])
+    if len(violations) > 5:
+        detail += f" ... 他{len(violations) - 5}件"
+    return {"name": "Material rights", "ok": False, "detail": detail}
+
+
+def run_preflight(test_mode=False, materials=None):
     checks = [
         check_python(),
         check_packages(),
@@ -159,6 +176,7 @@ def run_preflight(test_mode=False):
         check_output_writable(),
         check_zero_kb_inputs(),
         check_mode_separation(test_mode),
+        check_materials_rights(materials),
     ]
 
     all_ok = True

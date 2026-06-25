@@ -22,6 +22,70 @@ def create_material_record(file_path, source_name, source_url="",
     }
 
 
+PROHIBITED_IMAGE_TYPES = [
+    "ai_generated_royal_face",
+    "face_composite",
+    "expression_modified",
+    "clothing_modified",
+    "age_modified",
+    "unverified_press_photo",
+]
+
+
+def validate_material(material):
+    """Validate a single material record. Returns list of violation strings."""
+    violations = []
+    fp = material.get("file_path", "unknown")
+
+    if not material.get("source_name"):
+        violations.append(f"{fp}: source_name（出典・取得元）が未記録")
+
+    if not material.get("rights_status"):
+        violations.append(f"{fp}: rights_statusが未記録")
+    elif material["rights_status"] not in ("OK", "REVIEW", "NG"):
+        violations.append(
+            f"{fp}: rights_statusが不正値 '{material['rights_status']}'"
+            " (OK/REVIEW/NGのみ許可)"
+        )
+
+    if material.get("rights_status") != "OK":
+        violations.append(
+            f"{fp}: rights_status='{material.get('rights_status')}'"
+            " — 完成MP4にはOKのみ使用可"
+        )
+
+    if material.get("generated_by_ai") and material.get("image_type") in (
+        "royal_portrait", "royal_face", "ai_generated_royal_face",
+    ):
+        violations.append(f"{fp}: 皇族・王族のAI生成人物画像は使用禁止")
+
+    if material.get("image_type") in PROHIBITED_IMAGE_TYPES:
+        violations.append(
+            f"{fp}: 禁止素材種別 '{material['image_type']}'"
+            "（顔合成/表情変更/服装変更/年齢変更/権利不明報道写真）"
+        )
+
+    if material.get("image_type") == "press_photo" and not material.get("source_url"):
+        violations.append(f"{fp}: 報道写真にsource_url（権利元URL）が未記録")
+
+    if material.get("image_type") in ("press_photo", "archive_photo"):
+        if not material.get("source_name") or not material.get("source_url"):
+            violations.append(
+                f"{fp}: 実在記録写真には出典（source_name）と"
+                "取得元URL（source_url）が必須"
+            )
+
+    return violations
+
+
+def validate_all_materials(materials):
+    """Validate all materials for production use. Returns (ok, violations_list)."""
+    all_violations = []
+    for m in materials:
+        all_violations.extend(validate_material(m))
+    return len(all_violations) == 0, all_violations
+
+
 def filter_ok_materials(materials):
     ok = [m for m in materials if m["rights_status"] == "OK"]
     excluded = [m for m in materials if m["rights_status"] != "OK"]
