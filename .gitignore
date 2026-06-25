@@ -2,7 +2,10 @@ __pycache__/
 *.pyc
 output/
 final_videoTEMP_MPY_wvf_snd.mp4
-assets/bgm/
+assets/bgm/**/*.wav
+assets/bgm/**/*.mp3
+assets/bgm/**/*.ogg
+assets/bgm/**/*.flac
 videos/
 logs/
 

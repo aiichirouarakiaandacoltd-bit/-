@@ -1,0 +1,20 @@
+{
+  "version": "1.0",
+  "note": "BGMファイルの権利情報レジストリ。新しいBGMを追加する際は必ずここに登録し、allowed_channels を確認すること。",
+  "bgm_files": [
+    {
+      "file_name": "UNL1337.wav",
+      "source": "箕輪レコーズ",
+      "license": "フリー音源（商用利用可）",
+      "allowed_channels": ["imperial"],
+      "commercial_use": true,
+      "credit_required": true,
+      "credit_text": "楽曲提供：箕輪レコーズ",
+      "note": "昭和・平成チャンネルへの使用は利用範囲を荒木が確認すること。確認前は allowed_channels に showa_heisei を追加しないこと。"
+    }
+  ],
+  "showa_heisei_bgm_status": {
+    "status": "未確認",
+    "note": "昭和・平成チャンネル用BGMは権利確認中。assets/bgm/showa_heisei/ にファイルを配置し、このレジストリに登録してから使用すること。"
+  }
+}

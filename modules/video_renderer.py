@@ -294,6 +294,7 @@ def render_video(
     subtitle_entries: list[dict],
     bgm_path: str | None,
     output_path: str,
+    srt_path: str | None = None,
 ) -> str:
     W, H = VIDEO_SPEC["width"], VIDEO_SPEC["height"]
     FPS = VIDEO_SPEC["fps"]
@@ -367,7 +368,9 @@ def render_video(
         import shutil
         shutil.copy(video_no_audio, merged_no_sub)
 
-    srt_path = str(Path(output_path).parent / "subtitle.srt")
+    # SRT パスの決定: 明示的に指定 → output の親 / subtitle.srt の順で探す
+    if not srt_path:
+        srt_path = str(Path(output_path).parent / "subtitle.srt")
     if os.path.exists(srt_path):
         print(f"\n  [5] 字幕を動画に焼き込み中...")
         print(f"     出力先: {output_path}")

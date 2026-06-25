@@ -1,6 +1,10 @@
 """
-技術検証用 MP4 生成テスト
-VOICEVOX・BGM が使用できない環境で、全パイプラインを検証する。
+技術検証用 MP4 生成テスト（モジュール直接呼び出し版）
+
+NOTE: create_video.py を使う場合は以下のコマンドを推奨:
+  python create_video.py --channel showa_heisei --theme "テーマ" --test-mode
+
+本スクリプトは個別モジュールのユニットテスト用途。
 
 使用条件:
   - VOICEVOX: 未接続 → scipy による技術検証用サイン波 WAV を生成
@@ -9,7 +13,7 @@ VOICEVOX・BGM が使用できない環境で、全パイプラインを検証�
   - Pillow: スライド生成に使用
   - Anthropic API: 不要（ビルトインスクリプトを使用）
 
-本番投稿には使用しないこと。音声は VOICEVOX の技術検証代替音声。
+⚠️  TEST ONLY / 投稿不可
 """
 
 import os
