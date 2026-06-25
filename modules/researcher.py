@@ -25,6 +25,8 @@ PRIORITY_SOURCES = [
 ]
 
 # Built-in knowledge base for test mode / offline fallback
+# evidence_type: "direct" = 布かけ習慣の直接的根拠, "background" = テレビ普及等の周辺背景
+# usable_in_script_as: CONFIRMED+出典あり→事実断定, PARTIAL→限定表現のみ, UNCONFIRMED/REJECTED→不可
 KNOWLEDGE_BASE = {
     "テレビ_布": {
         "facts": [
@@ -32,28 +34,39 @@ KNOWLEDGE_BASE = {
                 "fact_id": "TV_CLOTH_001",
                 "claim": "1950年代後半〜1960年代、白黒テレビの価格は一般家庭の月収3〜6ヶ月分に相当した",
                 "status": "PARTIAL",
-                "source_type": "一般知識・経済史",
-                "source_name": "家電普及史に関する一般的知識",
+                "source_type": "経済史",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国",
                 "period_scope": "昭和30年代〜40年代（1955-1970頃）",
                 "usable_in_script": True,
-                "notes": "具体的な価格は年代・機種により異なる。一般的に月収数ヶ月分とされる",
+                "script_expression": "limited",
+                "notes": "具体的な価格は年代・機種により異なる。出典URLなし。"
+                         "限定表現で使用：「月収数ヶ月分に相当したとも言われています」",
             },
             {
                 "fact_id": "TV_CLOTH_002",
                 "claim": "真空管テレビは発熱が大きく、ほこりが静電気で付着しやすかった。"
-                         "布カバーはほこりよけとして実用的だった",
+                         "布カバーはほこりよけとしての実用面もあったと考えられる",
                 "status": "PARTIAL",
-                "source_type": "技術史・一般知識",
-                "source_name": "テレビ技術史に関する一般的知識",
+                "source_type": "技術史",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和20年代後半〜40年代（1953-1970頃）",
                 "usable_in_script": True,
-                "notes": "真空管テレビの発熱と静電気によるほこり付着は技術的事実として広く知られている",
+                "script_expression": "limited",
+                "notes": "真空管の発熱と静電気は技術的に妥当だが、布かけ理由として"
+                         "断定できる一次資料の確認は未実施。"
+                         "限定表現：「ほこりよけも一因と考えられます」",
             },
             {
                 "fact_id": "TV_CLOTH_003",
@@ -61,41 +74,58 @@ KNOWLEDGE_BASE = {
                          "家具としての位置づけがあった",
                 "status": "PARTIAL",
                 "source_type": "生活文化史",
-                "source_name": "昭和の家庭生活に関する一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国（都市部中心に普及）",
                 "period_scope": "昭和30年代〜50年代（1955-1980頃）",
                 "usable_in_script": True,
-                "notes": "テレビの設置場所は家庭の間取りや地域差がある",
+                "script_expression": "limited",
+                "notes": "テレビの設置場所は家庭の間取りや地域差がある。出典なし。"
+                         "限定表現：「家庭によっては応接間の中心に置かれることもありました」",
             },
             {
                 "fact_id": "TV_CLOTH_004",
                 "claim": "テレビだけでなく、ミシンや電話機にも布カバーをかける習慣があった。"
-                         "高価な物を大切にする文化の表れ",
+                         "高価な物を大切にする意識があったと考えられる",
                 "status": "PARTIAL",
                 "source_type": "生活文化史",
-                "source_name": "昭和の生活習慣に関する一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和全期",
                 "usable_in_script": True,
-                "notes": "布カバー文化は家電に限らず広く存在した",
+                "script_expression": "limited",
+                "notes": "布カバー文化は家電に限らず広く存在したと言われるが"
+                         "体系的な研究資料の確認は未実施。"
+                         "限定表現：「高価な物を大切にする意識も一因と考えられます」",
             },
             {
                 "fact_id": "TV_CLOTH_005",
                 "claim": "テレビの技術は真空管方式からブラウン管（CRT）、"
                          "そして液晶・プラズマへと変遷した",
-                "status": "CONFIRMED",
+                "status": "PARTIAL",
                 "source_type": "技術史",
-                "source_name": "テレビジョン技術の発展史",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国（世界共通の技術変遷）",
                 "period_scope": "昭和28年〜平成期",
                 "usable_in_script": True,
-                "notes": "技術変遷の事実は確立されている",
+                "script_expression": "limited",
+                "notes": "技術変遷自体は公知の事実だが、本ナレッジベースでは"
+                         "出典URL・資料識別情報を保持していないためPARTIAL。"
+                         "出典確認後にCONFIRMEDへ昇格可能",
             },
             {
                 "fact_id": "TV_CLOTH_006",
@@ -103,41 +133,59 @@ KNOWLEDGE_BASE = {
                          "1960年頃に約50%、1964年の東京オリンピック前後で約90%に達した",
                 "status": "PARTIAL",
                 "source_type": "放送史・統計",
-                "source_name": "NHK放送史・総務省統計に基づく一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国",
                 "period_scope": "昭和28年〜40年代",
                 "usable_in_script": True,
-                "notes": "普及率の具体的数値は統計により差異あり。概数として使用可能",
+                "script_expression": "limited",
+                "notes": "NHK放送開始は公知の事実。普及率の数値は統計により差異あり。"
+                         "本番用には総務省統計局またはNHK放送文化研究所の"
+                         "一次資料での確認を推奨。"
+                         "限定表現：「およそ90%に達したとされています」",
             },
             {
                 "fact_id": "TV_CLOTH_007",
                 "claim": "1980年代以降、テレビが安価になり一家に複数台が一般的になると、"
-                         "布カバーをかける習慣は徐々に薄れた",
+                         "布カバーをかける習慣は徐々に薄れたと言われている",
                 "status": "PARTIAL",
                 "source_type": "生活文化史",
-                "source_name": "生活様式の変化に関する一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和50年代後半〜平成初期",
                 "usable_in_script": True,
-                "notes": "布カバー習慣の衰退時期は家庭により異なる",
+                "script_expression": "limited",
+                "notes": "布カバー習慣の衰退時期は家庭により異なる。出典なし。"
+                         "限定表現：「家庭によっては、この頃から布をかけなくなったようです」",
             },
             {
                 "fact_id": "TV_CLOTH_008",
                 "claim": "初期のテレビ受像機は木製キャビネットに収められ、"
                          "高級家具のような外観だった",
-                "status": "CONFIRMED",
+                "status": "PARTIAL",
                 "source_type": "工業デザイン史",
-                "source_name": "家電デザイン史に関する一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国（世界共通の傾向）",
                 "period_scope": "昭和28年〜40年代",
                 "usable_in_script": True,
-                "notes": "初期テレビの木製筐体は実物資料でも確認できる",
+                "script_expression": "limited",
+                "notes": "初期テレビの木製筐体は博物館等の実物資料でも確認できるが、"
+                         "本ナレッジベースでは出典URL未保持のためPARTIAL。"
+                         "国立科学博物館等の資料で確認後にCONFIRMED昇格可能",
             },
             {
                 "fact_id": "TV_CLOTH_009",
@@ -145,13 +193,18 @@ KNOWLEDGE_BASE = {
                          "力道山のプロレス中継が有名な契機となった",
                 "status": "PARTIAL",
                 "source_type": "放送文化史",
-                "source_name": "放送史に関する一般的知識",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "都市部中心",
                 "period_scope": "昭和28年〜30年代前半",
                 "usable_in_script": True,
-                "notes": "街頭テレビの普及状況は地域差が大きい",
+                "script_expression": "limited",
+                "notes": "街頭テレビの普及状況は地域差が大きい。出典なし。"
+                         "限定表現：「街頭テレビが広まるきっかけの一つとされています」",
             },
             {
                 "fact_id": "TV_CLOTH_010",
@@ -159,14 +212,18 @@ KNOWLEDGE_BASE = {
                          "故障は大きな出費を伴った",
                 "status": "UNCONFIRMED",
                 "source_type": "生活文化史",
-                "source_name": "推定（一般的な証言に基づく）",
+                "source_name": "",
                 "source_url": "",
                 "source_date": "",
+                "verified_excerpt": "",
+                "verified_date": "",
+                "evidence_type": "background",
                 "regional_scope": "全国",
                 "period_scope": "昭和30年代〜50年代",
                 "usable_in_script": False,
+                "script_expression": "prohibited",
                 "notes": "当時を知る人の証言として語られるが、"
-                         "体系的な資料での確認は未実施",
+                         "体系的な資料での確認は未実施。台本使用不可",
             },
         ],
     },
@@ -243,12 +300,8 @@ def research_topic(topic, mode="production"):
         logger.warning("インターネット未接続かつ内蔵知識なし: 一般的な構造のみ生成")
         facts = _generate_generic_research_structure(topic)
 
-    # Mark appropriately for test mode
     if mode == "test":
         for fact in facts:
-            if fact["status"] == "CONFIRMED" and not fact.get("source_url"):
-                # Without a verifiable URL, downgrade to PARTIAL
-                pass  # Keep CONFIRMED if the fact is well-established
             if not fact.get("notes"):
                 fact["notes"] = "テストモードで生成"
 
@@ -294,7 +347,8 @@ def _generate_generic_research_structure(topic):
 def fact_check(facts):
     """
     Perform fact-checking on research results.
-    Returns updated facts with verification notes.
+    CONFIRMED requires: source_url AND source_name both non-empty.
+    Without both, downgrade to PARTIAL regardless of content.
     """
     checked = []
     stats = {
@@ -306,22 +360,20 @@ def fact_check(facts):
 
     for fact in facts:
         status = fact.get("status", "UNCONFIRMED")
-        stats[status] = stats.get(status, 0) + 1
 
-        # Cross-check logic
-        if not fact.get("source_url") and status == "CONFIRMED":
-            # Facts without source URLs that are well-established technical
-            # facts can remain CONFIRMED
-            if any(kw in fact.get("claim", "") for kw in
-                   ["技術", "方式", "真空管", "ブラウン管", "液晶"]):
-                pass  # Technical facts are well-established
-            else:
-                # Add a note about source verification
+        if status == "CONFIRMED":
+            has_url = bool(fact.get("source_url", "").strip())
+            has_name = bool(fact.get("source_name", "").strip())
+            if not (has_url and has_name):
+                fact["status"] = "PARTIAL"
+                status = "PARTIAL"
+                fact["script_expression"] = "limited"
                 fact.setdefault("notes", "")
                 if fact["notes"]:
                     fact["notes"] += "。"
-                fact["notes"] += "出典URLの確認を推奨"
+                fact["notes"] += "出典URL・出典名が未確認のためPARTIALへ降格"
 
+        stats[status] = stats.get(status, 0) + 1
         checked.append(fact)
 
     logger.info(
@@ -360,11 +412,19 @@ def write_research_outputs(output_dir, research_results, fact_stats):
             f.write(f"### {fact['fact_id']} [{fact['status']}] (脚本使用: {usable})\n")
             f.write(f"**主張**: {fact['claim']}\n\n")
             f.write(f"- 出典種別: {fact.get('source_type', '不明')}\n")
-            f.write(f"- 出典名: {fact.get('source_name', '不明')}\n")
+            f.write(f"- 出典名: {fact.get('source_name') or '未確認'}\n")
             if fact.get("source_url"):
                 f.write(f"- URL: {fact['source_url']}\n")
+            else:
+                f.write(f"- URL: 未確認\n")
+            f.write(f"- 根拠分類: {fact.get('evidence_type', '不明')}\n")
+            f.write(f"- 脚本表現: {fact.get('script_expression', '不明')}\n")
             f.write(f"- 地域範囲: {fact.get('regional_scope', '不明')}\n")
             f.write(f"- 時代範囲: {fact.get('period_scope', '不明')}\n")
+            if fact.get("verified_excerpt"):
+                f.write(f"- 確認済み引用: {fact['verified_excerpt']}\n")
+            if fact.get("verified_date"):
+                f.write(f"- 確認日: {fact['verified_date']}\n")
             if fact.get("notes"):
                 f.write(f"- 備考: {fact['notes']}\n")
             f.write("\n")
@@ -386,17 +446,23 @@ def write_research_outputs(output_dir, research_results, fact_stats):
     with open(sources_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "fact_id", "source_type", "source_name", "source_url",
-            "source_date", "status", "regional_scope", "period_scope"
+            "fact_id", "status", "evidence_type", "script_expression",
+            "source_type", "source_name", "source_url", "source_date",
+            "verified_excerpt", "verified_date",
+            "regional_scope", "period_scope",
         ])
         for fact in facts:
             writer.writerow([
                 fact.get("fact_id", ""),
+                fact.get("status", ""),
+                fact.get("evidence_type", ""),
+                fact.get("script_expression", ""),
                 fact.get("source_type", ""),
                 fact.get("source_name", ""),
                 fact.get("source_url", ""),
                 fact.get("source_date", ""),
-                fact.get("status", ""),
+                fact.get("verified_excerpt", ""),
+                fact.get("verified_date", ""),
                 fact.get("regional_scope", ""),
                 fact.get("period_scope", ""),
             ])
