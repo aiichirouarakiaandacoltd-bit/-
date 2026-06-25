@@ -1,52 +1,105 @@
-"""Central configuration for imperial-video-automation."""
-import os
 from pathlib import Path
 
+
 PROJECT_ROOT = Path(__file__).resolve().parent
-
-# Directories
-ASSETS_DIR = PROJECT_ROOT / "assets"
-BGM_DIR = ASSETS_DIR / "bgm"
-IMAGES_DIR = ASSETS_DIR / "images"
-INPUT_DIR = PROJECT_ROOT / "input"
-INPUT_IMAGES_DIR = INPUT_DIR / "images"
-INPUT_SCRIPTS_DIR = INPUT_DIR / "scripts"
 OUTPUT_DIR = PROJECT_ROOT / "output"
-OUTPUT_LONG_DIR = OUTPUT_DIR / "long"
-OUTPUT_SHORTS_DIR = OUTPUT_DIR / "shorts"
-OUTPUT_TEST_DIR = OUTPUT_DIR / "test"
+OUTPUT_PACKAGES_DIR = OUTPUT_DIR / "packages"
+OUTPUT_LATEST_DIR = OUTPUT_DIR / "latest"
 LOGS_DIR = PROJECT_ROOT / "logs"
-SCREENSHOTS_DIR = PROJECT_ROOT / "screenshots"
+INPUT_DIR = PROJECT_ROOT / "input"
 
-# BGM
-BGM_FILE = BGM_DIR / "UNL1337.wav"
-BGM_CREDIT = "楽曲提供：箕輪レコーズ"
+CHANNEL_NAME = "日本が誇る皇室物語"
+CHANNEL_PROMISE = "公式事実で、静かな感動を。"
+TARGET_AUDIENCE = "55歳以上、特に65歳以上の女性、日本国内、スマートフォン視聴中心"
 
-# VOICEVOX
-VOICEVOX_HOST = os.environ.get("VOICEVOX_HOST", "http://localhost:50021")
-VOICEVOX_SPEAKER_NAME = "青山龍星"
-VOICEVOX_SPEED = 0.88
+VIDEO_SPECS = {
+    "long": {
+        "width": 1920,
+        "height": 1080,
+        "fps": 30,
+        "duration_min_seconds": 8 * 60,
+        "duration_max_seconds": 12 * 60,
+    },
+    "shorts": {
+        "width": 1080,
+        "height": 1920,
+        "fps": 30,
+        "duration_min_seconds": 45.0,
+        "duration_max_seconds": 59.5,
+    },
+}
 
-# Video specs - Long
-LONG_WIDTH = 1920
-LONG_HEIGHT = 1080
-LONG_FPS = 30
-LONG_MIN_DURATION = 480
-LONG_MAX_DURATION = 720
+BGM_SETTINGS = {
+    "file_name": "UNL1337.wav",
+    "provider": "箕輪レコーズ",
+    "credit_text": "楽曲提供：箕輪レコーズ",
+}
 
-# Video specs - Shorts
-SHORTS_WIDTH = 1080
-SHORTS_HEIGHT = 1920
-SHORTS_FPS = 30
-SHORTS_MIN_DURATION = 45
-SHORTS_MAX_DURATION = 59.5
+BGM_CONFIG_PATH = PROJECT_ROOT / "bgm_config.json"
 
-# Font
-FONT_PATH = "/usr/share/fonts/opentype/ipafont-gothic/ipag.ttf"
-FALLBACK_FONTS = [
-    "/usr/share/fonts/truetype/fonts-japanese-gothic.ttf",
-    "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+VOICEVOX_SETTINGS = {
+    "speaker_name": "青山龍星",
+    "speed": 0.88,
+}
+
+PROHIBITED_IMAGE_TYPES = [
+    "葬儀・棺・遺影",
+    "事故現場・災害遺体",
+    "暴力的・残虐な描写",
+    "性的な描写",
+    "政治的に偏向した風刺画",
+    "無断使用の私的写真",
+    "フェイク画像・AI生成で誤解を招くもの",
 ]
 
-# Channel
-CHANNEL_NAME = "日本が誇る皇室物語"
+PROHIBITED_EXPRESSIONS = [
+    "衝撃の真実",
+    "驚愕の事実",
+    "ヤバすぎる",
+    "〇〇が激怒",
+    "緊急速報",
+    "マスコミが隠す",
+    "まさかの展開",
+    "炎上",
+    "暴露",
+    "崩壊",
+]
+
+NG_INNER_FEELINGS = [
+    "〇〇は内心激怒している",
+    "〇〇は密かに喜んでいた",
+    "〇〇の本心は～だった",
+    "〇〇は心の中で～と思っていた",
+    "〇〇は実は～を望んでいる",
+]
+
+OFFICIAL_SOURCES = [
+    "宮内庁",
+    "首相官邸",
+    "外務省",
+    "NHK",
+    "共同通信",
+    "時事通信",
+    "主要全国紙（読売・朝日・毎日・産経・日経）",
+]
+
+
+class FactStatus:
+    CONFIRMED = "confirmed"
+    PARTIAL = "partial"
+    UNCONFIRMED = "unconfirmed"
+    REJECTED = "rejected"
+
+
+class RightsStatus:
+    OK = "ok"
+    REVIEW = "review"
+    NG = "ng"
+
+
+class Priority:
+    NOW = "今すぐ制作"
+    THIS_WEEK = "今週中に制作"
+    EVERGREEN = "長期常緑企画"
+    SEASONAL = "季節・記念日連動"
+    ON_HOLD = "保留・様子見"
