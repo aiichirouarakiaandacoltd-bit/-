@@ -32,7 +32,7 @@ from modules.subtitle import generate_all_subtitles, AudioSegment as SubAudioSeg
 from modules.materials import generate_test_topic_materials, generate_all_materials
 from modules.compositor import VideoCompositor
 from modules.quality import QualityChecker, generate_screenshots, generate_report
-from modules.reporter import ReportGenerator
+from modules.reporter import generate_all_reports
 
 
 def load_config(project_root):
@@ -355,9 +355,19 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
     logger.info("ステップ11: レポート生成")
     logger.info("=" * 60)
     try:
-        rg = ReportGenerator(output_dir=output_dir, status=status_data)
-        rf = rg.generate_all_reports()
-        log_step("レポート生成", True, "%dファイル" % len(rf))
+        execution_data = {
+            "topic": topic,
+            "mode": mode,
+            "sources": [],
+            "material_credits": [],
+            "bgm_credits": [],
+            "materials_list": [],
+            "bgm_info": {},
+            "shorts_info": [],
+        }
+        execution_data.update(status_data)
+        generate_all_reports(output_dir=output_dir, execution_data=execution_data)
+        log_step("レポート生成", True, "完了")
     except Exception as e:
         errors.append("レポート生成エラー: %s" % e)
         log_step("レポート生成", False, str(e))
