@@ -1,12 +1,15 @@
 # 外注者情報
-# YouTube「日本が誇る皇室物語」チャンネルの外注者データ
+# YouTube「日本が誇る皇室物語」チャンネル
+
+# ステータス: 制作中 / 待機中 / 体調不良 / 辞退 / 停止
+# ※ 履歴削除は禁止
 
 contractors:
-  川口祐太:
+  川口雄大:
     service_name: ""
     contact: ""
     available_tasks:
-      - "速報Shorts編集"
+      - "Shorts編集"
     long_video_price: null
     shorts_price: 3000
     thumbnail_price: null
@@ -16,8 +19,11 @@ contractors:
     material_capable: false
     thumbnail_capable: false
     continuation_ok: true
-    continuation_status: "テスト継続"
-    notes: ""
+    continuation_status: "制作中"
+    order_date: null
+    deadline: null
+    revision_count: 0
+    memo: ""
 
   エルシー:
     service_name: ""
@@ -34,8 +40,11 @@ contractors:
     material_capable: false
     thumbnail_capable: true
     continuation_ok: true
-    continuation_status: "テスト継続"
-    notes: ""
+    continuation_status: "制作中"
+    order_date: null
+    deadline: null
+    revision_count: 0
+    memo: ""
 
   前進主義 田中:
     service_name: ""
@@ -51,16 +60,20 @@ contractors:
     material_capable: false
     thumbnail_capable: false
     continuation_ok: true
-    continuation_status: "テスト継続"
-    notes: ""
+    continuation_status: "制作中"
+    order_date: null
+    deadline: null
+    revision_count: 0
+    memo: ""
 
-  漣レン:
+  山崎佑馬:
     service_name: ""
     contact: ""
     available_tasks:
       - "長尺動画編集"
+      - "Shorts編集"
       - "サムネイル作成"
-    long_video_price: 4000
+    long_video_price: null
     shorts_price: null
     thumbnail_price: null
     delivery_days: null
@@ -69,5 +82,49 @@ contractors:
     material_capable: false
     thumbnail_capable: true
     continuation_ok: true
-    continuation_status: "テスト継続"
-    notes: ""
+    continuation_status: "体調不良"
+    order_date: null
+    deadline: "2026-06-27"
+    revision_count: 0
+    memo: "長尺＋Shorts3本＋サムネ。体調不良により納期延期。"
+
+  # === 履歴（辞退・停止）===
+  # ※ 履歴削除は禁止
+
+  三浦有里:
+    service_name: ""
+    contact: ""
+    available_tasks: []
+    long_video_price: null
+    shorts_price: null
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: false
+    continuation_ok: false
+    continuation_status: "辞退"
+    order_date: null
+    deadline: null
+    revision_count: 0
+    memo: "辞退"
+
+  yume_000:
+    service_name: ""
+    contact: ""
+    available_tasks: []
+    long_video_price: null
+    shorts_price: null
+    thumbnail_price: null
+    delivery_days: null
+    software: ""
+    voicevox_capable: false
+    material_capable: false
+    thumbnail_capable: false
+    continuation_ok: false
+    continuation_status: "辞退"
+    order_date: null
+    deadline: null
+    revision_count: 0
+    memo: "辞退"
