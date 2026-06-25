@@ -4,244 +4,154 @@
 昭和・平成動画自動制作システム用の素材生成・権利管理モジュール。
 Pillowを使用してテキストカード、タイムライン、比較チャート等の画像素材を生成し、
 全素材の権利情報をJSON/Markdown/テキスト形式で追跡・出力する。
-"""
 
-from __future__ import annotations
+チャンネル: 昭和・平成 なぜそうだったのか
+"""
 
 import json
 import logging
-import math
 import os
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 logger = logging.getLogger(__name__)
 
-# --- 解像度定数 ---
+# ---------------------------------------------------------------------------
+# 解像度定数
+# ---------------------------------------------------------------------------
 RESOLUTION_LONG: Tuple[int, int] = (1920, 1080)
 RESOLUTION_SHORTS: Tuple[int, int] = (1080, 1920)
 
-# --- フォントパス ---
-FONT_PATH_PRIMARY = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
-FONT_PATH_FALLBACKS = [
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
-    "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+# ---------------------------------------------------------------------------
+# フォントパス
+# ---------------------------------------------------------------------------
+FONT_TITLE = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"
+FONT_BODY_BOLD = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
+FONT_BODY_REGULAR = "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc"
+
+FONT_FALLBACKS = [
+    FONT_TITLE,
+    FONT_BODY_BOLD,
+    FONT_BODY_REGULAR,
     "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
     "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
     "/usr/share/fonts/google-noto-cjk/NotoSansCJK-Bold.ttc",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
 ]
 
-# --- 配色 (ノスタルジックな暖色系) ---
-COLOR_SEPIA_BG = (62, 47, 35)           # 濃いセピア背景
-COLOR_SEPIA_LIGHT = (210, 180, 140)     # 薄いセピア
-COLOR_WARM_WHITE = (255, 248, 235)      # 温かみのある白
-COLOR_WARM_CREAM = (245, 235, 215)      # クリーム色
-COLOR_GOLD = (218, 165, 32)             # ゴールド
-COLOR_DARK_BROWN = (80, 50, 30)         # 濃い茶色
-COLOR_ACCENT_RED = (180, 60, 40)        # アクセント赤
-COLOR_ACCENT_NAVY = (40, 60, 100)       # アクセント紺
-COLOR_SHADOW = (30, 20, 10)             # 影色
-COLOR_SUBTITLE_BG = (0, 0, 0, 180)     # 字幕背景 (半透明黒)
+# ---------------------------------------------------------------------------
+# 配色 (ノスタルジックな暖色系)
+# ---------------------------------------------------------------------------
+# 背景色
+BG_WARM_CREAM = (245, 230, 208)       # #F5E6D0
+BG_SEPIA = (212, 167, 106)            # #D4A76A
+BG_DARK_WARM = (61, 43, 31)           # #3D2B1F
+BG_MUTED_NAVY = (44, 62, 80)          # #2C3E50
 
-# --- グラデーション方向 ---
-GRADIENT_VERTICAL = "vertical"
-GRADIENT_HORIZONTAL = "horizontal"
-GRADIENT_DIAGONAL = "diagonal"
+# テキスト色
+TEXT_WARM_WHITE = (255, 248, 240)      # #FFF8F0
+TEXT_DARK_BROWN = (61, 43, 31)         # #3D2B1F
+
+# アクセント色
+ACCENT_WARM_RED = (192, 57, 43)        # #C0392B
+ACCENT_GOLD = (212, 167, 106)         # #D4A76A
+
+# 影色
+SHADOW_COLOR = (30, 20, 10)
+
+CHANNEL_NAME = "昭和・平成 なぜそうだったのか"
 
 
-def get_font(size: int, bold: bool = True) -> ImageFont.FreeTypeFont:
+# ===========================================================================
+# フォントユーティリティ
+# ===========================================================================
+
+def _load_font(size: int, role: str = "title") -> ImageFont.FreeTypeFont:
     """
-    指定サイズのNoto Sans CJK JPフォントを読み込む。
-    プライマリフォントが見つからない場合はフォールバックを試行する。
+    指定サイズ・ロールのフォントを読み込む。
 
     Args:
-        size: フォントサイズ (ピクセル)
-        bold: Boldフォントを優先するか
+        size: フォントサイズ (px)
+        role: "title" (Black) / "body" (Bold) / "regular" (Regular)
 
     Returns:
         読み込まれたフォントオブジェクト
-
-    Raises:
-        RuntimeError: すべてのフォントパスで読み込みに失敗した場合
     """
-    paths_to_try = [FONT_PATH_PRIMARY] + FONT_PATH_FALLBACKS
+    primary = {
+        "title": FONT_TITLE,
+        "body": FONT_BODY_BOLD,
+        "regular": FONT_BODY_REGULAR,
+    }.get(role, FONT_TITLE)
 
-    for font_path in paths_to_try:
-        if os.path.isfile(font_path):
+    paths = [primary] + [p for p in FONT_FALLBACKS if p != primary]
+
+    for path in paths:
+        if os.path.isfile(path):
             try:
-                font = ImageFont.truetype(font_path, size)
-                return font
-            except (OSError, IOError) as e:
-                logger.warning(f"フォント読み込み失敗: {font_path} - {e}")
+                return ImageFont.truetype(path, size)
+            except (OSError, IOError) as exc:
+                logger.warning("フォント読み込み失敗: %s - %s", path, exc)
                 continue
 
-    # すべてのフォントが見つからない場合、デフォルトフォントを使用
     logger.warning(
         "日本語フォントが見つかりません。デフォルトフォントを使用します。"
-        "日本語テキストが正しく表示されない場合があります。"
     )
     try:
         return ImageFont.load_default()
     except Exception:
         raise RuntimeError(
-            "フォントの読み込みに失敗しました。"
-            f"Noto Sans CJK JPを {FONT_PATH_PRIMARY} にインストールしてください。"
+            f"フォントの読み込みに失敗しました。"
+            f"Noto Sans CJK JP を {FONT_TITLE} にインストールしてください。"
         )
 
 
-def create_gradient_background(
+# ===========================================================================
+# 描画ヘルパー
+# ===========================================================================
+
+def _resolve_resolution(
+    resolution: Optional[Tuple[int, int]],
+    format_type: str = "long",
+) -> Tuple[int, int]:
+    """resolution 引数を解決する。None の場合は format_type から判定。"""
+    if resolution is not None:
+        return resolution
+    return RESOLUTION_SHORTS if format_type == "shorts" else RESOLUTION_LONG
+
+
+def _gradient_bg(
     size: Tuple[int, int],
-    color1: Tuple[int, int, int],
-    color2: Tuple[int, int, int],
-    direction: str = GRADIENT_VERTICAL,
+    top: Tuple[int, int, int],
+    bottom: Tuple[int, int, int],
 ) -> Image.Image:
-    """
-    グラデーション背景画像を生成する。
-
-    Args:
-        size: 画像サイズ (width, height)
-        color1: 開始色 (R, G, B)
-        color2: 終了色 (R, G, B)
-        direction: グラデーション方向
-
-    Returns:
-        グラデーション背景の Image オブジェクト
-    """
-    width, height = size
-    image = Image.new("RGB", size)
-    pixels = image.load()
-
-    for y in range(height):
-        for x in range(width):
-            if direction == GRADIENT_VERTICAL:
-                ratio = y / max(height - 1, 1)
-            elif direction == GRADIENT_HORIZONTAL:
-                ratio = x / max(width - 1, 1)
-            elif direction == GRADIENT_DIAGONAL:
-                ratio = (x + y) / max(width + height - 2, 1)
-            else:
-                ratio = y / max(height - 1, 1)
-
-            r = int(color1[0] + (color2[0] - color1[0]) * ratio)
-            g = int(color1[1] + (color2[1] - color1[1]) * ratio)
-            b = int(color1[2] + (color2[2] - color1[2]) * ratio)
-            pixels[x, y] = (r, g, b)
-
-    return image
+    """縦方向グラデーション背景を生成する。"""
+    w, h = size
+    img = Image.new("RGB", size)
+    px = img.load()
+    for y in range(h):
+        r = y / max(h - 1, 1)
+        c = tuple(int(top[i] + (bottom[i] - top[i]) * r) for i in range(3))
+        for x in range(w):
+            px[x, y] = c
+    return img
 
 
-def _create_solid_background(
+def _solid_bg(
     size: Tuple[int, int],
     color: Tuple[int, int, int],
 ) -> Image.Image:
-    """単色背景画像を生成する。"""
+    """単色背景を生成する。"""
     return Image.new("RGB", size, color)
 
 
-def _create_pattern_background(
-    size: Tuple[int, int],
-    base_color: Tuple[int, int, int],
-    pattern_type: str = "dots",
-) -> Image.Image:
-    """
-    微細パターン付き背景画像を生成する。
-
-    Args:
-        size: 画像サイズ
-        base_color: ベース色
-        pattern_type: パターン種類 ("dots", "lines", "crosshatch")
-
-    Returns:
-        パターン付き背景の Image オブジェクト
-    """
-    image = Image.new("RGB", size, base_color)
-    draw = ImageDraw.Draw(image)
-    width, height = size
-
-    # パターン色（ベース色より少し暗め/明るめ）
-    pattern_color = (
-        max(0, base_color[0] - 15),
-        max(0, base_color[1] - 12),
-        max(0, base_color[2] - 10),
-    )
-
-    if pattern_type == "dots":
-        spacing = 30
-        dot_radius = 2
-        for y in range(0, height, spacing):
-            offset = spacing // 2 if (y // spacing) % 2 == 1 else 0
-            for x in range(offset, width, spacing):
-                draw.ellipse(
-                    [x - dot_radius, y - dot_radius,
-                     x + dot_radius, y + dot_radius],
-                    fill=pattern_color,
-                )
-
-    elif pattern_type == "lines":
-        spacing = 20
-        for y in range(0, height, spacing):
-            draw.line([(0, y), (width, y)], fill=pattern_color, width=1)
-
-    elif pattern_type == "crosshatch":
-        spacing = 40
-        for i in range(-height, width + height, spacing):
-            draw.line([(i, 0), (i + height, height)], fill=pattern_color, width=1)
-            draw.line([(i, height), (i + height, 0)], fill=pattern_color, width=1)
-
-    return image
-
-
-def _draw_decorative_border(
-    draw: ImageDraw.Draw,
-    size: Tuple[int, int],
-    border_color: Tuple[int, int, int] = COLOR_GOLD,
-    margin: int = 40,
-    width: int = 3,
-) -> None:
-    """装飾的な枠線を描画する。"""
-    w, h = size
-    # 外枠
-    draw.rectangle(
-        [margin, margin, w - margin, h - margin],
-        outline=border_color,
-        width=width,
-    )
-    # 内側に細い線
-    inner_margin = margin + 8
-    draw.rectangle(
-        [inner_margin, inner_margin, w - inner_margin, h - inner_margin],
-        outline=border_color,
-        width=1,
-    )
-
-
-def _draw_text_with_shadow(
-    draw: ImageDraw.Draw,
-    position: Tuple[int, int],
-    text: str,
-    font: ImageFont.FreeTypeFont,
-    fill: Tuple[int, int, int] = COLOR_WARM_WHITE,
-    shadow_color: Tuple[int, int, int] = COLOR_SHADOW,
-    shadow_offset: int = 3,
-) -> None:
-    """影付きテキストを描画する。"""
-    x, y = position
-    # 影
-    draw.text((x + shadow_offset, y + shadow_offset), text,
-              font=font, fill=shadow_color)
-    # 本体
-    draw.text((x, y), text, font=font, fill=fill)
-
-
-def _get_text_size(
+def _text_size(
     draw: ImageDraw.Draw,
     text: str,
     font: ImageFont.FreeTypeFont,
 ) -> Tuple[int, int]:
-    """テキストのバウンディングボックスサイズを取得する。"""
+    """テキストの (width, height) を返す。"""
     bbox = draw.textbbox((0, 0), text, font=font)
     return bbox[2] - bbox[0], bbox[3] - bbox[1]
 
@@ -252,63 +162,54 @@ def _wrap_text(
     max_width: int,
     draw: ImageDraw.Draw,
 ) -> List[str]:
-    """
-    テキストを指定幅に収まるように折り返す。
-
-    Args:
-        text: 折り返すテキスト
-        font: 使用フォント
-        max_width: 最大幅 (ピクセル)
-        draw: ImageDraw オブジェクト
-
-    Returns:
-        折り返されたテキスト行のリスト
-    """
+    """テキストを max_width に収まるよう文字単位で折り返す。"""
     lines: List[str] = []
-    current_line = ""
-
-    for char in text:
-        test_line = current_line + char
-        tw, _ = _get_text_size(draw, test_line, font)
+    cur = ""
+    for ch in text:
+        test = cur + ch
+        tw, _ = _text_size(draw, test, font)
         if tw <= max_width:
-            current_line = test_line
+            cur = test
         else:
-            if current_line:
-                lines.append(current_line)
-            current_line = char
-
-    if current_line:
-        lines.append(current_line)
-
-    return lines if lines else [text]
+            if cur:
+                lines.append(cur)
+            cur = ch
+    if cur:
+        lines.append(cur)
+    return lines or [text]
 
 
-def _draw_centered_text(
+def _draw_shadow_text(
+    draw: ImageDraw.Draw,
+    pos: Tuple[int, int],
+    text: str,
+    font: ImageFont.FreeTypeFont,
+    fill: Tuple[int, int, int] = TEXT_WARM_WHITE,
+    shadow: Tuple[int, int, int] = SHADOW_COLOR,
+    offset: int = 3,
+) -> None:
+    """影付きテキストを描画する。"""
+    x, y = pos
+    draw.text((x + offset, y + offset), text, font=font, fill=shadow)
+    draw.text((x, y), text, font=font, fill=fill)
+
+
+def _draw_centered(
     draw: ImageDraw.Draw,
     text: str,
     font: ImageFont.FreeTypeFont,
     y: int,
-    image_width: int,
-    fill: Tuple[int, int, int] = COLOR_WARM_WHITE,
+    img_w: int,
+    fill: Tuple[int, int, int] = TEXT_WARM_WHITE,
     shadow: bool = True,
-    shadow_color: Tuple[int, int, int] = COLOR_SHADOW,
-    shadow_offset: int = 3,
 ) -> int:
-    """
-    テキストを水平中央揃えで描画する。
-
-    Returns:
-        描画後のY座標（次のテキストの開始位置）
-    """
-    tw, th = _get_text_size(draw, text, font)
-    x = (image_width - tw) // 2
-
+    """中央揃えでテキストを描画し、次の Y 座標を返す。"""
+    tw, th = _text_size(draw, text, font)
+    x = (img_w - tw) // 2
     if shadow:
-        _draw_text_with_shadow(draw, (x, y), text, font, fill,
-                               shadow_color, shadow_offset)
+        _draw_shadow_text(draw, (x, y), text, font, fill=fill)
     else:
         draw.text((x, y), text, font=font, fill=fill)
-
     return y + th
 
 
@@ -317,1152 +218,827 @@ def _draw_multiline_centered(
     text: str,
     font: ImageFont.FreeTypeFont,
     center_y: int,
-    image_width: int,
-    max_text_width: int,
-    line_spacing: int = 15,
-    fill: Tuple[int, int, int] = COLOR_WARM_WHITE,
+    img_w: int,
+    max_text_w: int,
+    spacing: int = 15,
+    fill: Tuple[int, int, int] = TEXT_WARM_WHITE,
     shadow: bool = True,
 ) -> int:
+    """複数行テキストを水平・垂直中央に描画する。"""
+    lines = _wrap_text(text, font, max_text_w, draw)
+    heights = [_text_size(draw, ln, font)[1] for ln in lines]
+    total_h = sum(heights) + spacing * max(0, len(lines) - 1)
+    cy = center_y - total_h // 2
+    for i, ln in enumerate(lines):
+        cy = _draw_centered(draw, ln, font, cy, img_w, fill=fill, shadow=shadow)
+        if i < len(lines) - 1:
+            cy += spacing
+    return cy
+
+
+def _decorative_border(
+    draw: ImageDraw.Draw,
+    size: Tuple[int, int],
+    color: Tuple[int, int, int] = ACCENT_GOLD,
+    margin: int = 40,
+) -> None:
+    """装飾的な二重枠線を描画する。"""
+    w, h = size
+    draw.rectangle([margin, margin, w - margin, h - margin],
+                   outline=color, width=3)
+    m2 = margin + 8
+    draw.rectangle([m2, m2, w - m2, h - m2], outline=color, width=1)
+
+
+def _add_image_label(image: Image.Image) -> Image.Image:
+    """画像右下に「イメージ」ラベルを追加する。"""
+    w, h = image.size
+    if image.mode != "RGBA":
+        image = image.convert("RGBA")
+    overlay = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    od = ImageDraw.Draw(overlay)
+
+    label = "イメージ"
+    fsz = int(min(w, h) * 0.025)
+    fnt = _load_font(fsz, "body")
+    tw, th = _text_size(od, label, fnt)
+
+    px, py = int(tw * 0.3), int(th * 0.3)
+    mg = int(min(w, h) * 0.03)
+    x1 = w - mg - tw - px * 2
+    y1 = h - mg - th - py * 2
+    x2 = w - mg
+    y2 = h - mg
+
+    od.rectangle([x1, y1, x2, y2], fill=(0, 0, 0, 180))
+    od.text((x1 + px, y1 + py), label, font=fnt, fill=(255, 255, 255, 230))
+    return Image.alpha_composite(image, overlay).convert("RGB")
+
+
+def _ensure_dir(path: str) -> None:
+    """出力先ディレクトリを作成する。"""
+    d = os.path.dirname(path)
+    if d:
+        os.makedirs(d, exist_ok=True)
+
+
+# ===========================================================================
+# 権利情報テンプレート
+# ===========================================================================
+
+def _make_rights_entry(
+    file_path: str,
+    image_type: str = "TEXT_CARD",
+    notes: str = "",
+) -> Dict[str, Any]:
+    """自作テキストカード用の権利情報 dict を返す。"""
+    return {
+        "file_path": file_path,
+        "source_name": "自作テキストカード",
+        "source_url": "",
+        "rights_status": "OK",
+        "image_type": image_type,
+        "generated_by_ai": False,
+        "credit_required": False,
+        "credit_text": "",
+        "commercial_use": True,
+        "youtube_use": True,
+        "notes": notes,
+    }
+
+
+# ===========================================================================
+# 素材生成関数
+# ===========================================================================
+
+def generate_title_card(
+    topic: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
     """
-    複数行テキストを水平中央・垂直中央揃えで描画する。
+    タイトルカード画像を生成する。
 
     Args:
-        draw: ImageDraw オブジェクト
-        text: 描画するテキスト
-        font: フォント
-        center_y: 垂直中央のY座標
-        image_width: 画像幅
-        max_text_width: テキスト折り返し最大幅
-        line_spacing: 行間 (ピクセル)
-        fill: テキスト色
-        shadow: 影を付けるか
+        topic: 動画トピック (タイトルテキスト)
+        resolution: 画像解像度 (width, height)
+        output_path: 出力 PNG パス
 
     Returns:
-        描画領域の下端Y座標
+        出力ファイルパス
     """
-    lines = _wrap_text(text, font, max_text_width, draw)
+    w, h = resolution
+    logger.info("タイトルカード生成: '%s' -> %s", topic, output_path)
 
-    # 全行の高さを計算
-    line_heights = []
-    for line in lines:
-        _, th = _get_text_size(draw, line, font)
-        line_heights.append(th)
+    img = _gradient_bg(resolution, BG_DARK_WARM, (30, 20, 12))
+    draw = ImageDraw.Draw(img)
 
-    total_height = sum(line_heights) + line_spacing * max(0, len(lines) - 1)
-    start_y = center_y - total_height // 2
+    margin = int(min(w, h) * 0.04)
+    _decorative_border(draw, resolution, ACCENT_GOLD, margin)
 
-    current_y = start_y
-    for i, line in enumerate(lines):
-        _draw_centered_text(draw, line, font, current_y, image_width,
-                            fill=fill, shadow=shadow)
-        current_y += line_heights[i] + line_spacing
+    # チャンネル名
+    ch_sz = int(min(w, h) * 0.028)
+    ch_fnt = _load_font(ch_sz, "body")
+    ch_y = int(h * 0.10)
+    _draw_centered(draw, CHANNEL_NAME, ch_fnt, ch_y, w, fill=ACCENT_GOLD)
 
-    return current_y
+    # 装飾ライン
+    line_y = int(h * 0.18)
+    lw = int(w * 0.5)
+    lx = (w - lw) // 2
+    draw.line([(lx, line_y), (lx + lw, line_y)], fill=ACCENT_GOLD, width=2)
+
+    # タイトル
+    t_sz = int(min(w, h) * 0.065)
+    t_fnt = _load_font(t_sz, "title")
+    mtw = int(w * 0.75)
+    _draw_multiline_centered(
+        draw, topic, t_fnt, int(h * 0.45), w, mtw,
+        spacing=int(t_sz * 0.4), fill=TEXT_WARM_WHITE,
+    )
+
+    # 下部ライン
+    bl_y = int(h * 0.85)
+    draw.line([(lx, bl_y), (lx + lw, bl_y)], fill=ACCENT_GOLD, width=2)
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("タイトルカード保存完了: %s", output_path)
+    return output_path
 
 
-class MaterialGenerator:
+def generate_chapter_card(
+    chapter_num: int,
+    chapter_title: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
     """
-    素材画像を生成するクラス。
+    チャプター見出しカード (第N章) を生成する。
 
-    タイトルカード、チャプターカード、年代カード、比較チャート、
-    タイムライン、イメージプレースホルダー等を生成する。
+    Args:
+        chapter_num: チャプター番号
+        chapter_title: チャプタータイトル
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
+
+    Returns:
+        出力ファイルパス
     """
+    w, h = resolution
+    logger.info("チャプターカード生成: 第%d章 '%s' -> %s",
+                chapter_num, chapter_title, output_path)
 
-    def __init__(self, default_resolution: Tuple[int, int] = RESOLUTION_LONG):
-        """
-        Args:
-            default_resolution: デフォルトの画像解像度 (width, height)
-        """
-        self.default_resolution = default_resolution
-        logger.info(f"MaterialGenerator 初期化: 解像度 {default_resolution}")
+    # ドットパターン背景
+    img = _solid_bg(resolution, BG_DARK_WARM)
+    draw = ImageDraw.Draw(img)
+    pat_color = (max(0, BG_DARK_WARM[0] - 12),
+                 max(0, BG_DARK_WARM[1] - 10),
+                 max(0, BG_DARK_WARM[2] - 8))
+    sp = 30
+    for py in range(0, h, sp):
+        off = sp // 2 if (py // sp) % 2 else 0
+        for px in range(off, w, sp):
+            draw.ellipse([px - 2, py - 2, px + 2, py + 2], fill=pat_color)
 
-    def generate_title_card(
-        self,
-        title: str,
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-        subtitle: Optional[str] = None,
-    ) -> str:
-        """
-        タイトルカード画像を生成する。
+    # 左アクセントバー
+    bw = int(w * 0.008)
+    bx = int(w * 0.08)
+    draw.rectangle([bx, int(h * 0.25), bx + bw, int(h * 0.75)], fill=ACCENT_GOLD)
 
-        Args:
-            title: タイトルテキスト
-            output_path: 出力ファイルパス
-            resolution: 画像解像度 (None の場合デフォルト使用)
-            subtitle: サブタイトルテキスト (任意)
+    # 章ラベル
+    lbl_sz = int(min(w, h) * 0.025)
+    lbl_fnt = _load_font(lbl_sz, "body")
+    lbl_y = int(h * 0.25)
+    num_x = int(w * 0.12)
+    draw.text((num_x, lbl_y), f"第{chapter_num}章", font=lbl_fnt,
+              fill=BG_SEPIA)
 
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(f"タイトルカード生成: '{title}' -> {output_path}")
+    # 章番号 (大きく)
+    n_sz = int(min(w, h) * 0.12)
+    n_fnt = _load_font(n_sz, "title")
+    n_y = int(h * 0.28)
+    _draw_shadow_text(draw, (num_x, n_y), f"{chapter_num:02d}", n_fnt,
+                      fill=ACCENT_GOLD, offset=4)
 
-        # グラデーション背景
-        image = create_gradient_background(
-            res, COLOR_SEPIA_BG, COLOR_DARK_BROWN, GRADIENT_VERTICAL
-        )
-        draw = ImageDraw.Draw(image)
+    # チャプタータイトル
+    t_sz = int(min(w, h) * 0.055)
+    t_fnt = _load_font(t_sz, "title")
+    t_x = int(w * 0.12)
+    t_y = int(h * 0.55)
+    mtw = int(w * 0.75)
+    for ln in _wrap_text(chapter_title, t_fnt, mtw, draw):
+        _draw_shadow_text(draw, (t_x, t_y), ln, t_fnt,
+                          fill=TEXT_WARM_WHITE, offset=3)
+        _, lh = _text_size(draw, ln, t_fnt)
+        t_y += lh + int(t_sz * 0.3)
 
-        # 装飾枠
-        border_margin = int(min(width, height) * 0.04)
-        _draw_decorative_border(draw, res, COLOR_GOLD,
-                                margin=border_margin, width=3)
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("チャプターカード保存完了: %s", output_path)
+    return output_path
 
-        # チャンネル名 (上部)
-        channel_font_size = int(min(width, height) * 0.028)
-        channel_font = get_font(channel_font_size)
-        channel_name = "昭和・平成 なぜそうだったのか"
-        channel_y = int(height * 0.1)
-        _draw_centered_text(draw, channel_name, channel_font, channel_y,
-                            width, fill=COLOR_GOLD, shadow=True)
 
-        # 装飾ライン
-        line_y = int(height * 0.18)
-        line_width_px = int(width * 0.5)
-        line_x_start = (width - line_width_px) // 2
-        draw.line(
-            [(line_x_start, line_y), (line_x_start + line_width_px, line_y)],
-            fill=COLOR_GOLD, width=2,
-        )
+def generate_era_card(
+    era_text: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
+    """
+    年代表示カード (昭和30年代 など) を生成する。
 
-        # タイトルテキスト（中央）
-        title_font_size = int(min(width, height) * 0.065)
-        title_font = get_font(title_font_size)
-        max_text_width = int(width * 0.75)
-        title_center_y = int(height * 0.45)
+    Args:
+        era_text: 年代テキスト (例: "昭和30年代")
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
 
-        _draw_multiline_centered(
-            draw, title, title_font, title_center_y, width, max_text_width,
-            line_spacing=int(title_font_size * 0.4),
-            fill=COLOR_WARM_WHITE, shadow=True,
-        )
+    Returns:
+        出力ファイルパス
+    """
+    w, h = resolution
+    logger.info("年代カード生成: '%s' -> %s", era_text, output_path)
 
-        # サブタイトル
-        if subtitle:
-            sub_font_size = int(min(width, height) * 0.035)
-            sub_font = get_font(sub_font_size)
-            sub_y = int(height * 0.72)
-            _draw_centered_text(draw, subtitle, sub_font, sub_y, width,
-                                fill=COLOR_SEPIA_LIGHT, shadow=True)
+    img = _gradient_bg(resolution, TEXT_DARK_BROWN, BG_DARK_WARM)
+    draw = ImageDraw.Draw(img)
 
-        # 下部装飾ライン
-        bottom_line_y = int(height * 0.85)
-        draw.line(
-            [(line_x_start, bottom_line_y),
-             (line_x_start + line_width_px, bottom_line_y)],
-            fill=COLOR_GOLD, width=2,
-        )
+    cx, cy = w // 2, h // 2
+    cr = int(min(w, h) * 0.25)
+    draw.ellipse([cx - cr, cy - cr, cx + cr, cy + cr],
+                 outline=ACCENT_GOLD, width=3)
+    ir = cr - 10
+    draw.ellipse([cx - ir, cy - ir, cx + ir, cy + ir],
+                 outline=ACCENT_GOLD, width=1)
 
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"タイトルカード保存完了: {output_path}")
+    e_sz = int(min(w, h) * 0.08)
+    e_fnt = _load_font(e_sz, "title")
+    ew, eh = _text_size(draw, era_text, e_fnt)
+    _draw_shadow_text(draw, ((w - ew) // 2, cy - eh // 2),
+                      era_text, e_fnt, fill=TEXT_WARM_WHITE, offset=4)
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("年代カード保存完了: %s", output_path)
+    return output_path
+
+
+def generate_timeline_image(
+    items: List[Dict[str, str]],
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
+    """
+    タイムライン画像を生成する。
+
+    Args:
+        items: タイムライン項目リスト。各項目は {"year": str, "text": str} 形式。
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
+
+    Returns:
+        出力ファイルパス
+    """
+    w, h = resolution
+    logger.info("タイムライン生成: %d 件 -> %s", len(items), output_path)
+
+    img = _gradient_bg(resolution, BG_DARK_WARM, (45, 35, 25))
+    draw = ImageDraw.Draw(img)
+
+    # タイトル
+    ttl_sz = int(min(w, h) * 0.045)
+    ttl_fnt = _load_font(ttl_sz, "title")
+    ttl_y = int(h * 0.06)
+    _draw_centered(draw, "タイムライン", ttl_fnt, ttl_y, w,
+                   fill=TEXT_WARM_WHITE)
+
+    if not items:
+        _ensure_dir(output_path)
+        img.save(output_path, "PNG", quality=95)
         return output_path
 
-    def generate_chapter_card(
-        self,
-        chapter_title: str,
-        chapter_number: int,
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-    ) -> str:
-        """
-        チャプター見出しカード画像を生成する。
-
-        Args:
-            chapter_title: チャプタータイトル
-            chapter_number: チャプター番号
-            output_path: 出力ファイルパス
-            resolution: 画像解像度
-
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(
-            f"チャプターカード生成: 第{chapter_number}章 '{chapter_title}' -> {output_path}"
-        )
-
-        # パターン背景
-        image = _create_pattern_background(res, COLOR_SEPIA_BG, "dots")
-        draw = ImageDraw.Draw(image)
-
-        # 左サイドのアクセントバー
-        bar_width = int(width * 0.008)
-        bar_x = int(width * 0.08)
-        bar_y_start = int(height * 0.25)
-        bar_y_end = int(height * 0.75)
-        draw.rectangle(
-            [bar_x, bar_y_start, bar_x + bar_width, bar_y_end],
-            fill=COLOR_GOLD,
-        )
-
-        # チャプター番号
-        num_font_size = int(min(width, height) * 0.12)
-        num_font = get_font(num_font_size)
-        num_text = f"{chapter_number:02d}"
-        num_x = int(width * 0.12)
-        num_y = int(height * 0.28)
-        _draw_text_with_shadow(draw, (num_x, num_y), num_text, num_font,
-                               fill=COLOR_GOLD, shadow_offset=4)
-
-        # "Chapter" ラベル (小さめ)
-        label_font_size = int(min(width, height) * 0.025)
-        label_font = get_font(label_font_size)
-        label_y = int(height * 0.25)
-        draw.text((num_x, label_y), "Chapter", font=label_font,
-                  fill=COLOR_SEPIA_LIGHT)
-
-        # チャプタータイトル
-        title_font_size = int(min(width, height) * 0.055)
-        title_font = get_font(title_font_size)
-        title_x = int(width * 0.12)
-        title_y = int(height * 0.55)
-        max_text_width = int(width * 0.75)
-
-        lines = _wrap_text(chapter_title, title_font, max_text_width, draw)
-        current_y = title_y
-        for line in lines:
-            _draw_text_with_shadow(draw, (title_x, current_y), line,
-                                   title_font, fill=COLOR_WARM_WHITE,
-                                   shadow_offset=3)
-            _, th = _get_text_size(draw, line, title_font)
-            current_y += th + int(title_font_size * 0.3)
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"チャプターカード保存完了: {output_path}")
-        return output_path
-
-    def generate_era_card(
-        self,
-        era_name: str,
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-        description: Optional[str] = None,
-    ) -> str:
-        """
-        年代表示カード画像を生成する。
-
-        Args:
-            era_name: 年代名 (例: "昭和30年代")
-            output_path: 出力ファイルパス
-            resolution: 画像解像度
-            description: 年代の補足説明 (任意)
-
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(f"年代カード生成: '{era_name}' -> {output_path}")
-
-        # グラデーション背景（暗めから明るめセピア）
-        image = create_gradient_background(
-            res, COLOR_DARK_BROWN, COLOR_SEPIA_BG, GRADIENT_DIAGONAL
-        )
-        draw = ImageDraw.Draw(image)
-
-        # 中央の円形装飾
-        center_x = width // 2
-        center_y = height // 2
-        circle_radius = int(min(width, height) * 0.25)
-        draw.ellipse(
-            [center_x - circle_radius, center_y - circle_radius,
-             center_x + circle_radius, center_y + circle_radius],
-            outline=COLOR_GOLD, width=3,
-        )
-        # 内側の円
-        inner_radius = circle_radius - 10
-        draw.ellipse(
-            [center_x - inner_radius, center_y - inner_radius,
-             center_x + inner_radius, center_y + inner_radius],
-            outline=COLOR_GOLD, width=1,
-        )
-
-        # 年代テキスト（大きく中央に）
-        era_font_size = int(min(width, height) * 0.08)
-        era_font = get_font(era_font_size)
-        era_tw, era_th = _get_text_size(draw, era_name, era_font)
-        era_x = (width - era_tw) // 2
-        era_y = center_y - era_th // 2
-        _draw_text_with_shadow(draw, (era_x, era_y), era_name, era_font,
-                               fill=COLOR_WARM_WHITE, shadow_offset=4)
-
-        # 補足説明（あれば）
-        if description:
-            desc_font_size = int(min(width, height) * 0.03)
-            desc_font = get_font(desc_font_size)
-            desc_y = center_y + circle_radius + int(height * 0.05)
-            _draw_centered_text(draw, description, desc_font, desc_y,
-                                width, fill=COLOR_SEPIA_LIGHT, shadow=True)
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"年代カード保存完了: {output_path}")
-        return output_path
-
-    def generate_comparison_chart(
-        self,
-        title: str,
-        items: List[Dict[str, Any]],
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-    ) -> str:
-        """
-        比較チャート画像を生成する。
-
-        Args:
-            title: チャートタイトル
-            items: 比較項目リスト。各項目は {"label": str, "value": str} 形式。
-                   オプションで "bar_ratio" (0.0-1.0) を含めるとバーグラフを描画。
-            output_path: 出力ファイルパス
-            resolution: 画像解像度
-
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(f"比較チャート生成: '{title}' ({len(items)}項目) -> {output_path}")
-
-        # 背景
-        image = _create_pattern_background(res, COLOR_SEPIA_BG, "lines")
-        draw = ImageDraw.Draw(image)
-
-        # 枠線
-        border_margin = int(min(width, height) * 0.04)
-        _draw_decorative_border(draw, res, COLOR_GOLD,
-                                margin=border_margin, width=2)
-
-        # タイトル
-        title_font_size = int(min(width, height) * 0.05)
-        title_font = get_font(title_font_size)
-        title_y = int(height * 0.08)
-        _draw_centered_text(draw, title, title_font, title_y, width,
-                            fill=COLOR_WARM_WHITE, shadow=True)
-
-        # 区切り線
-        sep_y = int(height * 0.17)
-        sep_margin = int(width * 0.1)
-        draw.line([(sep_margin, sep_y), (width - sep_margin, sep_y)],
-                  fill=COLOR_GOLD, width=2)
-
-        # 項目描画エリア
-        if not items:
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            image.save(output_path, "PNG", quality=95)
-            return output_path
-
-        items_start_y = int(height * 0.22)
-        items_end_y = int(height * 0.90)
-        available_height = items_end_y - items_start_y
-        item_height = available_height // len(items)
-        item_margin_x = int(width * 0.1)
-        bar_max_width = int(width * 0.45)
-
-        label_font_size = int(min(width, height) * 0.032)
-        label_font = get_font(label_font_size)
-        value_font_size = int(min(width, height) * 0.03)
-        value_font = get_font(value_font_size)
-
-        for i, item in enumerate(items):
-            item_y = items_start_y + i * item_height
-            label = item.get("label", "")
-            value = item.get("value", "")
-            bar_ratio = item.get("bar_ratio", None)
-
-            # ラベル
-            label_y = item_y + int(item_height * 0.15)
-            _draw_text_with_shadow(draw, (item_margin_x, label_y), label,
-                                   label_font, fill=COLOR_WARM_WHITE,
-                                   shadow_offset=2)
-
-            # バーグラフ（bar_ratioがある場合）
-            if bar_ratio is not None:
-                bar_y = label_y + int(label_font_size * 1.5)
-                bar_height_px = int(item_height * 0.25)
-                bar_width_px = int(bar_max_width * min(1.0, max(0.0, bar_ratio)))
-
-                # バー背景
-                draw.rectangle(
-                    [item_margin_x, bar_y,
-                     item_margin_x + bar_max_width, bar_y + bar_height_px],
-                    fill=COLOR_DARK_BROWN, outline=COLOR_SEPIA_LIGHT, width=1,
-                )
-                # バー本体
-                if bar_width_px > 0:
-                    draw.rectangle(
-                        [item_margin_x, bar_y,
-                         item_margin_x + bar_width_px, bar_y + bar_height_px],
-                        fill=COLOR_GOLD,
-                    )
-
-                # 値テキスト（バーの右側）
-                value_x = item_margin_x + bar_max_width + int(width * 0.03)
-                value_y = bar_y + (bar_height_px - value_font_size) // 2
-                draw.text((value_x, value_y), value, font=value_font,
-                          fill=COLOR_WARM_CREAM)
-            else:
-                # バーグラフなし: 値をラベルの右に表示
-                value_x = int(width * 0.55)
-                draw.text((value_x, label_y), value, font=value_font,
-                          fill=COLOR_WARM_CREAM)
-
-            # 項目間区切り線
-            if i < len(items) - 1:
-                sep_item_y = item_y + item_height - 2
-                draw.line(
-                    [(item_margin_x, sep_item_y),
-                     (width - item_margin_x, sep_item_y)],
-                    fill=(100, 80, 60), width=1,
-                )
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"比較チャート保存完了: {output_path}")
-        return output_path
-
-    def generate_timeline(
-        self,
-        title: str,
-        events: List[Dict[str, str]],
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-    ) -> str:
-        """
-        タイムライン画像を生成する。
-
-        Args:
-            title: タイムラインのタイトル
-            events: イベントリスト。各イベントは {"year": str, "event": str} 形式。
-                    オプションで "value" (数値表示用) を含められる。
-            output_path: 出力ファイルパス
-            resolution: 画像解像度
-
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(f"タイムライン生成: '{title}' ({len(events)}件) -> {output_path}")
-
-        # グラデーション背景
-        image = create_gradient_background(
-            res, COLOR_SEPIA_BG, (45, 35, 25), GRADIENT_VERTICAL
-        )
-        draw = ImageDraw.Draw(image)
-
-        # タイトル
-        title_font_size = int(min(width, height) * 0.045)
-        title_font = get_font(title_font_size)
-        title_y = int(height * 0.06)
-        _draw_centered_text(draw, title, title_font, title_y, width,
-                            fill=COLOR_WARM_WHITE, shadow=True)
-
-        if not events:
-            os.makedirs(os.path.dirname(output_path), exist_ok=True)
-            image.save(output_path, "PNG", quality=95)
-            return output_path
-
-        # タイムライン軸
-        timeline_x = int(width * 0.15)
-        timeline_start_y = int(height * 0.18)
-        timeline_end_y = int(height * 0.92)
-        timeline_height = timeline_end_y - timeline_start_y
-
-        # 軸線
-        draw.line(
-            [(timeline_x, timeline_start_y),
-             (timeline_x, timeline_end_y)],
-            fill=COLOR_GOLD, width=3,
-        )
-
-        # イベント描画
-        event_spacing = timeline_height // max(len(events), 1)
-        year_font_size = int(min(width, height) * 0.032)
-        year_font = get_font(year_font_size)
-        event_font_size = int(min(width, height) * 0.028)
-        event_font = get_font(event_font_size)
-        value_font_size = int(min(width, height) * 0.024)
-        value_font = get_font(value_font_size)
-
-        dot_radius = int(min(width, height) * 0.008)
-        max_event_width = int(width * 0.55)
-
-        for i, event_data in enumerate(events):
-            event_y = timeline_start_y + i * event_spacing + event_spacing // 2
-            year = event_data.get("year", "")
-            event_text = event_data.get("event", "")
-            value_text = event_data.get("value", "")
-
-            # 軸上のドット
-            draw.ellipse(
-                [timeline_x - dot_radius, event_y - dot_radius,
-                 timeline_x + dot_radius, event_y + dot_radius],
-                fill=COLOR_GOLD,
-            )
-
-            # 横線（ドットからイベントテキストへ）
-            line_end_x = timeline_x + int(width * 0.06)
-            draw.line(
-                [(timeline_x + dot_radius, event_y),
-                 (line_end_x, event_y)],
-                fill=COLOR_GOLD, width=1,
-            )
-
-            # 年ラベル（軸の左側に配置、右揃え）
-            year_tw, year_th = _get_text_size(draw, year, year_font)
-            year_x = timeline_x - int(width * 0.02) - year_tw
-            year_y = event_y - year_th // 2
-            _draw_text_with_shadow(draw, (year_x, year_y), year, year_font,
-                                   fill=COLOR_GOLD, shadow_offset=2)
-
-            # イベントテキスト（軸の右側）
-            event_x = line_end_x + int(width * 0.015)
-            event_lines = _wrap_text(event_text, event_font,
-                                     max_event_width, draw)
-            current_ey = event_y - (len(event_lines) * (event_font_size + 5)) // 2
-            for eline in event_lines:
-                _draw_text_with_shadow(
-                    draw, (event_x, current_ey), eline, event_font,
-                    fill=COLOR_WARM_WHITE, shadow_offset=2,
-                )
-                current_ey += event_font_size + 5
-
-            # 数値テキスト（あれば）
-            if value_text:
-                value_x = event_x
-                draw.text((value_x, current_ey + 3), value_text,
-                          font=value_font, fill=COLOR_SEPIA_LIGHT)
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"タイムライン保存完了: {output_path}")
-        return output_path
-
-    def generate_image_placeholder(
-        self,
-        label: str,
-        output_path: str,
-        resolution: Optional[Tuple[int, int]] = None,
-    ) -> str:
-        """
-        イメージラベル付きプレースホルダー画像を生成する。
-        ノスタルジックなシーンの代替画像として使用。
-
-        Args:
-            label: プレースホルダーのラベルテキスト
-            output_path: 出力ファイルパス
-            resolution: 画像解像度
-
-        Returns:
-            出力ファイルパス
-        """
-        res = resolution or self.default_resolution
-        width, height = res
-        logger.info(f"イメージプレースホルダー生成: '{label}' -> {output_path}")
-
-        # 温かみのある単色背景
-        image = create_gradient_background(
-            res, COLOR_WARM_CREAM, COLOR_SEPIA_LIGHT, GRADIENT_VERTICAL
-        )
-        draw = ImageDraw.Draw(image)
-
-        # 中央にラベルテキスト
-        label_font_size = int(min(width, height) * 0.045)
-        label_font = get_font(label_font_size)
-        max_text_width = int(width * 0.7)
-        center_y = int(height * 0.45)
-        _draw_multiline_centered(
-            draw, label, label_font, center_y, width, max_text_width,
-            fill=COLOR_DARK_BROWN, shadow=False,
-        )
-
-        # 「イメージ」ラベルを右下に追加
-        image = self._add_image_label_to_image(image)
-
-        os.makedirs(os.path.dirname(output_path), exist_ok=True)
-        image.save(output_path, "PNG", quality=95)
-        logger.info(f"イメージプレースホルダー保存完了: {output_path}")
-        return output_path
-
-    def _add_image_label_to_image(self, image: Image.Image) -> Image.Image:
-        """
-        画像に「イメージ」ラベルオーバーレイを追加する (内部メソッド)。
-
-        Args:
-            image: 元画像
-
-        Returns:
-            ラベル追加後の画像
-        """
-        width, height = image.size
-        # RGBA に変換してオーバーレイ
-        if image.mode != "RGBA":
-            image = image.convert("RGBA")
-
-        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        overlay_draw = ImageDraw.Draw(overlay)
-
-        label_text = "イメージ"
-        label_font_size = int(min(width, height) * 0.025)
-        label_font = get_font(label_font_size)
-
-        label_tw, label_th = _get_text_size(overlay_draw, label_text, label_font)
-
-        padding_x = int(label_tw * 0.3)
-        padding_y = int(label_th * 0.3)
-        margin = int(min(width, height) * 0.03)
-
-        box_x1 = width - margin - label_tw - padding_x * 2
-        box_y1 = height - margin - label_th - padding_y * 2
-        box_x2 = width - margin
-        box_y2 = height - margin
-
-        # 半透明黒背景
-        overlay_draw.rectangle(
-            [box_x1, box_y1, box_x2, box_y2],
-            fill=(0, 0, 0, 180),
-        )
-
-        # テキスト
-        text_x = box_x1 + padding_x
-        text_y = box_y1 + padding_y
-        overlay_draw.text((text_x, text_y), label_text, font=label_font,
-                          fill=(255, 255, 255, 230))
-
-        result = Image.alpha_composite(image, overlay)
-        return result.convert("RGB")
-
-    def add_image_label(
-        self,
-        image_path: str,
-        label: str = "イメージ",
-        output_path: Optional[str] = None,
-    ) -> str:
-        """
-        既存画像に「イメージ」ラベルオーバーレイを追加する。
-
-        Args:
-            image_path: 元画像ファイルパス
-            label: ラベルテキスト (デフォルト: "イメージ")
-            output_path: 出力パス (None の場合、元画像を上書き)
-
-        Returns:
-            出力ファイルパス
-        """
-        if output_path is None:
-            output_path = image_path
-
-        logger.info(f"イメージラベル追加: '{label}' -> {image_path}")
-
-        try:
-            image = Image.open(image_path)
-        except (OSError, IOError) as e:
-            raise RuntimeError(f"画像ファイルを開けません: {image_path} - {e}")
-
-        width, height = image.size
-
-        if image.mode != "RGBA":
-            image = image.convert("RGBA")
-
-        overlay = Image.new("RGBA", (width, height), (0, 0, 0, 0))
-        overlay_draw = ImageDraw.Draw(overlay)
-
-        label_font_size = int(min(width, height) * 0.025)
-        label_font = get_font(label_font_size)
-
-        label_tw, label_th = _get_text_size(overlay_draw, label, label_font)
-
-        padding_x = int(label_tw * 0.3)
-        padding_y = int(label_th * 0.3)
-        margin = int(min(width, height) * 0.03)
-
-        box_x1 = width - margin - label_tw - padding_x * 2
-        box_y1 = height - margin - label_th - padding_y * 2
-        box_x2 = width - margin
-        box_y2 = height - margin
-
-        overlay_draw.rectangle(
-            [box_x1, box_y1, box_x2, box_y2],
-            fill=(0, 0, 0, 180),
-        )
-
-        text_x = box_x1 + padding_x
-        text_y = box_y1 + padding_y
-        overlay_draw.text((text_x, text_y), label, font=label_font,
-                          fill=(255, 255, 255, 230))
-
-        result = Image.alpha_composite(image, overlay)
-
-        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-        result.convert("RGB").save(output_path, "PNG", quality=95)
-        logger.info(f"イメージラベル追加完了: {output_path}")
-        return output_path
-
-    def generate_topic_materials(
-        self,
-        topic: str,
-        output_dir: str,
-        resolution: Optional[Tuple[int, int]] = None,
-    ) -> Dict[str, Any]:
-        """
-        テレビの布トピック用の全素材を一括生成するメインエントリーポイント。
-
-        Args:
-            topic: トピック名 (現在は "tv_cloth" のみ対応)
-            output_dir: 出力ディレクトリ
-            resolution: 画像解像度
-
-        Returns:
-            生成結果の辞書 {"materials": List, "tracker": MaterialTracker}
-        """
-        res = resolution or self.default_resolution
-        os.makedirs(output_dir, exist_ok=True)
-        tracker = MaterialTracker()
-
-        logger.info(f"トピック素材一括生成開始: topic={topic}, output_dir={output_dir}")
-
-        if topic == "tv_cloth":
-            return self._generate_tv_cloth_materials(output_dir, res, tracker)
-        else:
-            logger.warning(f"未対応トピック: {topic}。デフォルトのタイトルカードのみ生成します。")
-            title_path = os.path.join(output_dir, "title_card.png")
-            self.generate_title_card(topic, title_path, res)
-            tracker.add_material(
-                file_path=title_path,
-                source_name="自動生成",
-                image_type="title_card",
-                generated_by_ai=False,
-                description=f"タイトルカード: {topic}",
-            )
-            return {
-                "materials": tracker.get_all_materials(),
-                "tracker": tracker,
-            }
-
-    def _generate_tv_cloth_materials(
-        self,
-        output_dir: str,
-        resolution: Tuple[int, int],
-        tracker: MaterialTracker,
-    ) -> Dict[str, Any]:
-        """テレビの布トピック用素材を生成する内部メソッド。"""
-
-        generated_paths: List[str] = []
-
-        # 1. タイトルカード
-        title_path = os.path.join(output_dir, "title_card.png")
-        self.generate_title_card(
-            "なぜ昔のテレビには布をかけていたのか",
-            title_path, resolution,
-            subtitle="昭和の居間に必ずあった「テレビの布」の謎に迫る",
-        )
-        tracker.add_material(
-            file_path=title_path,
-            source_name="自動生成",
-            image_type="title_card",
-            generated_by_ai=False,
-            description="メインタイトルカード",
-        )
-        generated_paths.append(title_path)
-
-        # 2. チャプターカード
-        chapters = [
-            "テレビがやってきた日",
-            "布をかけた本当の理由",
-            "テレビと日本人の暮らし",
-            "布文化の衰退",
-            "現代に残る名残",
-        ]
-        for i, chapter_title in enumerate(chapters, 1):
-            chapter_path = os.path.join(output_dir, f"chapter_{i:02d}.png")
-            self.generate_chapter_card(chapter_title, i, chapter_path, resolution)
-            tracker.add_material(
-                file_path=chapter_path,
-                source_name="自動生成",
-                image_type="chapter_card",
-                generated_by_ai=False,
-                description=f"チャプター{i}: {chapter_title}",
-            )
-            generated_paths.append(chapter_path)
-
-        # 3. タイムライン: テレビ普及率の推移
-        timeline_path = os.path.join(output_dir, "timeline_tv_spread.png")
-        timeline_events = [
-            {"year": "1953", "event": "テレビ放送開始",
-             "value": "普及率: ほぼ0%"},
-            {"year": "1958", "event": "皇太子ご成婚パレード",
-             "value": "普及率: 約10%"},
-            {"year": "1964", "event": "東京オリンピック",
-             "value": "普及率: 約90%"},
-            {"year": "1970", "event": "カラーテレビ普及開始",
-             "value": "普及率: 約95%"},
-            {"year": "1975", "event": "カラー完全普及",
-             "value": "カラー普及率: 約90%"},
-            {"year": "1985", "event": "薄型化・軽量化進行",
-             "value": "一家に複数台の時代"},
-        ]
-        self.generate_timeline(
-            "テレビ普及率の推移", timeline_events, timeline_path, resolution
-        )
-        tracker.add_material(
-            file_path=timeline_path,
-            source_name="自動生成",
-            image_type="timeline",
-            generated_by_ai=False,
-            description="テレビ普及率の推移タイムライン",
-        )
-        generated_paths.append(timeline_path)
-
-        # 4. 比較チャート: 当時のテレビ価格 vs 月給
-        comparison_path = os.path.join(output_dir, "comparison_price.png")
-        comparison_items = [
-            {"label": "テレビ価格 (1955年頃)",
-             "value": "約17万円", "bar_ratio": 1.0},
-            {"label": "サラリーマン月給 (1955年)",
-             "value": "約1.5万円", "bar_ratio": 0.088},
-            {"label": "テレビ価格 (1965年頃)",
-             "value": "約6万円", "bar_ratio": 0.35},
-            {"label": "サラリーマン月給 (1965年)",
-             "value": "約3万円", "bar_ratio": 0.18},
-        ]
-        self.generate_comparison_chart(
-            "当時のテレビ価格 vs 月給",
-            comparison_items, comparison_path, resolution,
-        )
-        tracker.add_material(
-            file_path=comparison_path,
-            source_name="自動生成",
-            image_type="comparison_chart",
-            generated_by_ai=False,
-            description="テレビ価格と月給の比較チャート",
-        )
-        generated_paths.append(comparison_path)
-
-        # 5. 年代カード
-        eras = [
-            ("昭和30年代", "1955-1964: テレビ黎明期"),
-            ("昭和40年代", "1965-1974: カラー化と大衆化"),
-            ("昭和50年代", "1975-1984: 多チャンネル時代"),
-            ("昭和60年代〜平成初期", "1985-1995: 布文化の終焉"),
-        ]
-        for era_name, description in eras:
-            safe_name = era_name.replace("〜", "_").replace("・", "_")
-            era_path = os.path.join(output_dir, f"era_{safe_name}.png")
-            self.generate_era_card(era_name, era_path, resolution,
-                                   description=description)
-            tracker.add_material(
-                file_path=era_path,
-                source_name="自動生成",
-                image_type="era_card",
-                generated_by_ai=False,
-                description=f"年代カード: {era_name}",
-            )
-            generated_paths.append(era_path)
-
-        # 6. イメージプレースホルダー（ノスタルジックシーン）
-        placeholder_path = os.path.join(output_dir, "nostalgic_scene.png")
-        self.generate_image_placeholder(
-            "昭和の居間 ― テレビに布がかけられた風景",
-            placeholder_path, resolution,
-        )
-        tracker.add_material(
-            file_path=placeholder_path,
-            source_name="自動生成",
-            image_type="image_placeholder",
-            generated_by_ai=False,
-            description="ノスタルジックシーンのイメージプレースホルダー",
-        )
-        generated_paths.append(placeholder_path)
-
-        # 権利関連ファイル出力
-        tracker.save_materials_json(
-            os.path.join(output_dir, "materials.json")
-        )
-        tracker.save_rights_report(
-            os.path.join(output_dir, "rights_report.md")
-        )
-        tracker.save_credits(
-            os.path.join(output_dir, "credits.txt")
-        )
-
-        logger.info(
-            f"テレビの布トピック素材生成完了: {len(generated_paths)}件の素材を生成しました"
-        )
-
-        return {
-            "materials": tracker.get_all_materials(),
-            "tracker": tracker,
-        }
-
+    # 軸
+    ax_x = int(w * 0.15)
+    ax_top = int(h * 0.18)
+    ax_bot = int(h * 0.92)
+    ax_h = ax_bot - ax_top
+    draw.line([(ax_x, ax_top), (ax_x, ax_bot)], fill=ACCENT_GOLD, width=3)
+
+    ev_sp = ax_h // max(len(items), 1)
+    y_fnt = _load_font(int(min(w, h) * 0.032), "title")
+    t_fnt = _load_font(int(min(w, h) * 0.028), "body")
+    dr = int(min(w, h) * 0.008)
+    max_tw = int(w * 0.55)
+
+    for i, item in enumerate(items):
+        ey = ax_top + i * ev_sp + ev_sp // 2
+        year = item.get("year", "")
+        text = item.get("text", "")
+
+        # ドット
+        draw.ellipse([ax_x - dr, ey - dr, ax_x + dr, ey + dr],
+                     fill=ACCENT_GOLD)
+        # 横線
+        le = ax_x + int(w * 0.06)
+        draw.line([(ax_x + dr, ey), (le, ey)], fill=ACCENT_GOLD, width=1)
+
+        # 年ラベル (軸左)
+        yw, yh = _text_size(draw, year, y_fnt)
+        yx = ax_x - int(w * 0.02) - yw
+        _draw_shadow_text(draw, (yx, ey - yh // 2), year, y_fnt,
+                          fill=ACCENT_GOLD, offset=2)
+
+        # テキスト (軸右)
+        tx = le + int(w * 0.015)
+        lines = _wrap_text(text, t_fnt, max_tw, draw)
+        ty = ey - (len(lines) * (int(min(w, h) * 0.028) + 5)) // 2
+        for ln in lines:
+            _draw_shadow_text(draw, (tx, ty), ln, t_fnt,
+                              fill=TEXT_WARM_WHITE, offset=2)
+            ty += int(min(w, h) * 0.028) + 5
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("タイムライン保存完了: %s", output_path)
+    return output_path
+
+
+def generate_comparison_card(
+    left_label: str,
+    left_value: str,
+    right_label: str,
+    right_value: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
+    """
+    左右比較カードを生成する。
+
+    Args:
+        left_label: 左側ラベル (例: "テレビ価格")
+        left_value: 左側値
+        right_label: 右側ラベル (例: "平均月収")
+        right_value: 右側値
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
+
+    Returns:
+        出力ファイルパス
+    """
+    w, h = resolution
+    logger.info("比較カード生成: '%s' vs '%s' -> %s",
+                left_label, right_label, output_path)
+
+    img = _gradient_bg(resolution, BG_DARK_WARM, BG_MUTED_NAVY)
+    draw = ImageDraw.Draw(img)
+
+    margin = int(min(w, h) * 0.04)
+    _decorative_border(draw, resolution, ACCENT_GOLD, margin)
+
+    # VS テキスト
+    vs_sz = int(min(w, h) * 0.06)
+    vs_fnt = _load_font(vs_sz, "title")
+    _draw_centered(draw, "VS", vs_fnt, int(h * 0.44), w, fill=ACCENT_WARM_RED)
+
+    # 中央縦線
+    draw.line([(w // 2, int(h * 0.15)), (w // 2, int(h * 0.85))],
+              fill=ACCENT_GOLD, width=2)
+
+    # 左側
+    lbl_sz = int(min(w, h) * 0.04)
+    val_sz = int(min(w, h) * 0.055)
+    lbl_fnt = _load_font(lbl_sz, "body")
+    val_fnt = _load_font(val_sz, "title")
+
+    half = w // 2
+    # 左ラベル
+    llw, _ = _text_size(draw, left_label, lbl_fnt)
+    _draw_shadow_text(draw, ((half - llw) // 2, int(h * 0.28)),
+                      left_label, lbl_fnt, fill=ACCENT_GOLD, offset=2)
+    # 左値
+    lvw, _ = _text_size(draw, left_value, val_fnt)
+    _draw_shadow_text(draw, ((half - lvw) // 2, int(h * 0.58)),
+                      left_value, val_fnt, fill=TEXT_WARM_WHITE, offset=3)
+
+    # 右ラベル
+    rlw, _ = _text_size(draw, right_label, lbl_fnt)
+    _draw_shadow_text(draw, (half + (half - rlw) // 2, int(h * 0.28)),
+                      right_label, lbl_fnt, fill=ACCENT_GOLD, offset=2)
+    # 右値
+    rvw, _ = _text_size(draw, right_value, val_fnt)
+    _draw_shadow_text(draw, (half + (half - rvw) // 2, int(h * 0.58)),
+                      right_value, val_fnt, fill=TEXT_WARM_WHITE, offset=3)
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("比較カード保存完了: %s", output_path)
+    return output_path
+
+
+def generate_image_placeholder(
+    description: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
+    """
+    「イメージ」ラベル付きプレースホルダー画像を生成する。
+
+    Args:
+        description: プレースホルダーの説明テキスト
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
+
+    Returns:
+        出力ファイルパス
+    """
+    w, h = resolution
+    logger.info("イメージプレースホルダー生成: '%s' -> %s", description, output_path)
+
+    img = _gradient_bg(resolution, BG_WARM_CREAM, BG_SEPIA)
+    draw = ImageDraw.Draw(img)
+
+    lbl_sz = int(min(w, h) * 0.045)
+    lbl_fnt = _load_font(lbl_sz, "body")
+    mtw = int(w * 0.7)
+    _draw_multiline_centered(
+        draw, description, lbl_fnt, int(h * 0.45), w, mtw,
+        fill=TEXT_DARK_BROWN, shadow=False,
+    )
+
+    img = _add_image_label(img)
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("イメージプレースホルダー保存完了: %s", output_path)
+    return output_path
+
+
+def generate_transition_card(
+    text: str,
+    resolution: Tuple[int, int],
+    output_path: str,
+) -> str:
+    """
+    トランジション (場面転換) カードを生成する。
+
+    Args:
+        text: トランジションテキスト
+        resolution: 画像解像度
+        output_path: 出力 PNG パス
+
+    Returns:
+        出力ファイルパス
+    """
+    w, h = resolution
+    logger.info("トランジションカード生成: '%s' -> %s", text, output_path)
+
+    img = _solid_bg(resolution, BG_DARK_WARM)
+    draw = ImageDraw.Draw(img)
+
+    # 上下に細いゴールドライン
+    ly = int(h * 0.40)
+    lw_ = int(w * 0.6)
+    lx = (w - lw_) // 2
+    draw.line([(lx, ly), (lx + lw_, ly)], fill=ACCENT_GOLD, width=1)
+
+    by = int(h * 0.60)
+    draw.line([(lx, by), (lx + lw_, by)], fill=ACCENT_GOLD, width=1)
+
+    # テキスト
+    t_sz = int(min(w, h) * 0.05)
+    t_fnt = _load_font(t_sz, "body")
+    _draw_multiline_centered(
+        draw, text, t_fnt, h // 2, w, int(w * 0.7),
+        fill=TEXT_WARM_WHITE, shadow=True,
+    )
+
+    _ensure_dir(output_path)
+    img.save(output_path, "PNG", quality=95)
+    logger.info("トランジションカード保存完了: %s", output_path)
+    return output_path
+
+
+# ===========================================================================
+# 権利管理 (MaterialTracker)
+# ===========================================================================
 
 class MaterialTracker:
     """
     素材の権利情報を追跡・管理するクラス。
 
-    各素材のファイルパス、出典、権利ステータス等を記録し、
-    materials.json, rights_report.md, credits.txt として出力する。
+    全素材に対して権利 JSON を保持し、materials.json / rights_report.md /
+    credits.txt を出力する。REVIEW / NG ステータスの素材は最終動画に使用しない。
     """
 
     def __init__(self) -> None:
         self._materials: List[Dict[str, Any]] = []
-        logger.info("MaterialTracker 初期化")
 
-    def add_material(
+    # ----- 追加 -----
+
+    def add(self, entry: Dict[str, Any]) -> None:
+        """権利情報 dict を追加する。"""
+        if entry.get("rights_status") not in ("OK", "REVIEW", "NG"):
+            entry["rights_status"] = "REVIEW"
+        self._materials.append(entry)
+
+    def add_self_generated(
         self,
         file_path: str,
-        source_name: str = "自動生成",
-        source_url: Optional[str] = None,
-        rights_status: str = "OK",
-        image_type: str = "generated",
-        generated_by_ai: bool = False,
-        credit_required: bool = False,
-        credit_text: Optional[str] = None,
-        description: Optional[str] = None,
-        license_type: Optional[str] = None,
-        notes: Optional[str] = None,
+        image_type: str = "TEXT_CARD",
+        notes: str = "",
     ) -> None:
-        """
-        素材を追跡リストに追加する。
+        """自作テキストカード素材を追加する (常に OK)。"""
+        self.add(_make_rights_entry(file_path, image_type, notes))
 
-        自己生成素材は常に rights_status="OK" となる。
+    # ----- 参照 -----
 
-        Args:
-            file_path: 素材ファイルパス
-            source_name: 出典名
-            source_url: 出典URL (任意)
-            rights_status: 権利ステータス ("OK", "REVIEW", "NG")
-            image_type: 画像種類
-            generated_by_ai: AI生成かどうか
-            credit_required: クレジット表示が必要か
-            credit_text: クレジットテキスト (任意)
-            description: 素材の説明 (任意)
-            license_type: ライセンス種類 (任意)
-            notes: 備考 (任意)
-        """
-        # 自動生成素材は常にOK
-        if source_name == "自動生成":
-            rights_status = "OK"
-            generated_by_ai = False
-            credit_required = False
-
-        if rights_status not in ("OK", "REVIEW", "NG"):
-            logger.warning(
-                f"不正な権利ステータス: '{rights_status}'。'REVIEW' に設定します。"
-            )
-            rights_status = "REVIEW"
-
-        material: Dict[str, Any] = {
-            "file_path": file_path,
-            "source_name": source_name,
-            "source_url": source_url,
-            "rights_status": rights_status,
-            "image_type": image_type,
-            "generated_by_ai": generated_by_ai,
-            "credit_required": credit_required,
-            "credit_text": credit_text,
-            "description": description,
-            "license_type": license_type,
-            "notes": notes,
-            "added_at": datetime.now().isoformat(),
-        }
-
-        self._materials.append(material)
-        logger.debug(f"素材追加: {file_path} (権利: {rights_status})")
-
-    def get_all_materials(self) -> List[Dict[str, Any]]:
-        """全素材情報を返す。"""
+    def get_all(self) -> List[Dict[str, Any]]:
+        """全素材を返す。"""
         return list(self._materials)
 
-    def get_safe_materials(self) -> List[Dict[str, Any]]:
-        """
-        権利ステータスが "OK" の素材のみを返す。
-        REVIEW/NG の素材は最終動画に使用しない。
+    def get_ok(self) -> List[Dict[str, Any]]:
+        """rights_status == 'OK' の素材のみ返す。"""
+        return [m for m in self._materials if m["rights_status"] == "OK"]
 
-        Returns:
-            rights_status=="OK" の素材リスト
-        """
-        safe = [m for m in self._materials if m["rights_status"] == "OK"]
-        logger.info(
-            f"安全な素材: {len(safe)}/{len(self._materials)}件 "
-            f"(除外: {len(self._materials) - len(safe)}件)"
-        )
-        return safe
-
-    def get_materials_by_status(
-        self, status: str
-    ) -> List[Dict[str, Any]]:
+    def get_by_status(self, status: str) -> List[Dict[str, Any]]:
         """指定ステータスの素材を返す。"""
         return [m for m in self._materials if m["rights_status"] == status]
 
-    def get_materials_by_type(
-        self, image_type: str
-    ) -> List[Dict[str, Any]]:
+    def get_by_type(self, image_type: str) -> List[Dict[str, Any]]:
         """指定種類の素材を返す。"""
         return [m for m in self._materials if m["image_type"] == image_type]
 
-    def save_materials_json(self, output_path: str) -> str:
-        """
-        素材情報を materials.json として保存する。
+    # ----- 出力 -----
 
-        Args:
-            output_path: 出力ファイルパス
-
-        Returns:
-            出力ファイルパス
-        """
-        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-
+    def save_materials_json(self, path: str) -> str:
+        """materials.json を出力する。"""
+        _ensure_dir(path)
         data = {
             "generated_at": datetime.now().isoformat(),
             "total_materials": len(self._materials),
             "status_summary": {
-                "OK": len(self.get_materials_by_status("OK")),
-                "REVIEW": len(self.get_materials_by_status("REVIEW")),
-                "NG": len(self.get_materials_by_status("NG")),
+                s: len(self.get_by_status(s)) for s in ("OK", "REVIEW", "NG")
             },
             "materials": self._materials,
         }
-
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, ensure_ascii=False, indent=2)
+        logger.info("materials.json 保存: %s", path)
+        return path
 
-        logger.info(f"素材情報JSON保存: {output_path}")
-        return output_path
+    def save_rights_report(self, path: str) -> str:
+        """rights_report.md を出力する。"""
+        _ensure_dir(path)
+        ok = self.get_by_status("OK")
+        review = self.get_by_status("REVIEW")
+        ng = self.get_by_status("NG")
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    def save_rights_report(self, output_path: str) -> str:
-        """
-        権利レポートを rights_report.md として保存する。
+        lines = [
+            "# 素材権利レポート", "",
+            f"生成日時: {now}", "",
+            "## サマリー", "",
+            f"- 総素材数: {len(self._materials)}",
+            f"- OK (使用可能): {len(ok)}",
+            f"- REVIEW (要確認): {len(review)}",
+            f"- NG (使用不可): {len(ng)}", "",
+        ]
 
-        Args:
-            output_path: 出力ファイルパス
-
-        Returns:
-            出力ファイルパス
-        """
-        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-
-        ok_materials = self.get_materials_by_status("OK")
-        review_materials = self.get_materials_by_status("REVIEW")
-        ng_materials = self.get_materials_by_status("NG")
-
-        lines: List[str] = []
-        lines.append("# 素材権利レポート")
-        lines.append("")
-        lines.append(f"生成日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append("")
-        lines.append("## サマリー")
-        lines.append("")
-        lines.append(f"- 総素材数: {len(self._materials)}")
-        lines.append(f"- OK (使用可能): {len(ok_materials)}")
-        lines.append(f"- REVIEW (要確認): {len(review_materials)}")
-        lines.append(f"- NG (使用不可): {len(ng_materials)}")
-        lines.append("")
-
-        if ng_materials:
-            lines.append("## NG素材 (使用不可)")
-            lines.append("")
-            lines.append("以下の素材は最終動画に使用できません。")
-            lines.append("")
-            for m in ng_materials:
+        if ng:
+            lines += ["## NG素材 (使用不可)", "",
+                       "以下の素材は最終動画に使用できません。", ""]
+            for m in ng:
                 lines.append(f"- **{os.path.basename(m['file_path'])}**")
                 lines.append(f"  - 出典: {m['source_name']}")
                 if m.get("notes"):
                     lines.append(f"  - 備考: {m['notes']}")
             lines.append("")
 
-        if review_materials:
-            lines.append("## REVIEW素材 (要確認)")
-            lines.append("")
-            lines.append("以下の素材は権利確認が必要です。確認完了まで使用しないでください。")
-            lines.append("")
-            for m in review_materials:
+        if review:
+            lines += ["## REVIEW素材 (要確認)", "",
+                       "以下の素材は権利確認が必要です。確認完了まで使用しないでください。", ""]
+            for m in review:
                 lines.append(f"- **{os.path.basename(m['file_path'])}**")
                 lines.append(f"  - 出典: {m['source_name']}")
                 if m.get("source_url"):
                     lines.append(f"  - URL: {m['source_url']}")
-                if m.get("license_type"):
-                    lines.append(f"  - ライセンス: {m['license_type']}")
                 if m.get("notes"):
                     lines.append(f"  - 備考: {m['notes']}")
             lines.append("")
 
-        lines.append("## OK素材 (使用可能)")
-        lines.append("")
-        if ok_materials:
-            for m in ok_materials:
+        lines += ["## OK素材 (使用可能)", ""]
+        if ok:
+            for m in ok:
                 lines.append(f"- **{os.path.basename(m['file_path'])}**")
                 lines.append(f"  - 種類: {m['image_type']}")
                 lines.append(f"  - 出典: {m['source_name']}")
-                if m.get("description"):
-                    lines.append(f"  - 説明: {m['description']}")
+                if m.get("notes"):
+                    lines.append(f"  - 備考: {m['notes']}")
         else:
             lines.append("使用可能な素材はありません。")
-        lines.append("")
+        lines += ["", "---", "",
+                   "注意: REVIEW/NG素材は最終動画に含めないでください。", ""]
 
-        lines.append("---")
-        lines.append("")
-        lines.append("注意: REVIEW/NG素材は最終動画に含めないでください。")
-        lines.append("")
-
-        with open(output_path, "w", encoding="utf-8") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
+        logger.info("rights_report.md 保存: %s", path)
+        return path
 
-        logger.info(f"権利レポート保存: {output_path}")
-        return output_path
-
-    def save_credits(self, output_path: str) -> str:
-        """
-        クレジット情報を credits.txt として保存する。
-
-        Args:
-            output_path: 出力ファイルパス
-
-        Returns:
-            出力ファイルパス
-        """
-        os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
-
-        lines: List[str] = []
-        lines.append("=" * 50)
-        lines.append("クレジット / Credits")
-        lines.append("=" * 50)
-        lines.append("")
-
-        credit_materials = [
+    def save_credits(self, path: str) -> str:
+        """credits.txt を出力する。"""
+        _ensure_dir(path)
+        credit_mats = [
             m for m in self._materials
             if m.get("credit_required") and m["rights_status"] == "OK"
         ]
-
-        if credit_materials:
+        lines = [
+            "=" * 50,
+            "クレジット / Credits",
+            "=" * 50, "",
+        ]
+        if credit_mats:
             lines.append("使用素材クレジット:")
             lines.append("")
-            for m in credit_materials:
-                credit = m.get("credit_text") or m.get("source_name", "不明")
+            for m in credit_mats:
+                ct = m.get("credit_text") or m.get("source_name", "不明")
                 lines.append(f"  {os.path.basename(m['file_path'])}")
-                lines.append(f"    クレジット: {credit}")
+                lines.append(f"    クレジット: {ct}")
                 if m.get("source_url"):
                     lines.append(f"    URL: {m['source_url']}")
-                if m.get("license_type"):
-                    lines.append(f"    ライセンス: {m['license_type']}")
                 lines.append("")
         else:
-            lines.append("外部素材のクレジット表示は不要です。")
-            lines.append("すべての素材は自動生成されたものです。")
-            lines.append("")
-
-        lines.append("-" * 50)
-        lines.append(f"生成日時: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-        lines.append("制作: 昭和・平成 なぜそうだったのか")
-        lines.append("=" * 50)
-        lines.append("")
-
-        with open(output_path, "w", encoding="utf-8") as f:
+            lines += [
+                "外部素材のクレジット表示は不要です。",
+                "すべての素材は自動生成されたものです。", "",
+            ]
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        lines += [
+            "-" * 50,
+            f"生成日時: {now}",
+            f"制作: {CHANNEL_NAME}",
+            "=" * 50, "",
+        ]
+        with open(path, "w", encoding="utf-8") as f:
             f.write("\n".join(lines))
+        logger.info("credits.txt 保存: %s", path)
+        return path
 
-        logger.info(f"クレジットファイル保存: {output_path}")
-        return output_path
+
+# ===========================================================================
+# 一括生成
+# ===========================================================================
+
+def generate_all_materials(
+    topic: str,
+    script_chapters: List[str],
+    output_dir: str,
+    format_type: str = "long",
+) -> List[Dict[str, Any]]:
+    """
+    指定トピック・チャプター構成に基づき全素材を一括生成する。
+
+    Args:
+        topic: 動画トピック
+        script_chapters: チャプタータイトルのリスト
+        output_dir: 出力ディレクトリ
+        format_type: "long" (1920x1080) or "shorts" (1080x1920)
+
+    Returns:
+        生成された素材 dict のリスト (権利情報付き)。
+        各 dict は _make_rights_entry() 形式。
+    """
+    res = RESOLUTION_SHORTS if format_type == "shorts" else RESOLUTION_LONG
+    os.makedirs(output_dir, exist_ok=True)
+    tracker = MaterialTracker()
+    logger.info(
+        "素材一括生成開始: topic='%s', chapters=%d, format=%s",
+        topic, len(script_chapters), format_type,
+    )
+
+    # 1. タイトルカード
+    title_path = os.path.join(output_dir, "title_card.png")
+    generate_title_card(topic, res, title_path)
+    tracker.add_self_generated(title_path, "TITLE_CARD", f"タイトル: {topic}")
+
+    # 2. チャプターカード
+    for i, ch_title in enumerate(script_chapters, 1):
+        ch_path = os.path.join(output_dir, f"chapter_{i:02d}.png")
+        generate_chapter_card(i, ch_title, res, ch_path)
+        tracker.add_self_generated(
+            ch_path, "CHAPTER_CARD", f"第{i}章: {ch_title}",
+        )
+
+    # 3. トランジションカード (各章間)
+    if len(script_chapters) > 1:
+        for i in range(len(script_chapters) - 1):
+            tr_path = os.path.join(output_dir, f"transition_{i + 1:02d}.png")
+            generate_transition_card("・  ・  ・", res, tr_path)
+            tracker.add_self_generated(
+                tr_path, "TRANSITION_CARD",
+                f"トランジション: 第{i + 1}章→第{i + 2}章",
+            )
+
+    # 権利関連ファイル出力
+    tracker.save_materials_json(os.path.join(output_dir, "materials.json"))
+    tracker.save_rights_report(os.path.join(output_dir, "rights_report.md"))
+    tracker.save_credits(os.path.join(output_dir, "credits.txt"))
+
+    materials = tracker.get_all()
+    logger.info("素材一括生成完了: %d 件", len(materials))
+    return materials
+
+
+# ===========================================================================
+# テストトピック用一括生成
+# ===========================================================================
+
+def generate_test_topic_materials(
+    output_dir: str,
+    format_type: str = "long",
+) -> List[Dict[str, Any]]:
+    """
+    テストトピック「なぜ昔のテレビには布をかけていたのか」用の全素材を生成する。
+
+    タイトルカード、チャプターカード6枚、年代カード3枚、
+    タイムライン、比較カード、イメージプレースホルダーを含む。
+
+    Args:
+        output_dir: 出力ディレクトリ
+        format_type: "long" or "shorts"
+
+    Returns:
+        生成された素材 dict のリスト
+    """
+    res = RESOLUTION_SHORTS if format_type == "shorts" else RESOLUTION_LONG
+    os.makedirs(output_dir, exist_ok=True)
+    tracker = MaterialTracker()
+    topic = "なぜ昔のテレビには布をかけていたのか"
+
+    logger.info("テストトピック素材生成開始: format=%s", format_type)
+
+    # --- タイトルカード ---
+    title_path = os.path.join(output_dir, "title_card.png")
+    generate_title_card(topic, res, title_path)
+    tracker.add_self_generated(title_path, "TITLE_CARD", topic)
+
+    # --- チャプターカード ---
+    chapters = [
+        "当時のテレビのある風景",
+        "布をかけていた理由",
+        "技術と価格の背景",
+        "地域と家庭による違い",
+        "変化の始まり",
+        "現代との違い",
+    ]
+    for i, ch in enumerate(chapters, 1):
+        p = os.path.join(output_dir, f"chapter_{i:02d}.png")
+        generate_chapter_card(i, ch, res, p)
+        tracker.add_self_generated(p, "CHAPTER_CARD", f"第{i}章: {ch}")
+
+    # --- 年代カード ---
+    eras = ["昭和30年代", "昭和40年代", "昭和50年代"]
+    for era in eras:
+        safe = era.replace("・", "_")
+        p = os.path.join(output_dir, f"era_{safe}.png")
+        generate_era_card(era, res, p)
+        tracker.add_self_generated(p, "ERA_CARD", era)
+
+    # --- タイムライン: テレビ普及率 ---
+    tl_path = os.path.join(output_dir, "timeline_tv_penetration.png")
+    tl_items = [
+        {"year": "1955", "text": "テレビ普及率 0.9%"},
+        {"year": "1960", "text": "テレビ普及率 44.7%"},
+        {"year": "1965", "text": "テレビ普及率 90%"},
+        {"year": "1975", "text": "テレビ普及率 95%+"},
+    ]
+    generate_timeline_image(tl_items, res, tl_path)
+    tracker.add_self_generated(tl_path, "TIMELINE", "テレビ普及率の推移")
+
+    # --- 比較カード: テレビ価格 vs 平均月収 ---
+    cmp_path = os.path.join(output_dir, "comparison_price_vs_salary.png")
+    generate_comparison_card(
+        "テレビ価格", "約17万円 (1955年)",
+        "平均月収", "約1.5万円 (1955年)",
+        res, cmp_path,
+    )
+    tracker.add_self_generated(cmp_path, "COMPARISON_CARD", "テレビ価格 vs 平均月収")
+
+    # --- イメージプレースホルダー ---
+    ph_path = os.path.join(output_dir, "placeholder_tv_scene.png")
+    generate_image_placeholder(
+        "昭和の居間 ― テレビに布がかけられた風景",
+        res, ph_path,
+    )
+    tracker.add_self_generated(ph_path, "IMAGE_PLACEHOLDER", "居間のイメージ")
+
+    # --- トランジションカード ---
+    tr_path = os.path.join(output_dir, "transition_01.png")
+    generate_transition_card("・  ・  ・", res, tr_path)
+    tracker.add_self_generated(tr_path, "TRANSITION_CARD", "場面転換")
+
+    # --- 権利ファイル出力 ---
+    tracker.save_materials_json(os.path.join(output_dir, "materials.json"))
+    tracker.save_rights_report(os.path.join(output_dir, "rights_report.md"))
+    tracker.save_credits(os.path.join(output_dir, "credits.txt"))
+
+    materials = tracker.get_all()
+    logger.info("テストトピック素材生成完了: %d 件", len(materials))
+    return materials

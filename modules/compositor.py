@@ -274,10 +274,8 @@ def build_ffmpeg_command(
     full_config: dict[str, Any],
 ) -> list[str]:
     """
-    Build the complete ffmpeg command with filter_complex for:
-      - Image sequence with Ken Burns + xfade
-      - Subtitle overlay (ass filter)
-      - Audio mixing (narration + BGM with ducking)
+    Build the complete ffmpeg command with filter_complex.
+    BGM and subtitles are optional (pass empty string to skip).
     """
     width = video_config["width"]
     height = video_config["height"]
@@ -286,10 +284,11 @@ def build_ffmpeg_command(
     codec_audio = video_config.get("codec_audio", "aac")
     pix_fmt = video_config.get("pix_fmt", "yuv420p")
 
-    # --- inputs ---
+    has_bgm = bgm_path and os.path.isfile(bgm_path)
+    has_subs = subtitle_ass and os.path.isfile(subtitle_ass)
+
     cmd: list[str] = ["ffmpeg", "-y"]
 
-    # Image inputs: one -loop 1 -t <dur> -i <path> per image
     for img in images:
         cmd.extend([
             "-loop", "1",
@@ -299,28 +298,35 @@ def build_ffmpeg_command(
 
     n_images = len(images)
 
-    # Narration audio input
     narration_idx = n_images
     cmd.extend(["-i", audio_path])
 
-    # BGM audio input
-    bgm_idx = n_images + 1
-    cmd.extend(["-stream_loop", "-1", "-i", bgm_path])
+    if has_bgm:
+        bgm_idx = n_images + 1
+        cmd.extend(["-stream_loop", "-1", "-i", bgm_path])
 
-    # --- filter_complex ---
     img_filter, _ = build_image_sequence_filter(images, width, height, fps)
-    sub_filter = build_subtitle_filter(subtitle_ass)
-    audio_filter = build_audio_mix_filter(narration_idx, bgm_idx, full_config)
 
-    # Chain: image sequence -> subtitle burn-in
-    video_chain = f"{img_filter};[vout]{sub_filter}[vfinal]"
+    if has_subs:
+        sub_filter = build_subtitle_filter(subtitle_ass)
+        video_chain = f"{img_filter};[vout]{sub_filter}[vfinal]"
+    else:
+        video_chain = img_filter.replace("[vout]", "[vfinal]")
+        if "[vfinal]" not in video_chain:
+            video_chain = f"{img_filter};[vout]null[vfinal]"
 
-    filter_complex = f"{video_chain};{audio_filter}"
+    if has_bgm:
+        audio_filter = build_audio_mix_filter(narration_idx, bgm_idx, full_config)
+        filter_complex = f"{video_chain};{audio_filter}"
+        audio_map = "[aout]"
+    else:
+        filter_complex = video_chain
+        audio_map = f"{narration_idx}:a"
 
     cmd.extend([
         "-filter_complex", filter_complex,
         "-map", "[vfinal]",
-        "-map", "[aout]",
+        "-map", audio_map,
         "-c:v", codec_video,
         "-preset", "medium",
         "-crf", "20",
@@ -609,10 +615,10 @@ class VideoCompositor:
         if not os.path.isfile(audio_path):
             raise RuntimeError(f"音声ファイルが見つかりません: {audio_path}")
 
-        if not os.path.isfile(subtitle_ass):
+        if subtitle_ass and not os.path.isfile(subtitle_ass):
             raise RuntimeError(f"字幕ファイル(ASS)が見つかりません: {subtitle_ass}")
 
-        if not os.path.isfile(bgm_path):
+        if bgm_path and not os.path.isfile(bgm_path):
             raise RuntimeError(f"BGMファイルが見つかりません: {bgm_path}")
 
     def _prepare_images(

@@ -1,20 +1,27 @@
 """
-Report generation module for showa-heisei-video-automation.
-Generates all text output files: descriptions, hashtags, summaries, credits, and status.
+レポート生成モジュール (Report Generation Module)
+
+昭和・平成動画自動制作システム用のレポート・メタデータ生成モジュール。
+YouTube動画の説明文、ハッシュタグ、固定コメント、実行サマリー、
+ステータスJSON、クレジットテキストを生成する。
+
+チャンネル: 昭和・平成 なぜそうだったのか
 """
 
 import json
-import subprocess
 import logging
-from dataclasses import dataclass
+import os
+import subprocess
 from datetime import datetime
-from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
-# デフォルトハッシュタグ (全動画共通)
-BASE_HASHTAGS = [
+CHANNEL_NAME = "昭和・平成 なぜそうだったのか"
+CHANNEL_TAGLINE = "昭和・平成の「当たり前」には、知られざる理由がありました。"
+
+# 固定ハッシュタグ (全動画共通)
+FIXED_HASHTAGS = [
     "#昭和",
     "#平成",
     "#なぜそうだったのか",
@@ -23,41 +30,45 @@ BASE_HASHTAGS = [
 ]
 
 # トピック別追加ハッシュタグ
-TOPIC_HASHTAG_MAP: dict[str, list[str]] = {
+TOPIC_HASHTAG_MAP: Dict[str, List[str]] = {
     "テレビ": ["#ブラウン管テレビ", "#昭和のテレビ", "#テレビの歴史"],
     "電話": ["#黒電話", "#ダイヤル式電話", "#昭和の電話"],
     "布": ["#テレビカバー", "#レースの敷物", "#昭和の暮らし"],
     "食": ["#昭和の食卓", "#懐かしの味", "#昭和グルメ"],
     "学校": ["#昭和の学校", "#懐かしの学校", "#昭和の教育"],
+    "給食": ["#学校給食", "#昭和の給食"],
     "遊び": ["#昭和の遊び", "#懐かしの遊び", "#昭和の子供"],
     "家電": ["#昭和の家電", "#三種の神器", "#レトロ家電"],
+    "駄菓子": ["#駄菓子", "#駄菓子屋"],
+    "銭湯": ["#銭湯", "#昭和の銭湯"],
+    "鉄道": ["#鉄道", "#昭和の鉄道"],
+    "車": ["#昭和の車", "#旧車"],
+    "おもちゃ": ["#昭和のおもちゃ"],
+    "住宅": ["#昭和の住宅", "#団地"],
+    "商店街": ["#商店街", "#昭和の商店街"],
+    "映画": ["#昭和の映画"],
+    "音楽": ["#昭和の音楽", "#歌謡曲"],
+    "ファッション": ["#昭和ファッション"],
+    "結婚": ["#昭和の結婚"],
+    "正月": ["#昭和の正月"],
+    "夏休み": ["#昭和の夏休み"],
     "交通": ["#昭和の交通", "#懐かしの乗り物", "#昭和の街"],
     "文化": ["#昭和文化", "#昭和の暮らし", "#日本文化"],
 }
 
-# 固定コメントテンプレート
-FIXED_COMMENT_TEMPLATE = """ご視聴いただきありがとうございます。
-
-この動画は「{topic}」について、当時の資料や文献をもとに制作しました。
-
-【参考資料・出典】
-{sources_text}
-
-内容に誤りや補足がございましたら、コメント欄でお知らせいただけると幸いです。
-皆さまの思い出やエピソードもぜひお聞かせください。
-
-※この動画の音声はVOICEVOXを使用しています。
-※BGMはライセンスに基づき使用しています。
-
-チャンネル登録・高評価いただけると励みになります。"""
+# 偽URL検出パターン
+_FAKE_URL_PATTERNS = [
+    "example.com", "placeholder", "dummy", "test.com",
+    "xxx", "yyy", "zzz", "hogehoge", "fugafuga",
+]
 
 
-def get_git_commit() -> str:
-    """現在のgitコミットハッシュを取得する。
+# ===========================================================================
+# ユーティリティ
+# ===========================================================================
 
-    Returns:
-        コミットハッシュの短縮形。取得できない場合は "unknown"。
-    """
+def _get_git_commit() -> str:
+    """現在の git commit ハッシュ短縮形を返す。取得不能時は 'unknown'。"""
     try:
         result = subprocess.run(
             ["git", "rev-parse", "--short", "HEAD"],
@@ -65,607 +76,663 @@ def get_git_commit() -> str:
         )
         if result.returncode == 0:
             return result.stdout.strip()
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         pass
-
-    logger.warning("gitコミットハッシュの取得に失敗しました")
     return "unknown"
 
 
+def _is_fake_url(url: str) -> bool:
+    """URLがプレースホルダーや偽URLかどうかを判定する。"""
+    if not url:
+        return False
+    lower = url.lower()
+    return any(p in lower for p in _FAKE_URL_PATTERNS)
+
+
+def _write_file(path: str, content: str) -> None:
+    """テキストファイルを UTF-8 で書き出す。"""
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+# ===========================================================================
+# YouTube 説明文
+# ===========================================================================
+
 def generate_description(
     topic: str,
-    sources: list[dict[str, str]],
-    credits: list[str],
-    hashtags: list[str],
-    output_path: str,
+    sources: List[Dict[str, str]],
+    credits: List[str],
+    bgm_credits: List[str],
 ) -> str:
-    """YouTube動画の概要欄テキストを生成する。
+    """
+    YouTube動画の説明文を生成する。
+
+    実際に使用したソースURLのみを記載する。URLを捏造しない。
+    偽URL (example.com, placeholder 等) は自動除外する。
 
     Args:
-        topic: 動画のトピック。
-        sources: 出典リスト。各要素は {"title": "...", "url": "..."} の辞書。
-            URLが空や偽のものは除外される。
-        credits: クレジット文のリスト。
-        hashtags: ハッシュタグのリスト。
-        output_path: 出力ファイルのパス。
+        topic: 動画トピック
+        sources: 出典リスト。各項目は {"name": str, "url": str} 形式。
+                 "title" キーも "name" として扱う。
+                 url が空文字列または偽URLの場合は名前のみ表示。
+        credits: 素材クレジット行のリスト (空リスト可)
+        bgm_credits: BGMクレジット行のリスト (空リスト可)
 
     Returns:
-        生成された概要欄テキスト。
+        説明文テキスト
     """
-    lines: list[str] = []
+    lines: List[str] = []
 
-    # タイトル・導入
-    lines.append(f"「{topic}」について、当時の背景や理由を解説します。")
+    # --- イントロ ---
+    lines.append(f"【{topic}】")
+    lines.append("")
+    lines.append(CHANNEL_TAGLINE)
+    lines.append(f"今回は「{topic}」について深掘りします。")
     lines.append("")
 
-    # 出典
-    valid_sources = _filter_valid_sources(sources)
+    # --- チャプター (タイムスタンプ用プレースホルダー) ---
+    lines.append("▼ チャプター")
+    lines.append("※ タイムスタンプは動画公開後に更新されます")
+    lines.append("0:00 オープニング")
+    lines.append("")
+
+    # --- 出典 ---
+    valid_sources = _filter_sources(sources)
     if valid_sources:
-        lines.append("【参考資料・出典】")
+        lines.append("▼ 参考資料・出典")
         for src in valid_sources:
-            title = src.get("title", "")
-            url = src.get("url", "")
-            if url:
-                lines.append(f"・{title}: {url}")
+            name = src["name"]
+            url = src.get("url", "").strip()
+            if url and not _is_fake_url(url):
+                lines.append(f"・{name}")
+                lines.append(f"  {url}")
             else:
-                lines.append(f"・{title}")
+                lines.append(f"・{name}")
         lines.append("")
 
-    # クレジット
-    if credits:
-        lines.append("【クレジット】")
-        for credit in credits:
+    # --- BGMクレジット ---
+    actual_bgm = [c for c in bgm_credits if c and c.strip()]
+    if actual_bgm:
+        lines.append("▼ BGM")
+        for credit in actual_bgm:
             lines.append(f"・{credit}")
         lines.append("")
 
-    # VOICEVOXクレジット
-    lines.append("【音声】")
+    # --- 素材クレジット ---
+    actual_credits = [c for c in credits if c and c.strip()]
+    if actual_credits:
+        lines.append("▼ 使用素材")
+        for credit in actual_credits:
+            lines.append(f"・{credit}")
+        lines.append("")
+
+    # --- 音声クレジット ---
+    lines.append("▼ 音声")
     lines.append("・VOICEVOX (https://voicevox.hiroshiba.jp/)")
     lines.append("")
 
-    # ハッシュタグ
-    if hashtags:
-        lines.append(" ".join(hashtags))
+    # --- チャンネル情報 ---
+    lines.append("▼ チャンネルについて")
+    lines.append(
+        f"「{CHANNEL_NAME}」では、昭和・平成時代の暮らしや文化について、"
+        "「なぜそうだったのか」という視点から解説しています。"
+    )
+    lines.append("チャンネル登録・高評価よろしくお願いします！")
+    lines.append("")
 
-    description_text = "\n".join(lines)
+    # --- 注意書き ---
+    lines.append("※ 本動画の内容は公開情報に基づくものであり、")
+    lines.append("  一部の情報は地域や時代により異なる場合があります。")
+    lines.append("※ 動画内の画像はイメージです。")
+    lines.append("")
 
-    _write_text_file(output_path, description_text)
-    logger.info("概要欄テキストを出力しました: %s", output_path)
+    # --- ハッシュタグ ---
+    tags = generate_hashtags(topic)
+    lines.append(" ".join(tags))
 
-    return description_text
+    return "\n".join(lines)
 
 
-def _filter_valid_sources(sources: list[dict[str, str]]) -> list[dict[str, str]]:
-    """実際に使用された有効な出典のみをフィルタリングする。
-
-    偽のURL、プレースホルダー、空のエントリは除外する。
-    """
-    invalid_patterns = [
-        "example.com",
-        "placeholder",
-        "dummy",
-        "test",
-        "xxx",
-        "yyy",
-        "zzz",
-        "hogehoge",
-        "fugafuga",
-    ]
-
-    valid: list[dict[str, str]] = []
+def _filter_sources(
+    sources: List[Dict[str, str]],
+) -> List[Dict[str, str]]:
+    """有効な出典のみを返す。name/title キーいずれも受け付ける。"""
+    result: List[Dict[str, str]] = []
     for src in sources:
-        title = src.get("title", "").strip()
-        url = src.get("url", "").strip()
-
-        if not title:
+        name = (src.get("name") or src.get("title", "")).strip()
+        if not name:
             continue
+        url = src.get("url", "").strip()
+        if _is_fake_url(url):
+            logger.warning("偽のURLを除外しました: %s", url)
+            url = ""
+        result.append({"name": name, "url": url})
+    return result
 
-        # URLが偽でないかチェック
-        if url:
-            url_lower = url.lower()
-            is_fake = any(pattern in url_lower for pattern in invalid_patterns)
-            if is_fake:
-                logger.warning("偽のURLを除外しました: %s", url)
-                # URLは除外するがタイトルは残す
-                valid.append({"title": title, "url": ""})
-                continue
 
-        valid.append(src)
+# ===========================================================================
+# ハッシュタグ
+# ===========================================================================
 
-    return valid
+def generate_hashtags(topic: str) -> List[str]:
+    """
+    動画用ハッシュタグを生成する。
 
+    固定タグに加え、トピックから自動抽出したタグを追加する。
+
+    Args:
+        topic: 動画トピック
+
+    Returns:
+        ハッシュタグ文字列のリスト (各要素は # 付き)
+    """
+    tags = list(FIXED_HASHTAGS)
+
+    # トピック固有タグ
+    for keyword, keyword_tags in TOPIC_HASHTAG_MAP.items():
+        if keyword in topic:
+            for t in keyword_tags:
+                if t not in tags:
+                    tags.append(t)
+
+    # トピック名そのものをタグ化 (30文字以下)
+    topic_clean = topic.replace(" ", "").replace("　", "")
+    if len(topic_clean) <= 28:
+        topic_tag = f"#{topic_clean}"
+        if topic_tag not in tags:
+            tags.append(topic_tag)
+
+    # 共通追加タグ
+    for t in ["#日本の歴史", "#雑学", "#ゆっくり解説"]:
+        if t not in tags:
+            tags.append(t)
+
+    return tags
+
+
+# ===========================================================================
+# 固定コメント
+# ===========================================================================
 
 def generate_fixed_comment(
     topic: str,
-    sources: list[dict[str, str]],
-    output_path: str,
+    shorts_info: Optional[List[Dict[str, str]]] = None,
 ) -> str:
-    """固定コメント用テキストを生成する。
+    """
+    動画の固定 (ピン留め) コメントを生成する。
 
     Args:
-        topic: 動画のトピック。
-        sources: 出典リスト。
-        output_path: 出力ファイルのパス。
+        topic: 動画トピック
+        shorts_info: Shorts動画の情報リスト。
+                     各項目は {"title": str, "url": str} 形式。
+                     None または空リストの場合はShortsリンクプレースホルダー。
 
     Returns:
-        生成された固定コメントテキスト。
+        固定コメント文テキスト
     """
-    valid_sources = _filter_valid_sources(sources)
-    if valid_sources:
-        source_lines = []
-        for src in valid_sources:
-            title = src.get("title", "")
-            url = src.get("url", "")
-            if url:
-                source_lines.append(f"・{title}: {url}")
+    lines: List[str] = []
+
+    lines.append("ご視聴ありがとうございます！")
+    lines.append("")
+    lines.append(f"「{topic}」、いかがでしたか？")
+    lines.append("")
+
+    # Shorts リンク
+    if shorts_info:
+        lines.append("この動画のショート版もあります：")
+        for info in shorts_info:
+            title = info.get("title", "Shorts")
+            url = info.get("url", "")
+            if url and not _is_fake_url(url):
+                lines.append(f"  ▶ {title}: {url}")
             else:
-                source_lines.append(f"・{title}")
-        sources_text = "\n".join(source_lines)
+                lines.append(f"  ▶ {title}: (公開後にリンクを追加します)")
+        lines.append("")
     else:
-        sources_text = "・各種公開資料を参考にしています"
+        lines.append("ショート版は近日公開予定です。お楽しみに！")
+        lines.append("")
 
-    comment_text = FIXED_COMMENT_TEMPLATE.format(
-        topic=topic,
-        sources_text=sources_text,
-    )
+    # 視聴者参加促進
+    lines.append("あなたの思い出を教えてください！")
+    lines.append(f"「{topic}」に関する思い出やエピソードがあれば、")
+    lines.append("ぜひコメント欄で教えてください。")
+    lines.append("皆さんの体験談をお待ちしています！")
+    lines.append("")
 
-    _write_text_file(output_path, comment_text)
-    logger.info("固定コメントテキストを出力しました: %s", output_path)
+    # チャンネル登録誘導
+    lines.append("チャンネル登録＆通知ONで、最新動画をお見逃しなく！")
+    lines.append("")
 
-    return comment_text
+    # 出典注記
+    lines.append("※この動画は公開資料・文献をもとに制作しています。")
+    lines.append("※音声はVOICEVOXを使用しています。")
+    lines.append("※内容に誤りや補足がございましたら、コメント欄でお知らせください。")
+
+    return "\n".join(lines)
 
 
-def generate_hashtags(
-    topic: str,
-    output_path: str,
-) -> list[str]:
-    """ハッシュタグリストを生成する。
+# ===========================================================================
+# 実行サマリー (Markdown)
+# ===========================================================================
 
-    基本ハッシュタグにトピック固有のタグを追加する。
+def generate_summary(execution_data: Dict[str, Any]) -> str:
+    """
+    実行全体のMarkdownサマリーを生成する。
 
     Args:
-        topic: 動画のトピック。
-        output_path: 出力ファイルのパス。
+        execution_data: 実行データ辞書。以下のキーを参照する:
+            - project_name (str)
+            - project_version (str)
+            - mode (str): "test" / "production"
+            - topic (str)
+            - format_type (str): "long" / "shorts"
+            - start_time (str, ISO format)
+            - end_time (str, ISO format)
+            - duration_seconds (float)
+            - environment (dict): os, python_version, etc.
+            - video (dict): duration, resolution, file_size, codec, etc.
+            - research (dict): source_count, fact_count, verified_count, etc.
+            - script (dict): char_count, chapter_count, estimated_duration
+            - voicevox (dict): speaker_id, speed_scale, audio_duration
+            - bgm (dict): file_name, source, license
+            - materials (dict): total, ok, review, ng
+            - quality (dict): checks_passed, checks_failed, overall_pass, results
+            - git_commit (str)
+            - output_dir (str)
+            - errors (list of str)
 
     Returns:
-        ハッシュタグのリスト。
+        Markdown形式のサマリー文字列
     """
-    hashtags = list(BASE_HASHTAGS)
+    lines: List[str] = []
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    topic = execution_data.get("topic", "不明")
 
-    # トピックに対応する追加ハッシュタグを検索
-    for keyword, extra_tags in TOPIC_HASHTAG_MAP.items():
-        if keyword in topic:
-            for tag in extra_tags:
-                if tag not in hashtags:
-                    hashtags.append(tag)
-
-    # トピック自体をハッシュタグに追加 (重複チェック)
-    topic_tag = f"#{topic.replace(' ', '').replace('　', '')}"
-    if topic_tag not in hashtags and len(topic_tag) <= 30:
-        hashtags.append(topic_tag)
-
-    hashtag_text = "\n".join(hashtags)
-    _write_text_file(output_path, hashtag_text)
-    logger.info("ハッシュタグを出力しました: %s (%d個)", output_path, len(hashtags))
-
-    return hashtags
-
-
-def generate_summary(
-    status: dict[str, Any],
-    output_path: str,
-) -> str:
-    """人間が読みやすいMarkdown形式のサマリーを生成する。
-
-    Args:
-        status: パイプライン全体のステータス辞書。
-        output_path: 出力ファイルのパス。
-
-    Returns:
-        生成されたMarkdownテキスト。
-    """
-    lines: list[str] = []
-
-    topic = status.get("topic", "不明")
-    mode = status.get("mode", "不明")
-    timestamp = status.get("timestamp", datetime.now().isoformat())
-
+    # --- ヘッダー ---
     lines.append(f"# 実行サマリー: {topic}")
     lines.append("")
-    lines.append(f"- **実行日時**: {timestamp}")
-    lines.append(f"- **モード**: {mode}")
-    lines.append(f"- **gitコミット**: {status.get('git_commit', get_git_commit())}")
+    lines.append(f"生成日時: {now}")
     lines.append("")
 
-    # VOICEVOX情報
-    voicevox = status.get("voicevox", {})
-    lines.append("## 音声 (VOICEVOX)")
+    # --- プロジェクト情報 ---
+    lines.append("## プロジェクト情報")
     lines.append("")
-    lines.append(f"- **話者**: {voicevox.get('speaker', '不明')}")
-    lines.append(f"- **スタイル**: {voicevox.get('style', '不明')}")
-    lines.append(f"- **速度**: {voicevox.get('speed', '不明')}")
-    lines.append("")
-
-    # BGM情報
-    bgm = status.get("bgm", {})
-    lines.append("## BGM")
-    lines.append("")
-    lines.append(f"- **ファイル**: {bgm.get('file', '不明')}")
-    lines.append(f"- **ライセンス**: {bgm.get('license', '不明')}")
+    lines.append(f"- プロジェクト: {execution_data.get('project_name', 'showa-heisei-video-automation')}")
+    lines.append(f"- バージョン: {execution_data.get('project_version', '不明')}")
+    lines.append(f"- モード: {execution_data.get('mode', '不明')}")
+    lines.append(f"- Gitコミット: {execution_data.get('git_commit', _get_git_commit())}")
+    lines.append(f"- 出力先: {execution_data.get('output_dir', '不明')}")
     lines.append("")
 
-    # ファクトチェック
-    facts = status.get("facts", {})
-    lines.append("## ファクトチェック")
+    # --- 環境情報 ---
+    env = execution_data.get("environment", {})
+    if env:
+        lines.append("## 環境")
+        lines.append("")
+        for k, v in env.items():
+            lines.append(f"- {k}: {v}")
+        lines.append("")
+
+    # --- 動画詳細 ---
+    lines.append("## 動画詳細")
     lines.append("")
-    if isinstance(facts, dict):
-        lines.append(f"- **確認済み**: {facts.get('confirmed', 0)}件")
-        lines.append(f"- **部分確認**: {facts.get('partial', 0)}件")
-        lines.append(f"- **未確認**: {facts.get('unconfirmed', 0)}件")
-        lines.append(f"- **却下**: {facts.get('rejected', 0)}件")
-    elif isinstance(facts, list):
-        from collections import Counter
-        counts = Counter(f.get("status", "不明") for f in facts)
-        for fact_status, count in counts.items():
-            lines.append(f"- **{fact_status}**: {count}件")
+    lines.append(f"- トピック: {topic}")
+    lines.append(f"- フォーマット: {execution_data.get('format_type', '不明')}")
+
+    video = execution_data.get("video", {})
+    if video:
+        lines.append(f"- 動画尺: {video.get('duration', '不明')}")
+        lines.append(f"- 解像度: {video.get('resolution', '不明')}")
+        lines.append(f"- ファイルサイズ: {video.get('file_size', '不明')}")
+        lines.append(f"- コーデック: {video.get('codec', '不明')}")
     lines.append("")
 
-    # 素材情報
-    materials = status.get("materials", {})
-    lines.append("## 素材")
-    lines.append("")
-    if isinstance(materials, dict):
-        lines.append(f"- **OK**: {materials.get('ok', 0)}件")
-        lines.append(f"- **REVIEW**: {materials.get('review', 0)}件")
-        lines.append(f"- **NG**: {materials.get('ng', 0)}件")
-    elif isinstance(materials, list):
-        from collections import Counter
-        counts = Counter(m.get("status", "不明") for m in materials)
-        for mat_status, count in counts.items():
-            lines.append(f"- **{mat_status}**: {count}件")
-    lines.append("")
+    # --- リサーチ ---
+    research = execution_data.get("research", {})
+    if research:
+        lines.append("## リサーチ統計")
+        lines.append("")
+        lines.append(f"- ソース数: {research.get('source_count', 0)}")
+        lines.append(f"- ファクト数: {research.get('fact_count', 0)}")
+        if research.get("verified_count") is not None:
+            lines.append(f"- 検証済み: {research['verified_count']}")
+        if research.get("unverified_count") is not None:
+            lines.append(f"- 未検証: {research['unverified_count']}")
+        lines.append("")
 
-    # 品質チェック結果
-    quality = status.get("quality", {})
-    lines.append("## 品質チェック")
-    lines.append("")
-    if isinstance(quality, dict):
-        overall = quality.get("overall_pass", False)
-        lines.append(f"- **結果**: {'PASS' if overall else 'FAIL'}")
-        passed = quality.get("passed_checks", 0)
-        total = quality.get("total_checks", 0)
-        lines.append(f"- **合格**: {passed}/{total}")
+    # --- スクリプト ---
+    script = execution_data.get("script", {})
+    if script:
+        lines.append("## スクリプト")
+        lines.append("")
+        lines.append(f"- 文字数: {script.get('char_count', '不明')}")
+        lines.append(f"- チャプター数: {script.get('chapter_count', '不明')}")
+        if script.get("estimated_duration"):
+            lines.append(f"- 推定尺: {script['estimated_duration']}")
+        lines.append("")
 
-        # 失敗チェックの詳細
-        check_results = quality.get("results", [])
-        failed = [r for r in check_results if not r.get("passed", True)]
-        if failed:
+    # --- 音声 ---
+    vv = execution_data.get("voicevox", {})
+    if vv:
+        lines.append("## VOICEVOX音声")
+        lines.append("")
+        lines.append(f"- スピーカーID: {vv.get('speaker_id', vv.get('speaker', '不明'))}")
+        lines.append(f"- 速度スケール: {vv.get('speed_scale', vv.get('speed', '不明'))}")
+        lines.append(f"- 音声尺: {vv.get('audio_duration', '不明')}")
+        lines.append("")
+
+    # --- BGM ---
+    bgm = execution_data.get("bgm", {})
+    if bgm:
+        lines.append("## BGM")
+        lines.append("")
+        lines.append(f"- ファイル: {bgm.get('file_name', bgm.get('file', '不明'))}")
+        lines.append(f"- ソース: {bgm.get('source', '不明')}")
+        lines.append(f"- ライセンス: {bgm.get('license', '不明')}")
+        lines.append("")
+
+    # --- 素材 ---
+    mats = execution_data.get("materials", {})
+    if mats:
+        lines.append("## 素材")
+        lines.append("")
+        lines.append(f"- 総数: {mats.get('total', 0)}")
+        lines.append(f"- OK: {mats.get('ok', 0)}")
+        lines.append(f"- REVIEW: {mats.get('review', 0)}")
+        lines.append(f"- NG: {mats.get('ng', 0)}")
+        lines.append("")
+
+    # --- 品質チェック ---
+    quality = execution_data.get("quality", {})
+    if quality:
+        lines.append("## 品質チェック")
+        lines.append("")
+        overall = quality.get("overall_pass")
+        if overall is True:
+            lines.append("**結果: PASS**")
+        elif overall is False:
+            lines.append("**結果: FAIL**")
+        else:
+            lines.append("**結果: 未実行**")
+        lines.append("")
+        lines.append(f"- 合格: {quality.get('checks_passed', quality.get('passed_checks', 0))}")
+        lines.append(f"- 不合格: {quality.get('checks_failed', 0)}")
+        lines.append("")
+
+        results = quality.get("results", [])
+        if results:
+            lines.append("| チェック項目 | 結果 | 詳細 |")
+            lines.append("|---|---|---|")
+            for r in results:
+                name = r.get("check_name", "")
+                passed = "PASS" if r.get("passed") else "FAIL"
+                details = r.get("details", "").replace("|", "/")
+                lines.append(f"| {name} | {passed} | {details} |")
             lines.append("")
-            lines.append("### 失敗したチェック")
-            lines.append("")
-            for r in failed:
-                severity_mark = "!!!" if r.get("severity") == "error" else "!"
-                lines.append(
-                    f"- [{severity_mark}] {r.get('check_name', '不明')}: "
-                    f"{r.get('details', '詳細なし')}"
-                )
+
+    # --- 実行時間 ---
+    lines.append("## 実行時間")
+    lines.append("")
+    lines.append(f"- 開始: {execution_data.get('start_time', execution_data.get('timestamp', '不明'))}")
+    lines.append(f"- 終了: {execution_data.get('end_time', '不明')}")
+    dur = execution_data.get("duration_seconds")
+    if dur is not None:
+        minutes = int(dur) // 60
+        seconds = int(dur) % 60
+        lines.append(f"- 所要時間: {minutes}分{seconds}秒 ({dur:.1f}秒)")
     lines.append("")
 
-    # 最終判定
-    overall_pass = status.get("overall_pass", False)
+    # --- エラー ---
+    errors = execution_data.get("errors", [])
+    if errors:
+        lines.append("## エラー")
+        lines.append("")
+        for err in errors:
+            lines.append(f"- {err}")
+        lines.append("")
+
+    # --- 最終判定 ---
+    overall_pass = execution_data.get("overall_pass",
+                                       quality.get("overall_pass", False) if quality else False)
     lines.append("## 最終判定")
     lines.append("")
     lines.append(f"**{'PASS - 公開可能' if overall_pass else 'FAIL - 要確認'}**")
     lines.append("")
 
-    summary_text = "\n".join(lines)
-    _write_text_file(output_path, summary_text)
-    logger.info("サマリーを出力しました: %s", output_path)
-
-    return summary_text
-
-
-def generate_status_json(
-    mode: str,
-    topic: str,
-    voicevox_info: dict[str, Any],
-    bgm_info: dict[str, Any],
-    facts_info: dict[str, Any],
-    materials_info: dict[str, Any],
-    quality_info: dict[str, Any],
-    output_path: str,
-) -> dict[str, Any]:
-    """機械可読なステータスJSONを生成する。
-
-    Args:
-        mode: 実行モード ("production" or "test")。
-        topic: トピック名。
-        voicevox_info: VOICEVOX情報 (speaker, style, speed)。
-        bgm_info: BGM情報 (file, license)。
-        facts_info: ファクトチェック結果 (confirmed/partial/unconfirmed/rejected counts)。
-        materials_info: 素材情報 (ok/review/ng counts)。
-        quality_info: 品質チェック結果。
-        output_path: 出力ファイルのパス。
-
-    Returns:
-        生成されたステータス辞書。
-    """
-    # ファクトチェックのカウント集計
-    if isinstance(facts_info, list):
-        facts_counts = {
-            "confirmed": sum(1 for f in facts_info if f.get("status") == "CONFIRMED"),
-            "partial": sum(1 for f in facts_info if f.get("status") == "PARTIAL"),
-            "unconfirmed": sum(1 for f in facts_info if f.get("status") == "UNCONFIRMED"),
-            "rejected": sum(1 for f in facts_info if f.get("status") == "REJECTED"),
-        }
-    else:
-        facts_counts = {
-            "confirmed": facts_info.get("confirmed", 0),
-            "partial": facts_info.get("partial", 0),
-            "unconfirmed": facts_info.get("unconfirmed", 0),
-            "rejected": facts_info.get("rejected", 0),
-        }
-
-    # 素材のカウント集計
-    if isinstance(materials_info, list):
-        materials_counts = {
-            "ok": sum(1 for m in materials_info if m.get("status") == "OK"),
-            "review": sum(1 for m in materials_info if m.get("status") == "REVIEW"),
-            "ng": sum(1 for m in materials_info if m.get("status") == "NG"),
-        }
-    else:
-        materials_counts = {
-            "ok": materials_info.get("ok", 0),
-            "review": materials_info.get("review", 0),
-            "ng": materials_info.get("ng", 0),
-        }
-
-    # 全体判定
-    quality_pass = quality_info.get("overall_pass", False) if isinstance(quality_info, dict) else False
-    facts_ok = facts_counts["rejected"] == 0 and facts_counts["unconfirmed"] == 0
-    materials_ok = materials_counts["review"] == 0 and materials_counts["ng"] == 0
-    overall_pass = quality_pass and facts_ok and materials_ok
-
-    status_data: dict[str, Any] = {
-        "mode": mode,
-        "topic": topic,
-        "timestamp": datetime.now().isoformat(),
-        "git_commit": get_git_commit(),
-        "voicevox": {
-            "speaker": voicevox_info.get("speaker", "不明"),
-            "style": voicevox_info.get("style", "不明"),
-            "speed": voicevox_info.get("speed", 1.0),
-        },
-        "bgm": {
-            "file": bgm_info.get("file", ""),
-            "license": bgm_info.get("license", ""),
-        },
-        "facts": facts_counts,
-        "materials": materials_counts,
-        "quality": quality_info if isinstance(quality_info, dict) else {},
-        "overall_pass": overall_pass,
-    }
-
-    out_path = Path(output_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-
-    try:
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(status_data, f, ensure_ascii=False, indent=2)
-        logger.info("ステータスJSONを出力しました: %s", output_path)
-    except OSError as e:
-        logger.error("ステータスJSONの書き出しに失敗しました: %s", e)
-        raise RuntimeError(f"ステータスJSONの書き出しに失敗しました: {e}")
-
-    return status_data
-
-
-def generate_credits(
-    bgm_credits: list[str],
-    source_credits: list[str],
-    output_path: str,
-) -> str:
-    """統合クレジットファイルを生成する。
-
-    Args:
-        bgm_credits: BGM関連のクレジット行リスト。
-        source_credits: 出典関連のクレジット行リスト。
-        output_path: 出力ファイルのパス。
-
-    Returns:
-        生成されたクレジットテキスト。
-    """
-    lines: list[str] = []
-
-    lines.append("=" * 40)
-    lines.append("クレジット")
-    lines.append("=" * 40)
+    lines.append("---")
+    lines.append(f"制作: {CHANNEL_NAME}")
     lines.append("")
 
-    # 音声クレジット (常に含める)
+    return "\n".join(lines)
+
+
+# ===========================================================================
+# ステータスJSON
+# ===========================================================================
+
+def generate_status_json(execution_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    実行ステータスの機械可読 JSON 辞書を生成する。
+
+    Args:
+        execution_data: 実行データ辞書 (generate_summary と同形式)
+
+    Returns:
+        ステータス辞書。キー: mode, topic, timestamp, git_commit,
+        voicevox, bgm, research (fact_count, source_count),
+        materials (total, ok, review, ng), quality_checks, overall_pass
+    """
+    now = datetime.now().isoformat()
+
+    quality = execution_data.get("quality", {})
+    materials = execution_data.get("materials", {})
+    research = execution_data.get("research", {})
+    voicevox = execution_data.get("voicevox", {})
+    bgm = execution_data.get("bgm", {})
+
+    status: Dict[str, Any] = {
+        "generated_at": now,
+        "mode": execution_data.get("mode", "unknown"),
+        "topic": execution_data.get("topic", ""),
+        "format_type": execution_data.get("format_type", "long"),
+        "timestamp": {
+            "start": execution_data.get("start_time", ""),
+            "end": execution_data.get("end_time", ""),
+            "duration_seconds": execution_data.get("duration_seconds"),
+        },
+        "git_commit": execution_data.get("git_commit", _get_git_commit()),
+        "voicevox": {
+            "speaker_id": voicevox.get("speaker_id", voicevox.get("speaker")),
+            "speed_scale": voicevox.get("speed_scale", voicevox.get("speed")),
+            "audio_duration": voicevox.get("audio_duration"),
+        },
+        "bgm": {
+            "file_name": bgm.get("file_name", bgm.get("file", "")),
+            "source": bgm.get("source", ""),
+            "license": bgm.get("license", ""),
+        },
+        "research": {
+            "fact_count": research.get("fact_count", 0),
+            "source_count": research.get("source_count", 0),
+        },
+        "materials": {
+            "total": materials.get("total", 0),
+            "ok": materials.get("ok", 0),
+            "review": materials.get("review", 0),
+            "ng": materials.get("ng", 0),
+        },
+        "quality_checks": {
+            "checks_passed": quality.get("checks_passed", quality.get("passed_checks", 0)),
+            "checks_failed": quality.get("checks_failed", 0),
+            "results": quality.get("results", []),
+        },
+        "overall_pass": quality.get("overall_pass", False),
+        "errors": execution_data.get("errors", []),
+    }
+
+    return status
+
+
+# ===========================================================================
+# クレジット統合
+# ===========================================================================
+
+def generate_credits(
+    materials: List[Dict[str, Any]],
+    bgm_info: Optional[Dict[str, Any]] = None,
+) -> str:
+    """
+    素材・BGMを統合したクレジットテキストを生成する。
+
+    実際に使用されたもののみクレジットする。偽のクレジットは出力しない。
+
+    Args:
+        materials: 素材情報リスト (MaterialTracker の出力形式)。
+                   rights_status が "OK" かつ credit_required が True のもののみ掲載。
+        bgm_info: BGM情報辞書。キー: credit_text, source, source_url, file_name
+
+    Returns:
+        クレジットテキスト
+    """
+    lines: List[str] = []
+    lines.append("=" * 50)
+    lines.append("クレジット / Credits")
+    lines.append("=" * 50)
+    lines.append("")
+
+    has_any = False
+
+    # --- 音声クレジット (常に含める) ---
     lines.append("【音声】")
     lines.append("・VOICEVOX (https://voicevox.hiroshiba.jp/)")
     lines.append("")
 
-    # BGMクレジット
-    if bgm_credits:
-        lines.append("【BGM】")
-        for credit in bgm_credits:
-            lines.append(f"・{credit}")
+    # --- 素材クレジット ---
+    credit_materials = [
+        m for m in materials
+        if m.get("credit_required") and m.get("rights_status") == "OK"
+    ]
+    if credit_materials:
+        has_any = True
+        lines.append("【使用素材】")
+        lines.append("")
+        for m in credit_materials:
+            ct = m.get("credit_text") or m.get("source_name", "")
+            if ct:
+                fname = os.path.basename(m.get("file_path", ""))
+                lines.append(f"  {fname}")
+                lines.append(f"    {ct}")
+                url = (m.get("source_url") or "").strip()
+                if url and not _is_fake_url(url):
+                    lines.append(f"    {url}")
+                lines.append("")
+
+    # --- BGMクレジット ---
+    if bgm_info:
+        bgm_credit = (bgm_info.get("credit_text") or "").strip()
+        if bgm_credit:
+            has_any = True
+            lines.append("【BGM】")
+            lines.append("")
+            lines.append(f"  {bgm_credit}")
+            bgm_url = (bgm_info.get("source_url") or "").strip()
+            if bgm_url and not _is_fake_url(bgm_url):
+                lines.append(f"  {bgm_url}")
+            lines.append("")
+
+    if not has_any:
+        lines.append("外部素材のクレジット表示は不要です。")
+        lines.append("すべての素材は自動生成されたものです。")
         lines.append("")
 
-    # 出典クレジット
-    if source_credits:
-        lines.append("【参考資料・出典】")
-        for credit in source_credits:
-            lines.append(f"・{credit}")
-        lines.append("")
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    lines.append("-" * 50)
+    lines.append(f"生成日時: {now}")
+    lines.append(f"制作: {CHANNEL_NAME}")
+    lines.append("=" * 50)
+    lines.append("")
 
-    lines.append("=" * 40)
-
-    credits_text = "\n".join(lines)
-    _write_text_file(output_path, credits_text)
-    logger.info("クレジットを出力しました: %s", output_path)
-
-    return credits_text
+    return "\n".join(lines)
 
 
-def _write_text_file(path: str, content: str) -> None:
-    """テキストファイルを書き出すヘルパー。
+# ===========================================================================
+# 全レポート一括出力
+# ===========================================================================
+
+def generate_all_reports(
+    output_dir: str,
+    execution_data: Dict[str, Any],
+) -> None:
+    """
+    全レポートファイルを出力する。
+
+    出力ファイル:
+        - description.txt: YouTube説明文
+        - fixed_comment.txt: 固定コメント
+        - hashtags.txt: ハッシュタグ
+        - summary.md: 実行サマリー
+        - status.json: ステータスJSON
+        - credits.txt: クレジット
 
     Args:
-        path: 出力ファイルのパス。
-        content: 書き出す内容。
-
-    Raises:
-        RuntimeError: ファイルの書き出しに失敗した場合。
+        output_dir: 出力ディレクトリ
+        execution_data: 実行データ辞書。generate_summary の execution_data に加え、
+            以下のキーも参照する:
+            - sources (list of dict): 出典情報 (name/title, url)
+            - material_credits (list of str): 素材クレジット行
+            - bgm_credits (list of str): BGMクレジット行
+            - materials_list (list of dict): 素材情報リスト
+            - bgm_info (dict): BGM情報
+            - shorts_info (list of dict): Shorts情報 (title, url)
     """
-    out_path = Path(path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+    topic = execution_data.get("topic", "")
 
-    try:
-        out_path.write_text(content, encoding="utf-8")
-    except OSError as e:
-        logger.error("ファイルの書き出しに失敗しました: %s - %s", path, e)
-        raise RuntimeError(f"ファイルの書き出しに失敗しました: {path} - {e}")
+    logger.info("全レポート生成開始: output_dir=%s, topic='%s'", output_dir, topic)
 
+    # --- description.txt ---
+    sources = execution_data.get("sources", [])
+    material_credits = execution_data.get("material_credits", [])
+    bgm_credits_list = execution_data.get("bgm_credits", [])
+    desc = generate_description(topic, sources, material_credits, bgm_credits_list)
+    desc_path = os.path.join(output_dir, "description.txt")
+    _write_file(desc_path, desc)
+    logger.info("description.txt 保存: %s", desc_path)
 
-class ReportGenerator:
-    """レポート生成を統合管理するクラス。
+    # --- fixed_comment.txt ---
+    shorts_info = execution_data.get("shorts_info")
+    comment = generate_fixed_comment(topic, shorts_info)
+    comment_path = os.path.join(output_dir, "fixed_comment.txt")
+    _write_file(comment_path, comment)
+    logger.info("fixed_comment.txt 保存: %s", comment_path)
 
-    全てのテキスト出力ファイルの生成を一括で行う。
-    """
+    # --- hashtags.txt ---
+    tags = generate_hashtags(topic)
+    tags_text = " ".join(tags) + "\n\n" + "\n".join(tags) + "\n"
+    tags_path = os.path.join(output_dir, "hashtags.txt")
+    _write_file(tags_path, tags_text)
+    logger.info("hashtags.txt 保存: %s", tags_path)
 
-    def __init__(
-        self,
-        output_dir: str,
-        status: Optional[dict[str, Any]] = None,
-    ) -> None:
-        """
-        Args:
-            output_dir: 出力ディレクトリのパス。
-            status: パイプラインのステータス辞書。
-        """
-        self.output_dir = Path(output_dir)
-        self.status = status or {}
+    # --- summary.md ---
+    summary = generate_summary(execution_data)
+    summary_path = os.path.join(output_dir, "summary.md")
+    _write_file(summary_path, summary)
+    logger.info("summary.md 保存: %s", summary_path)
 
-    def generate_all_reports(
-        self,
-        output_dir: Optional[str] = None,
-        status: Optional[dict[str, Any]] = None,
-    ) -> dict[str, str]:
-        """全てのレポートファイルを生成する。
+    # --- status.json ---
+    status = generate_status_json(execution_data)
+    status_path = os.path.join(output_dir, "status.json")
+    _write_file(status_path, json.dumps(status, ensure_ascii=False, indent=2))
+    logger.info("status.json 保存: %s", status_path)
 
-        Args:
-            output_dir: 出力ディレクトリ (省略時はコンストラクタの値)。
-            status: ステータス辞書 (省略時はコンストラクタの値)。
+    # --- credits.txt ---
+    materials_list = execution_data.get("materials_list", [])
+    bgm_info = execution_data.get("bgm_info")
+    credits_text = generate_credits(materials_list, bgm_info)
+    credits_path = os.path.join(output_dir, "credits.txt")
+    _write_file(credits_path, credits_text)
+    logger.info("credits.txt 保存: %s", credits_path)
 
-        Returns:
-            生成されたファイルパスの辞書 {"file_type": "path"}。
-        """
-        if output_dir:
-            self.output_dir = Path(output_dir)
-        if status:
-            self.status = status
-
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-        generated_files: dict[str, str] = {}
-
-        topic = self.status.get("topic", "不明")
-        mode = self.status.get("mode", "test")
-        sources = self.status.get("sources", [])
-        bgm_info = self.status.get("bgm", {})
-        voicevox_info = self.status.get("voicevox", {})
-        facts_info = self.status.get("facts", {})
-        materials_info = self.status.get("materials", {})
-        quality_info = self.status.get("quality", {})
-
-        logger.info("レポート生成を開始します: %s", self.output_dir)
-
-        # 1. ハッシュタグ生成
-        try:
-            hashtags_path = str(self.output_dir / "hashtags.txt")
-            hashtags = generate_hashtags(topic, hashtags_path)
-            generated_files["hashtags"] = hashtags_path
-        except RuntimeError as e:
-            logger.error("ハッシュタグの生成に失敗しました: %s", e)
-            hashtags = list(BASE_HASHTAGS)
-
-        # 2. クレジット生成
-        try:
-            bgm_credits: list[str] = []
-            if bgm_info.get("file"):
-                credit_line = bgm_info["file"]
-                if bgm_info.get("license"):
-                    credit_line += f" ({bgm_info['license']})"
-                if bgm_info.get("author"):
-                    credit_line += f" by {bgm_info['author']}"
-                bgm_credits.append(credit_line)
-
-            source_credits = [
-                src.get("title", "") for src in sources if src.get("title")
-            ]
-
-            credits_path = str(self.output_dir / "credits.txt")
-            generate_credits(bgm_credits, source_credits, credits_path)
-            generated_files["credits"] = credits_path
-
-            all_credits = bgm_credits + ["VOICEVOX (https://voicevox.hiroshiba.jp/)"]
-        except RuntimeError as e:
-            logger.error("クレジットの生成に失敗しました: %s", e)
-            all_credits = []
-
-        # 3. 概要欄テキスト生成
-        try:
-            description_path = str(self.output_dir / "description.txt")
-            generate_description(
-                topic, sources, all_credits, hashtags, description_path,
-            )
-            generated_files["description"] = description_path
-        except RuntimeError as e:
-            logger.error("概要欄テキストの生成に失敗しました: %s", e)
-
-        # 4. 固定コメント生成
-        try:
-            comment_path = str(self.output_dir / "fixed_comment.txt")
-            generate_fixed_comment(topic, sources, comment_path)
-            generated_files["fixed_comment"] = comment_path
-        except RuntimeError as e:
-            logger.error("固定コメントの生成に失敗しました: %s", e)
-
-        # 5. ステータスJSON生成
-        try:
-            status_path = str(self.output_dir / "status.json")
-            generate_status_json(
-                mode=mode,
-                topic=topic,
-                voicevox_info=voicevox_info,
-                bgm_info=bgm_info,
-                facts_info=facts_info,
-                materials_info=materials_info,
-                quality_info=quality_info,
-                output_path=status_path,
-            )
-            generated_files["status"] = status_path
-        except RuntimeError as e:
-            logger.error("ステータスJSONの生成に失敗しました: %s", e)
-
-        # 6. サマリー生成 (最後に生成 - 他の結果を含めるため)
-        try:
-            # ステータスを更新して品質情報を含める
-            summary_status = dict(self.status)
-            summary_status.setdefault("git_commit", get_git_commit())
-            summary_status.setdefault("timestamp", datetime.now().isoformat())
-
-            summary_path = str(self.output_dir / "summary.md")
-            generate_summary(summary_status, summary_path)
-            generated_files["summary"] = summary_path
-        except RuntimeError as e:
-            logger.error("サマリーの生成に失敗しました: %s", e)
-
-        logger.info(
-            "レポート生成が完了しました: %d件のファイルを生成",
-            len(generated_files),
-        )
-
-        return generated_files
+    logger.info("全レポート生成完了: 6ファイル -> %s", output_dir)
