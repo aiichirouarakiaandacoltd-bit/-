@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+output/
+logs/
+screenshots/
+*.mp4
+*.wav
+!assets/bgm/.gitkeep
+.env
+venv/
+.venv/
