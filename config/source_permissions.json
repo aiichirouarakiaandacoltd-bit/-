@@ -1,0 +1,108 @@
+{
+  "permission_types": {
+    "owned": {
+      "description": "荒木が所有するザ・ダンクの既存動画・画像",
+      "use_in_final": true,
+      "auto_download": true
+    },
+    "owned_alias": {
+      "description": "ファイル名やURLは異なるが、ザ・ダンク保有素材と確認済み",
+      "use_in_final": true,
+      "auto_download": true
+    },
+    "licensed": {
+      "description": "荒木が明示的な利用許諾を保有",
+      "use_in_final": true,
+      "auto_download": true
+    },
+    "reference_only": {
+      "description": "企画分析・台本作成・プレー確認だけに使用。完成MP4へ使用禁止",
+      "use_in_final": false,
+      "auto_download": false
+    },
+    "review_required": {
+      "description": "権利状態が不明。荒木の確認があるまで使用禁止",
+      "use_in_final": false,
+      "auto_download": false
+    },
+    "prohibited": {
+      "description": "完成MP4へ使用禁止",
+      "use_in_final": false,
+      "auto_download": false
+    }
+  },
+  "channels": {
+    "https://www.youtube.com/@%E3%82%B6%E3%83%80%E3%83%B3%E3%82%AF": {
+      "name": "ザ・ダンク",
+      "permission_type": "owned",
+      "rights_status": "OK",
+      "note": "荒木が所有するチャンネル。素材の自動取得・完成MP4への使用可能。"
+    },
+    "https://www.youtube.com/@GoldenHoopsProduction": {
+      "name": "GoldenHoopsProduction",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "参考専用。企画分析・プレー確認のみ。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@GDsHighlights": {
+      "name": "GDsHighlights",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "参考専用。企画分析・プレー確認のみ。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@KingSwish.": {
+      "name": "KingSwish",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "参考専用。企画分析・プレー確認のみ。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@all-aroundnba8912": {
+      "name": "all-aroundnba8912",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "参考専用。企画分析・プレー確認のみ。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@OvertimeEurope": {
+      "name": "OvertimeEurope",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "参考専用。企画分析・プレー確認のみ。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@spurs": {
+      "name": "San Antonio Spurs（公式）",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "NBA公式チームチャンネル。参考専用。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@lakers": {
+      "name": "Los Angeles Lakers（公式）",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "NBA公式チームチャンネル。参考専用。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@warriors": {
+      "name": "Golden State Warriors（公式）",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "NBA公式チームチャンネル。参考専用。完成MP4への素材使用禁止。"
+    },
+    "https://www.youtube.com/@ChicagoBulls": {
+      "name": "Chicago Bulls（公式）",
+      "permission_type": "reference_only",
+      "rights_status": "REVIEW",
+      "note": "NBA公式チームチャンネル。参考専用。完成MP4への素材使用禁止。"
+    }
+  },
+  "auto_download_prohibited_sources": [
+    "NBA公式映像",
+    "NBA Rakuten",
+    "B.LEAGUE公式映像",
+    "FIBA公式映像",
+    "他社YouTube動画",
+    "報道映像",
+    "選手SNS動画",
+    "放送映像",
+    "DRM付き動画"
+  ],
+  "materials": []
+}

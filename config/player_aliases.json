@@ -1,0 +1,139 @@
+{
+  "aliases": {
+    "河村勇輝": {
+      "canonical": "河村勇輝",
+      "variants": ["川村ゆうき", "川村優樹", "かわむらゆうき", "Yuki Kawamura"],
+      "nickname": "河村",
+      "priority": 5,
+      "team": "横浜ビー・コルセアーズ",
+      "league": "B.LEAGUE",
+      "position": "PG"
+    },
+    "八村塁": {
+      "canonical": "八村塁",
+      "variants": ["はちむらるい", "Rui Hachimura"],
+      "nickname": "八村",
+      "priority": 5,
+      "team": "ロサンゼルス・レイカーズ",
+      "league": "NBA",
+      "position": "PF"
+    },
+    "レブロン・ジェームズ": {
+      "canonical": "レブロン・ジェームズ",
+      "variants": ["ネブロン・ジェームス", "レブロンジェームズ", "LeBron James"],
+      "nickname": "レブロン",
+      "priority": 5,
+      "team": "ロサンゼルス・レイカーズ",
+      "league": "NBA",
+      "position": "SF"
+    },
+    "ステフィン・カリー": {
+      "canonical": "ステフィン・カリー",
+      "variants": ["ビステネフィンカリー", "ステファンカリー", "Stephen Curry", "Steph Curry"],
+      "nickname": "カリー",
+      "priority": 5,
+      "team": "ゴールデンステート・ウォリアーズ",
+      "league": "NBA",
+      "position": "PG"
+    },
+    "ビクター・ウェンバンヤマ": {
+      "canonical": "ビクター・ウェンバンヤマ",
+      "variants": ["ヴィクター・ウェンバンヤマー", "ウェンバニャマ", "Victor Wembanyama"],
+      "nickname": "ウェンビー",
+      "priority": 5,
+      "team": "サンアントニオ・スパーズ",
+      "league": "NBA",
+      "position": "C"
+    },
+    "富樫勇樹": {
+      "canonical": "富樫勇樹",
+      "variants": ["遠賀祐樹", "冨樫義勇", "とがしゆうき", "Yuki Togashi"],
+      "nickname": "富樫",
+      "priority": 5,
+      "team": "千葉ジェッツ",
+      "league": "B.LEAGUE",
+      "position": "PG"
+    },
+    "富永啓生": {
+      "canonical": "富永啓生",
+      "variants": ["富永啓星", "冬永圭世", "とみながけいせい", "Keisei Tominaga"],
+      "nickname": "富永",
+      "priority": 5,
+      "team": "インディアナ・ペイサーズ",
+      "league": "NBA",
+      "position": "SG"
+    },
+    "渡邊雄太": {
+      "canonical": "渡邊雄太",
+      "variants": ["渡辺雄太", "渡邉雄太", "小田信祐太", "わたなべゆうた", "Yuta Watanabe"],
+      "nickname": "渡邊",
+      "priority": 5,
+      "team": "",
+      "league": "B.LEAGUE",
+      "position": "SF"
+    },
+    "比江島慎": {
+      "canonical": "比江島慎",
+      "variants": ["冷島", "冷島真", "平島慎", "ひえじままこと", "Makoto Hiejima"],
+      "nickname": "比江島",
+      "priority": 5,
+      "team": "宇都宮ブレックス",
+      "league": "B.LEAGUE",
+      "position": "SG"
+    },
+    "ルカ・ドンチッチ": {
+      "canonical": "ルカ・ドンチッチ",
+      "variants": ["Luka Doncic"],
+      "nickname": "ルカ",
+      "priority": 4,
+      "team": "ロサンゼルス・レイカーズ",
+      "league": "NBA",
+      "position": "PG"
+    },
+    "ニコラ・ヨキッチ": {
+      "canonical": "ニコラ・ヨキッチ",
+      "variants": ["Nikola Jokic"],
+      "nickname": "ヨキッチ",
+      "priority": 4,
+      "team": "デンバー・ナゲッツ",
+      "league": "NBA",
+      "position": "C"
+    },
+    "シェイ・ギルジャス＝アレクサンダー": {
+      "canonical": "シェイ・ギルジャス＝アレクサンダー",
+      "variants": ["Shai Gilgeous-Alexander", "SGA"],
+      "nickname": "SGA",
+      "priority": 4,
+      "team": "オクラホマシティ・サンダー",
+      "league": "NBA",
+      "position": "SG"
+    },
+    "ケビン・デュラント": {
+      "canonical": "ケビン・デュラント",
+      "variants": ["Kevin Durant"],
+      "nickname": "KD",
+      "priority": 4,
+      "team": "フェニックス・サンズ",
+      "league": "NBA",
+      "position": "SF"
+    },
+    "アンソニー・エドワーズ": {
+      "canonical": "アンソニー・エドワーズ",
+      "variants": ["Anthony Edwards"],
+      "nickname": "ANT",
+      "priority": 4,
+      "team": "ミネソタ・ティンバーウルブズ",
+      "league": "NBA",
+      "position": "SG"
+    },
+    "クーパー・フラッグ": {
+      "canonical": "クーパー・フラッグ",
+      "variants": ["Cooper Flagg"],
+      "nickname": "フラッグ",
+      "priority": 4,
+      "team": "ロサンゼルス・レイカーズ",
+      "league": "NBA",
+      "position": "SF"
+    }
+  }
+}
