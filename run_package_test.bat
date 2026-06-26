@@ -50,7 +50,7 @@ echo  [1/2] テストモードで実行
 echo ============================================================
 echo.
 
-%PY_CMD% "%SCRIPT_DIR%main.py" --theme "%THEME%" --mode test
+%PY_CMD% "%SCRIPT_DIR%main.py" generate --test --theme "%THEME%"
 if errorlevel 1 (
     echo.
     echo [FAIL] テストモードで失敗しました。
@@ -65,7 +65,7 @@ echo  [2/2] プロダクションモードで実行
 echo ============================================================
 echo.
 
-%PY_CMD% "%SCRIPT_DIR%main.py" --theme "%THEME%" --mode production
+%PY_CMD% "%SCRIPT_DIR%main.py" generate --production --theme "%THEME%"
 if errorlevel 1 (
     echo.
     echo [FAIL] プロダクションモードで失敗しました。

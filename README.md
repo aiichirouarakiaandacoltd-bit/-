@@ -30,11 +30,16 @@ FFmpeg、VOICEVOX、BGMファイルは不要です（制作指示書に情報と
 ## 実行方法
 
 ```bash
+# ヘルプ
+python main.py --help
+
 # テストモード（動作確認用、仮データ可）
-python main.py --theme "テーマ" --mode test
+python main.py generate --test
+python main.py generate --test --theme "テーマ"
 
 # プロダクションモード（出典確認必須）
-python main.py --theme "テーマ" --mode production
+python main.py generate --production
+python main.py generate --production --theme "テーマ"
 ```
 
 出力先: `output/packages/<run_id>/`
@@ -67,6 +72,20 @@ python main.py --theme "テーマ" --mode production
 3. BGM正式URLの設定（`bgm_config.json`）
 4. NG表現チェック結果の確認
 5. 外注者へ渡す前の内容最終確認
+
+## BGM採用条件
+
+BGMは以下の4条件をすべて満たすもののみ採用する：
+
+1. **商用利用可**
+2. **YouTube収益化可**
+3. **公式ページURLあり**
+4. **作曲者条件確認済み**
+
+### 投稿後の確認事項
+
+- 初回投稿後、YouTube Studioで著作権申し立ての有無を確認する
+- 申し立てが出た場合は、BGMを差し替え、該当楽曲を使用停止リストに入れる
 
 ## 本番完成条件
 

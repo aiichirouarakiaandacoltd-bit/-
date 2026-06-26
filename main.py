@@ -2,9 +2,11 @@
 """Imperial Video Automation - 外注向け制作パッケージ生成システム
 
 Usage:
-    python main.py --theme "テーマ" --mode test
-    python main.py --theme "テーマ" --mode production
     python main.py --help
+    python main.py generate --test
+    python main.py generate --production
+    python main.py generate --test --theme "テーマ"
+    python main.py generate --production --theme "テーマ"
 """
 import argparse
 import json
@@ -152,18 +154,49 @@ def cleanup_intermediate(output_dir):
             f.unlink()
 
 
+DEFAULT_THEME = "なぜ昔のテレビには布をかけていたのか"
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Imperial Video Automation - 外注向け制作パッケージ生成"
     )
-    parser.add_argument("--theme", required=True, help="企画テーマ")
-    parser.add_argument(
-        "--mode", choices=["test", "production"], default="test",
-        help="test: 動作確認用 / production: 本番用（出典確認必須）"
+    subparsers = parser.add_subparsers(dest="command")
+
+    gen_parser = subparsers.add_parser("generate", help="制作パッケージを生成")
+    gen_parser.add_argument("--theme", default=DEFAULT_THEME, help="企画テーマ（省略時はデフォルトテーマ）")
+    mode_group = gen_parser.add_mutually_exclusive_group()
+    mode_group.add_argument("--test", action="store_true", help="テストモード（動作確認用）")
+    mode_group.add_argument("--production", action="store_true", help="プロダクションモード（出典確認必須）")
+    gen_parser.add_argument(
+        "--mode", choices=["test", "production"], default=None,
+        help="(後方互換) test / production"
     )
+
+    parser.add_argument("--theme", default=DEFAULT_THEME, help="企画テーマ（省略時はデフォルトテーマ）")
+    parser.add_argument(
+        "--mode", choices=["test", "production"], default=None,
+        help="(後方互換) test / production"
+    )
+
     args = parser.parse_args()
 
-    run_id = generate_run_id(args.theme)
+    if args.command == "generate":
+        theme = args.theme
+        if args.mode:
+            mode = args.mode
+        elif args.production:
+            mode = "production"
+        else:
+            mode = "test"
+    elif args.command is None and args.mode:
+        theme = args.theme
+        mode = args.mode
+    else:
+        parser.print_help()
+        sys.exit(0)
+
+    run_id = generate_run_id(theme)
     output_dir = cfg.OUTPUT_PACKAGES_DIR / run_id
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -171,8 +204,8 @@ def main():
 
     logger.info("=" * 60)
     logger.info(f"制作パッケージ生成開始")
-    logger.info(f"  テーマ: {args.theme}")
-    logger.info(f"  モード: {args.mode}")
+    logger.info(f"  テーマ: {theme}")
+    logger.info(f"  モード: {mode}")
     logger.info(f"  出力先: {output_dir}")
     logger.info("=" * 60)
 
@@ -196,29 +229,29 @@ def main():
         )
 
         logger.info("[1/9] 出典調査・ファクトチェック...")
-        research_data = research_topic(args.theme, output_dir)
+        research_data = research_topic(theme, output_dir)
         generate_research_report(research_data, output_dir)
         generate_fact_check(research_data, output_dir)
         generate_sources_csv(research_data, output_dir)
         consolidate_research(output_dir, logger)
 
         logger.info("[2/9] ナレーション台本作成...")
-        generate_long_script(args.theme, research_data, output_dir)
-        generate_shorts_scripts(args.theme, research_data, output_dir)
+        generate_long_script(theme, research_data, output_dir)
+        generate_shorts_scripts(theme, research_data, output_dir)
         consolidate_scripts(output_dir, logger)
 
         logger.info("[3/9] 編集指示書・サムネイル指示書作成...")
-        generate_video_instructions(args.theme, research_data, output_dir)
-        generate_thumbnail_instructions(args.theme, research_data, output_dir)
+        generate_video_instructions(theme, research_data, output_dir)
+        generate_thumbnail_instructions(theme, research_data, output_dir)
         consolidate_instructions(output_dir, logger)
 
         logger.info("[4/9] 素材候補・権利レポート作成...")
-        materials_data = generate_material_urls_csv(args.theme, research_data, output_dir)
+        materials_data = generate_material_urls_csv(theme, research_data, output_dir)
 
         logger.info("[5/9] 投稿用文面作成...")
         bgm_config = load_bgm_config()
         posting_result = generate_posting_package(
-            args.theme, research_data, bgm_config, output_dir
+            theme, research_data, bgm_config, output_dir
         )
 
         logger.info("[6/9] BGM・クレジット設定...")
@@ -257,11 +290,11 @@ def main():
         logger.info("[9/9] パッケージ検証・サマリー生成...")
         status = validate_package(
             output_dir, research_data, ng_data, bgm_config,
-            args.theme, topic_source="manual", mode=args.mode,
+            theme, topic_source="manual", mode=mode,
         )
 
         generate_package_summary(
-            args.theme, research_data, ng_data, bgm_config, status, output_dir
+            theme, research_data, ng_data, bgm_config, status, output_dir
         )
         write_status_json(status, output_dir)
 
@@ -296,8 +329,8 @@ def main():
         logger.error(f"エラー: {e}", exc_info=True)
         error_status = {
             "project_name": "imperial-video-automation",
-            "topic": args.theme,
-            "mode": args.mode,
+            "topic": theme,
+            "mode": mode,
             "package_complete": False,
             "production_ready": False,
             "error": str(e),
