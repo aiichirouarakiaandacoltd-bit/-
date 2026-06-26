@@ -94,11 +94,10 @@ def _generate_description_lines(topic, research_data, bgm_config):
     lines.append(f"VOICEVOX: {cfg.VOICEVOX_SETTINGS['speaker_name']}")
     lines.append("")
 
-    bgm_url = bgm_config.get("download_or_reference_url")
-    if bgm_url:
-        lines.append("【BGM】")
-        lines.append(bgm_config.get("credit_text", cfg.BGM_SETTINGS["credit_text"]))
-        lines.append("")
+    credit_text = bgm_config.get("credit_text", cfg.BGM_SETTINGS["credit_text"])
+    lines.append("【BGM】")
+    lines.append(credit_text)
+    lines.append("")
 
     lines.append("※ 本動画の内容は公式資料に基づいていますが、解釈を含む部分があります。")
     lines.append("※ 皇族のAI生成画像は一切使用しておりません。")
@@ -127,14 +126,8 @@ def _generate_credits_lines(research_data, bgm_config):
     lines.append(f"音声: VOICEVOX {cfg.VOICEVOX_SETTINGS['speaker_name']}")
     lines.append("")
 
-    bgm_url = bgm_config.get("download_or_reference_url")
-    if bgm_url:
-        credit = bgm_config.get("credit_text", cfg.BGM_SETTINGS["credit_text"])
-        if credit.startswith("BGM:") or credit.startswith("BGM："):
-            credit = credit.split(":", 1)[1].strip() if ":" in credit else credit.split("：", 1)[1].strip()
-        lines.append(f"BGM: {credit}")
-    else:
-        lines.append("BGM: 要確認（BGM正式URLが未設定）")
+    credit_text = bgm_config.get("credit_text", cfg.BGM_SETTINGS["credit_text"])
+    lines.append(credit_text)
     lines.append("")
     lines.append("素材: 各素材の出典は動画制作指示書を参照")
     lines.append("")

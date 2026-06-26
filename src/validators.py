@@ -31,15 +31,11 @@ def _validate_bgm_config(bgm_config):
     """Check BGM configuration completeness for production readiness."""
     issues = []
     if not bgm_config.get("download_or_reference_url"):
-        issues.append("BGM取得・確認URLが未設定")
-    if not bgm_config.get("title"):
-        issues.append("BGM楽曲タイトルが未設定")
-    if bgm_config.get("commercial_use") is not True:
-        issues.append("BGM商用利用可が未確認")
-    if bgm_config.get("youtube_monetization") is not True:
-        issues.append("BGM YouTube収益化可が未確認")
-    if bgm_config.get("license_status") in (None, "unknown", ""):
-        issues.append("BGMライセンス状態が未確認")
+        issues.append("BGM正式参照URL未設定")
+    if not bgm_config.get("file_name"):
+        issues.append("BGMファイル名が未設定")
+    if not bgm_config.get("provider"):
+        issues.append("BGM提供元が未設定")
     return issues
 
 
@@ -88,10 +84,15 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         missing_items.append(f"出典未確認の事実が{len(unconfirmed_facts)}件")
 
     all_facts = research_data.get("facts", [])
-    null_url_facts = [f for f in all_facts if not f.get("source_url")]
-    null_url_majority = len(null_url_facts) > len(all_facts) / 2 if all_facts else False
-    if null_url_majority and mode == "production":
-        missing_items.append(f"主要factの過半数({len(null_url_facts)}/{len(all_facts)})がsource_url未設定")
+    unsourced_facts = [f for f in all_facts
+                       if not f.get("source_url") and not f.get("resource_identifier")]
+    unsourced_majority = len(unsourced_facts) > len(all_facts) / 2 if all_facts else False
+    if unsourced_majority and mode == "production":
+        missing_items.append(f"主要factの過半数({len(unsourced_facts)}/{len(all_facts)})が出典未設定")
+
+    manual_verify_facts = [f for f in all_facts if f.get("manual_source_verification_required")]
+    if manual_verify_facts and mode == "production":
+        missing_items.append(f"手動出典確認が必要なfactが{len(manual_verify_facts)}件")
 
     script_path = output_dir / "02_narration_script.md"
     shorts_broken = False
@@ -123,7 +124,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and not ng_has_fail
         and not has_unconfirmed_in_script
         and not shorts_broken
-        and not null_url_majority
+        and not unsourced_majority
     )
 
     production_ready = (

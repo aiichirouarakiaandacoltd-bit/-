@@ -138,27 +138,28 @@ def _num_kanji(n):
 
 def _build_shorts_01_text(topic, research_data):
     filtered = _filter_confirmed_facts(research_data)
-    confirmed = filtered["confirmed"]
+    usable = [f for f in filtered["confirmed"] if f.get("usable_in_script")]
     channel = cfg.CHANNEL_NAME
 
     lines = []
-    lines.append(f"「{topic}」")
+    lines.append(f"「{channel}」をご視聴いただきありがとうございます。")
     lines.append("")
 
-    if confirmed:
-        lines.append(f"{confirmed[0].get('claim', '')}")
+    if usable:
+        lines.append(f"今回は「{topic}」についてお伝えします。")
         lines.append("")
-        if len(confirmed) > 1:
-            lines.append("実は、この背景には深い理由があるのです。")
+        lines.append(f"{usable[0].get('claim', '')}。")
         lines.append("")
+        if len(usable) > 1:
+            lines.append(f"そして、{usable[1].get('claim', '')}。")
+            lines.append("")
+        lines.append("その詳しい背景は、長尺動画で丁寧に解説しています。")
     else:
-        lines.append("このテーマ、ご存じですか？")
+        lines.append(f"「{topic}」について、ご存じですか。")
         lines.append("")
-        lines.append("意外な事実が隠されています。")
-        lines.append("")
+        lines.append("詳しくは長尺動画で解説しています。")
 
-    lines.append("詳しくは長尺動画で解説しています。")
-    lines.append(f"{channel}で検索してください。")
+    lines.append(f"ぜひ{channel}で検索してください。")
     lines.append("")
 
     return "\n".join(lines)
@@ -166,24 +167,28 @@ def _build_shorts_01_text(topic, research_data):
 
 def _build_shorts_02_text(topic, research_data):
     filtered = _filter_confirmed_facts(research_data)
-    confirmed = filtered["confirmed"]
+    usable = [f for f in filtered["confirmed"] if f.get("usable_in_script")]
     channel = cfg.CHANNEL_NAME
 
     lines = []
-    lines.append(f"「{topic}」の補足情報です。")
+    lines.append(f"「{channel}」をご視聴いただきありがとうございます。")
+    lines.append("")
+    lines.append(f"「{topic}」の補足です。")
     lines.append("")
 
-    if len(confirmed) > 2:
-        lines.append(f"{confirmed[-1].get('claim', '')}")
+    if len(usable) > 2:
+        lines.append(f"{usable[-1].get('claim', '')}。")
         lines.append("")
-        lines.append("長尺動画では語りきれなかった視点をお伝えしました。")
+        lines.append("長尺動画ではさらに詳しくお伝えしています。")
+    elif usable:
+        lines.append(f"{usable[-1].get('claim', '')}。")
+        lines.append("")
+        lines.append("長尺動画では、より丁寧にお伝えしています。")
     else:
-        lines.append("このテーマについて、もう少し深くお伝えします。")
-        lines.append("")
-        lines.append("（※ 出典確認後に内容を記載してください）")
+        lines.append("このテーマについて、詳しくは長尺動画をご覧ください。")
 
     lines.append("")
-    lines.append(f"他の動画も{channel}でご覧ください。")
+    lines.append(f"ぜひ{channel}でご覧ください。")
     lines.append("")
 
     return "\n".join(lines)

@@ -44,6 +44,11 @@ def load_bgm_config():
         return defaults
 
     if "selected" in raw and isinstance(raw["selected"], dict):
+        loaded_channel = raw.get("channel", "")
+        if loaded_channel and loaded_channel != cfg.CHANNEL_NAME:
+            defaults["missing_items"] = ["BGM正式参照URL未設定"]
+            defaults["_channel"] = cfg.CHANNEL_NAME
+            return defaults
         return _load_search_based(raw)
 
     if isinstance(raw, dict) and "bgm" in raw:
@@ -177,11 +182,9 @@ def generate_bgm_plan(bgm_config, output_dir):
     lines.append("# BGM選定プラン")
     lines.append("")
 
-    channel = bgm_config.get("_channel", "")
-    if channel:
-        lines.append(f"## 対象チャンネル")
-        lines.append(f"{channel}")
-        lines.append("")
+    lines.append(f"## 対象チャンネル")
+    lines.append(f"{cfg.CHANNEL_NAME}")
+    lines.append("")
 
     criteria = bgm_config.get("_search_criteria", {})
     if criteria:

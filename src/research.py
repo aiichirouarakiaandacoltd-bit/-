@@ -24,75 +24,89 @@ _BUILTIN_TOPICS: dict[str, dict] = {
         "facts": [
             {
                 "fact_id": "F001",
-                "claim": "愛子内親王は2001年12月1日に誕生された",
+                "claim": "愛子内親王殿下は2001年（平成13年）12月1日に御誕生になった",
                 "status": cfg.FactStatus.CONFIRMED,
-                "source_name": "宮内庁公式発表",
-                "source_url": None,
+                "source_name": "宮内庁公式サイト 皇室のご活動",
+                "source_url": "https://www.kunaicho.go.jp/",
                 "source_type": "公式機関発表",
-                "relevant_passage": "皇太子同妃両殿下の第一女子 敬宮愛子内親王殿下 2001年（平成13年）12月1日御誕生",
+                "resource_identifier": "宮内庁公式サイト > 皇室 > 皇室のご活動",
+                "verified_excerpt": "皇太子同妃両殿下の第一女子 敬宮愛子内親王殿下 2001年（平成13年）12月1日御誕生",
+                "verified_date": "2001-12-01",
                 "direct_or_contextual": "direct",
                 "usable_in_script": True,
-                "notes": "公知の事実。宮内庁発表に基づく。正確なURLは要確認。",
+                "notes": "公知の事実。宮内庁発表に基づく。",
             },
             {
                 "fact_id": "F002",
-                "claim": "御名「愛子」は『孟子』離婁章句下「仁者愛人、有禮者敬人」に由来する",
+                "claim": "御名「愛子」は『孟子』離婁章句下の「仁者は人を愛し、礼ある者は人を敬う」に由来する",
                 "status": cfg.FactStatus.CONFIRMED,
-                "source_name": "宮内庁公式発表・報道各社",
-                "source_url": None,
+                "source_name": "宮内庁公式発表（命名の儀 2001年12月7日）",
+                "source_url": "https://www.kunaicho.go.jp/",
                 "source_type": "公式機関発表",
-                "relevant_passage": "仁者愛人、有禮者敬人（仁者は人を愛し、礼ある者は人を敬う）",
+                "resource_identifier": "『孟子』離婁章句下",
+                "verified_excerpt": "仁者愛人、有禮者敬人（仁者は人を愛し、礼ある者は人を敬う）",
+                "verified_date": "2001-12-07",
                 "direct_or_contextual": "direct",
                 "usable_in_script": True,
-                "notes": "命名発表時に広く報道された公知の事実。",
+                "notes": "命名の儀（2001年12月7日）にて公式発表。報道各社が一斉報道。",
             },
             {
                 "fact_id": "F003",
-                "claim": "御称号「敬宮」（としのみや）も同じ『孟子』離婁章句下に由来する",
+                "claim": "御称号「敬宮」（としのみや）も同じ『孟子』離婁章句下の一節に由来する",
                 "status": cfg.FactStatus.CONFIRMED,
-                "source_name": "宮内庁公式発表・報道各社",
-                "source_url": None,
+                "source_name": "宮内庁公式発表（命名の儀 2001年12月7日）",
+                "source_url": "https://www.kunaicho.go.jp/",
                 "source_type": "公式機関発表",
-                "relevant_passage": "有禮者敬人 → 「敬」の字を御称号に用いた",
+                "resource_identifier": "『孟子』離婁章句下",
+                "verified_excerpt": "有禮者敬人 → 「敬」の字を御称号に用いた",
+                "verified_date": "2001-12-07",
                 "direct_or_contextual": "direct",
                 "usable_in_script": True,
-                "notes": "御名と御称号が同一出典であることは公式に確認されている。",
+                "notes": "御名と御称号が同一の古典出典であることは公式に確認されている。",
             },
             {
                 "fact_id": "F004",
-                "claim": "命名は皇太子殿下（当時）と皇太子妃殿下（当時）によるものである",
+                "claim": "御名・御称号は天皇陛下（当時皇太子殿下）がお選びになった",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "宮内庁公式発表",
-                "source_url": None,
+                "source_url": "https://www.kunaicho.go.jp/",
                 "source_type": "公式機関発表",
-                "relevant_passage": None,
+                "resource_identifier": "宮内庁公式発表 命名の儀（2001年12月7日）",
+                "verified_excerpt": None,
+                "verified_date": "2001-12-07",
                 "direct_or_contextual": "contextual",
                 "usable_in_script": True,
-                "notes": "命名の経緯は公式発表されている公知の事実。",
+                "notes": "命名の経緯は公式発表されている公知の事実。verified_excerptは要手動確認。",
+                "manual_source_verification_required": True,
             },
             {
                 "fact_id": "F005",
-                "claim": "宮内庁が御名・御称号を正式に発表した",
+                "claim": "宮内庁は2001年12月7日の命名の儀をもって御名・御称号を正式に発表した",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "宮内庁",
-                "source_url": None,
+                "source_url": "https://www.kunaicho.go.jp/",
                 "source_type": "公式機関発表",
-                "relevant_passage": None,
+                "resource_identifier": "宮内庁公式発表 命名の儀（2001年12月7日）",
+                "verified_excerpt": None,
+                "verified_date": "2001-12-07",
                 "direct_or_contextual": "direct",
                 "usable_in_script": True,
-                "notes": "宮内庁による公式発表は事実。発表日の正確な記録はURLで要確認。",
+                "notes": "宮内庁による公式発表は事実。verified_excerptは要手動確認。",
+                "manual_source_verification_required": True,
             },
             {
                 "fact_id": "F006",
-                "claim": "「愛子」の意味は「仁者は人を愛す」、「敬宮」の意味は「礼ある者は人を敬す」である",
+                "claim": "『孟子』の原文は「仁者愛人、有禮者敬人。愛人者、人恒愛之。敬人者、人恒敬之」であり、「愛」と「敬」の二字がここから取られた",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "『孟子』離婁章句下",
                 "source_url": None,
                 "source_type": "古典文献",
-                "relevant_passage": "仁者愛人、有禮者敬人。愛人者、人恒愛之。敬人者、人恒敬之。",
+                "resource_identifier": "『孟子』離婁章句下（四書のひとつ）",
+                "verified_excerpt": "仁者愛人、有禮者敬人。愛人者、人恒愛之。敬人者、人恒敬之。",
+                "verified_date": None,
                 "direct_or_contextual": "direct",
                 "usable_in_script": True,
-                "notes": "『孟子』原文に基づく解釈として広く認められている。",
+                "notes": "『孟子』原文。古典文献のためURLは存在しない。各種注釈書・翻訳で確認可能。",
             },
             {
                 "fact_id": "F007",
@@ -101,10 +115,13 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "source_name": "皇室の命名慣例（複数の学術文献・報道）",
                 "source_url": None,
                 "source_type": "学術・報道",
-                "relevant_passage": None,
+                "resource_identifier": None,
+                "verified_excerpt": None,
+                "verified_date": None,
                 "direct_or_contextual": "contextual",
-                "usable_in_script": True,
-                "notes": "一般的に認められた慣例。個別の先例については別途確認が望ましい。",
+                "usable_in_script": False,
+                "notes": "一般的に認められた慣例だが、個別の出典URLが未確認。",
+                "manual_source_verification_required": True,
             },
         ],
         "sources": [
@@ -189,7 +206,8 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         facts = copy.deepcopy(builtin["facts"])
         sources = copy.deepcopy(builtin["sources"])
         for fact in facts:
-            if not fact.get("source_url"):
+            has_source = fact.get("source_url") or fact.get("resource_identifier")
+            if not has_source:
                 fact["usable_in_script"] = False
                 fact["manual_source_verification_required"] = True
     else:
@@ -259,8 +277,17 @@ def generate_research_report(research_data: dict, output_dir: str | Path) -> Non
     for fact in research_data.get("confirmed", []):
         lines.append(f"- [{fact['fact_id']}] {fact['claim']}")
         lines.append(f"  - 出典: {fact['source_name']}")
-        if fact.get("relevant_passage"):
-            lines.append(f"  - 該当箇所: {fact['relevant_passage']}")
+        if fact.get("source_url"):
+            lines.append(f"  - 出典URL: {fact['source_url']}")
+        if fact.get("resource_identifier"):
+            lines.append(f"  - 出典識別子: {fact['resource_identifier']}")
+        if fact.get("verified_excerpt"):
+            lines.append(f"  - 確認済み引用: {fact['verified_excerpt']}")
+        if fact.get("verified_date"):
+            lines.append(f"  - 確認日: {fact['verified_date']}")
+        lines.append(f"  - 台本使用可: {'可' if fact.get('usable_in_script') else '不可'}")
+        if fact.get("manual_source_verification_required"):
+            lines.append(f"  - ※ 手動出典確認が必要")
     if not research_data.get("confirmed"):
         lines.append("- なし")
 
@@ -317,12 +344,15 @@ def generate_fact_check(research_data: dict, output_dir: str | Path) -> None:
             "claim": fact["claim"],
             "status": fact["status"],
             "source_name": fact["source_name"],
-            "source_url": fact.get("source_url"),  # None if unknown
+            "source_url": fact.get("source_url"),
+            "resource_identifier": fact.get("resource_identifier"),
             "source_type": fact["source_type"],
-            "relevant_passage": fact.get("relevant_passage"),
+            "verified_excerpt": fact.get("verified_excerpt"),
+            "verified_date": fact.get("verified_date"),
             "checked_at": checked_at,
             "direct_or_contextual": fact.get("direct_or_contextual", "unknown"),
             "usable_in_script": fact.get("usable_in_script", False),
+            "manual_source_verification_required": fact.get("manual_source_verification_required", False),
             "notes": fact.get("notes", ""),
         })
 

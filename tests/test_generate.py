@@ -137,16 +137,30 @@ class TestBug3ChannelName:
 
 
 class TestBug4SourceUrlNull:
-    def test_null_url_sets_unusable(self):
+    def test_null_url_and_no_identifier_sets_unusable(self):
         from src.research import research_topic
         import tempfile
         topic = "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来"
         with tempfile.TemporaryDirectory() as d:
             data = research_topic(topic, d)
             for fact in data["facts"]:
-                if not fact.get("source_url"):
+                has_source = fact.get("source_url") or fact.get("resource_identifier")
+                if not has_source:
                     assert fact["usable_in_script"] is False
                     assert fact.get("manual_source_verification_required") is True
+
+    def test_facts_have_verified_fields(self):
+        from src.research import research_topic
+        import tempfile
+        topic = "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            usable = [f for f in data["facts"] if f.get("usable_in_script")]
+            assert len(usable) >= 5
+            for fact in usable:
+                assert fact.get("source_url") or fact.get("resource_identifier"), \
+                    f"{fact['fact_id']} has no source_url or resource_identifier"
+                assert "verified_excerpt" in fact, f"{fact['fact_id']} missing verified_excerpt"
 
 
 class TestBug5InstructionsBGM:
@@ -155,24 +169,33 @@ class TestBug5InstructionsBGM:
         import config as cfg
         import tempfile
         research_data = {"facts": []}
-        bgm = {"file_name": "TestTrack.mp3", "provider": "TestProvider"}
+        bgm = {"file_name": "UNL1337.wav", "provider": "箕輪レコーズ"}
         with tempfile.TemporaryDirectory() as d:
             generate_video_instructions("T", research_data, d, bgm_config=bgm)
             content = (Path(d) / "video_editing_instructions.md").read_text(encoding="utf-8")
-            assert "TestTrack.mp3" in content
-            assert "TestProvider" in content
-            assert cfg.BGM_SETTINGS["file_name"] not in content
+            assert "UNL1337.wav" in content
+            assert "箕輪レコーズ" in content
+
+    def test_bgm_config_rejects_wrong_channel(self):
+        from src.bgm_config import load_bgm_config
+        import config as cfg
+        config = load_bgm_config()
+        assert config.get("file_name") == cfg.BGM_SETTINGS["file_name"]
+        assert config.get("provider") == cfg.BGM_SETTINGS["provider"]
+        assert "Sports_Digest" not in config.get("file_name", "")
+        assert "DOVA" not in config.get("provider", "")
 
 
 class TestBug6CreditDuplication:
-    def test_no_double_bgm_prefix(self):
+    def test_credit_text_output_as_is(self):
         from src.posting import _generate_credits_lines
-        bgm = {"download_or_reference_url": "https://x",
-               "credit_text": "BGM: Test / Artist (Provider)"}
+        bgm = {"credit_text": "楽曲提供：箕輪レコーズ"}
         lines = _generate_credits_lines({}, bgm)
         text = "\n".join(lines)
+        assert "楽曲提供：箕輪レコーズ" in text
+        assert text.count("楽曲提供：箕輪レコーズ") == 1
+        assert "BGM:" not in text
         assert "BGM: BGM:" not in text
-        assert "BGM: Test / Artist (Provider)" in text
 
 
 class TestBug7NGFalsePositive:
