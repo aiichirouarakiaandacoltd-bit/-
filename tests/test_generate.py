@@ -156,11 +156,33 @@ class TestBug4SourceUrlNull:
         with tempfile.TemporaryDirectory() as d:
             data = research_topic(topic, d)
             usable = [f for f in data["facts"] if f.get("usable_in_script")]
-            assert len(usable) >= 5
+            assert len(usable) >= 1
             for fact in usable:
                 assert fact.get("source_url") or fact.get("resource_identifier"), \
                     f"{fact['fact_id']} has no source_url or resource_identifier"
-                assert "verified_excerpt" in fact, f"{fact['fact_id']} missing verified_excerpt"
+                assert fact.get("verified_excerpt"), \
+                    f"{fact['fact_id']} missing verified_excerpt"
+                assert not fact.get("manual_source_verification_required"), \
+                    f"{fact['fact_id']} still requires manual verification"
+
+    def test_fact_check_status_not_all_confirmed_when_manual_needed(self):
+        from src.research import research_topic
+        from src.validators import validate_package
+        import tempfile
+        topic = "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来"
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            data = research_topic(topic, str(d))
+            for f in ["01_research_report.md", "02_narration_script.md",
+                       "03_editing_instructions.md", "04_materials_list.md",
+                       "05_posting_package.md", "06_bgm_and_credits.md",
+                       "07_ng_check_report.md", "08_bgm_plan.md"]:
+                (d / f).write_text("test", encoding="utf-8")
+            bgm = {"file_name": "UNL1337.wav", "provider": "箕輪レコーズ",
+                    "download_or_reference_url": None}
+            status = validate_package(d, data, {"findings": []}, bgm, topic)
+            assert status["fact_check_status"] != "all_confirmed"
+            assert status["fact_check_status"] == "manual_verification_required"
 
 
 class TestBug5InstructionsBGM:

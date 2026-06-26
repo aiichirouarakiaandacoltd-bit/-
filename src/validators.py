@@ -27,6 +27,18 @@ def check_zero_byte_files(output_dir):
     return zero_files
 
 
+def _determine_fact_check_status(all_facts, unconfirmed_facts):
+    has_rejected = any(f.get("status") == "rejected" for f in all_facts)
+    if has_rejected:
+        return "failed"
+    has_manual = any(f.get("manual_source_verification_required") for f in all_facts)
+    has_unusable = any(not f.get("usable_in_script") for f in all_facts)
+    has_unconfirmed = len(unconfirmed_facts) > 0
+    if has_manual or has_unusable or has_unconfirmed:
+        return "manual_verification_required"
+    return "all_confirmed"
+
+
 def _validate_bgm_config(bgm_config):
     """Check BGM configuration completeness for production readiness."""
     issues = []
@@ -132,6 +144,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and bgm_url_configured
         and len(bgm_issues) == 0
         and len(unconfirmed_facts) == 0
+        and len(manual_verify_facts) == 0
         and not script_not_narration
         and not credit_duplication
         and mode == "production"
@@ -155,7 +168,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "package_complete": package_complete,
         "production_ready": production_ready if not is_test else False,
         "manual_review_required": manual_review_required,
-        "fact_check_status": "all_confirmed" if not unconfirmed_facts else "review_needed",
+        "fact_check_status": _determine_fact_check_status(all_facts, unconfirmed_facts),
         "rights_status": "ok",
         "ng_check_status": "fail" if ng_has_fail else "pass",
         "bgm_url_configured": bgm_url_configured,
