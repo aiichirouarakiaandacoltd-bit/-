@@ -10,3 +10,5 @@ screenshots/
 .env
 venv/
 .venv/
+final_review_package/
+imperial_package_final_review_*.zip
