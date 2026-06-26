@@ -1,0 +1,51 @@
+# Instagram投稿生成・予約管理システム 設定ファイル
+# ライフセーブ21プラス / 株式会社ナチュラルウィル
+
+product:
+  name: "ライフセーブ21プラス"
+  company: "株式会社ナチュラルウィル"
+  # 商品訴求の柱（生成時のベースとして利用）
+  selling_points:
+    - "家全体の水を浄水するオール浄水システム"
+    - "オールナノバブル水"
+    - "キッチン、洗面、浴室、シャワー、洗濯など家中の水を見直す"
+    - "毎日使う水だからこそ、住まい全体で整える"
+  # 守るべきポリシー（生成・チェックの前提）
+  policy:
+    - "健康効果・治療効果・美容効果を断定しない"
+    - "薬機法・景品表示法・誇大広告リスクを避ける"
+
+# 生成エンジン（LLMプロバイダ）設定
+# provider: template | openai
+#   template … 外部APIキー不要。テンプレートで生成（MVPの既定）
+#   openai   … OPENAI_API_KEY 環境変数があればAPIを利用（無ければtemplateに自動フォールバック）
+llm:
+  provider: "template"
+  model: "gpt-4o-mini"
+  temperature: 0.7
+  # APIキーは環境変数から読み込む（ファイルには書かない）
+  api_key_env: "OPENAI_API_KEY"
+
+# 投稿カレンダーの既定値
+calendar:
+  default_weeks: 4
+  default_frequency: 3        # 週あたりの投稿本数
+  posting_days: [1, 3, 5]     # 0=月曜 ... 6=日曜
+  default_status: "draft"
+
+# ハッシュタグの最大件数
+hashtags:
+  max_count: 15
+
+# 出力先
+output:
+  posts_json: "posts.json"
+  calendar_csv: "calendar.csv"
+  risk_report: "risk_report.md"
+  generated_dir: "generated_posts"
+
+# データファイル
+data:
+  themes: "data/themes.json"
+  forbidden: "data/forbidden_expressions.json"
+  recommended: "data/recommended_expressions.json"

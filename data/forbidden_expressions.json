@@ -1,0 +1,108 @@
+{
+  "description": "薬機法・景品表示法・誇大広告リスクのある表現。pattern は正規表現（部分一致・大文字小文字無視）。",
+  "categories": {
+    "medical": "薬機法（医薬品的な効能効果の標ぼう）リスク",
+    "exaggeration": "景品表示法（優良誤認・誇大広告）リスク",
+    "absolute": "断定・絶対表現によるリスク"
+  },
+  "rules": [
+    {
+      "id": "atopy",
+      "pattern": "アトピー",
+      "category": "medical",
+      "reason": "特定の疾患（アトピー）への効果を連想させる表現は薬機法リスクがあります。",
+      "alternatives": ["塩素が気になる方へ", "肌に触れる水を見直すきっかけに"]
+    },
+    {
+      "id": "skin-improve",
+      "pattern": "肌荒れ(が)?(治る|改善|よくなる|良くなる)",
+      "category": "medical",
+      "reason": "肌トラブルの改善・治癒をうたう表現は薬機法リスクがあります。",
+      "alternatives": ["毎日触れる水だからこそ見直したい", "肌に触れる水まで考える"]
+    },
+    {
+      "id": "cure-disease",
+      "pattern": "(病気|疾患|症状).{0,4}(治る|治す|改善|効く)",
+      "category": "medical",
+      "reason": "疾病の治療・改善をうたう表現は薬機法で禁止されています。",
+      "alternatives": ["住まいの水環境を整える", "家中の水を見直す"]
+    },
+    {
+      "id": "heal",
+      "pattern": "治る|治す|完治|治療(効果)?",
+      "category": "medical",
+      "reason": "治療・治癒を連想させる表現は薬機法リスクがあります。",
+      "alternatives": ["水まわり全体を見直すきっかけに", "暮らしの水を整える"]
+    },
+    {
+      "id": "become-healthy",
+      "pattern": "健康になる|健康効果",
+      "category": "medical",
+      "reason": "健康状態の改善を断定する表現は薬機法・景表法リスクがあります。",
+      "alternatives": ["毎日使う水だからこそ、住まい全体で整える", "暮らしの水を見直す"]
+    },
+    {
+      "id": "anti-aging",
+      "pattern": "老化防止|アンチエイジング|若返り",
+      "category": "medical",
+      "reason": "老化防止などの身体的効果をうたう表現は薬機法リスクがあります。",
+      "alternatives": ["日々の暮らしの水を見直す", "住まい全体の水を整える"]
+    },
+    {
+      "id": "immunity",
+      "pattern": "免疫(力)?(アップ|向上|高める|上がる)",
+      "category": "medical",
+      "reason": "免疫への効果をうたう表現は薬機法で禁止されています。",
+      "alternatives": ["浄水＋ナノバブル水という選択", "家中の水を見直す"]
+    },
+    {
+      "id": "medical-effect",
+      "pattern": "医療(効果|的)|薬効",
+      "category": "medical",
+      "reason": "医療的効果を示す表現は薬機法リスクがあります。",
+      "alternatives": ["水まわり全体を見直すきっかけに", "住まいの水環境を整える"]
+    },
+    {
+      "id": "absolute-effect",
+      "pattern": "絶対(に)?効果|必ず効(く|果)|確実に効",
+      "category": "absolute",
+      "reason": "効果を断定・保証する表現は景品表示法（優良誤認）リスクがあります。",
+      "alternatives": ["選択肢のひとつとして", "気になる方はDMでご相談ください"]
+    },
+    {
+      "id": "must-change",
+      "pattern": "必ず変わる|絶対(に)?変わる|劇的に変わる",
+      "category": "absolute",
+      "reason": "結果を断定する表現は誇大広告リスクがあります。",
+      "alternatives": ["暮らしの変化を感じるきっかけに", "毎日の水を見直すきっかけに"]
+    },
+    {
+      "id": "miracle-water",
+      "pattern": "奇跡の水|魔法の水",
+      "category": "exaggeration",
+      "reason": "誇張した比喩は誇大広告（優良誤認）リスクがあります。",
+      "alternatives": ["浄水＋ナノバブル水という選択", "住まい全体の水を整える"]
+    },
+    {
+      "id": "all-purpose",
+      "pattern": "万能水|万能",
+      "category": "exaggeration",
+      "reason": "万能性をうたう表現は誇大広告リスクがあります。",
+      "alternatives": ["家中の水を見直す", "水まわり全体を整える"]
+    },
+    {
+      "id": "no1-guarantee",
+      "pattern": "日本一|世界一|No\\.?1|ナンバーワン",
+      "category": "exaggeration",
+      "reason": "客観的根拠のない最上級表現は景品表示法リスクがあります。根拠の明示が必要です。",
+      "alternatives": ["住まい全体の水を整える", "毎日使う水だからこそ"]
+    },
+    {
+      "id": "guarantee",
+      "pattern": "100%|完全に|誰でも",
+      "category": "absolute",
+      "reason": "断定・保証表現は誇大広告リスクがあります。",
+      "alternatives": ["選択肢のひとつとして", "暮らしに合わせてご提案します"]
+    }
+  ]
+}
