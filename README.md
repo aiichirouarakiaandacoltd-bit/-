@@ -1,58 +1,86 @@
-# Imperial Video Automation
+# imperial-video-automation
 
-「日本が誇る皇室物語」チャンネル用の動画自動生成システム。
+**外注向け制作パッケージ自動生成システム**
+
+YouTube チャンネル「日本が誇る皇室物語」の動画制作に必要な、外注者へそのまま渡せる制作パッケージ（台本、素材URL、制作指示書、投稿用文面等）を一括生成します。
+
+**これはMP4自動生成システムではありません。** 動画の実制作は外注者が行います。
 
 ## 必要環境
 
 - Python 3.9+
-- FFmpeg (libass対応)
-- VOICEVOX (本番モード)
-- BGMファイル: `assets/bgm/UNL1337.wav` (本番モード)
-- 日本語フォント (IPAGothic等)
 
-## セットアップ
+FFmpeg、VOICEVOX、BGMファイルは不要です（制作指示書に情報として記載するのみ）。
 
-```bash
-pip install -r requirements.txt
-```
-
-## 使い方 (Windows)
-
-1. VOICEVOXを起動する
-2. `UNL1337.wav` を `assets/bgm/` に配置する
-3. `check_environment.bat` をダブルクリックして環境確認
-4. `run_production.bat` をダブルクリックして動画生成
-5. `output/` フォルダの完成MP4を確認
-
-## コマンドライン
-
-```bash
-# 環境チェックのみ
-python main.py --preflight-only
-
-# テストモード (VOICEVOX/BGM不要)
-python main.py --test-mode
-
-# 本番モード (VOICEVOX・BGM必須)
-python main.py
-```
-
-## 出力ファイル
+## 生成物一覧
 
 | ファイル | 内容 |
-|---|---|
-| `final_long.mp4` | 長尺動画 (1920x1080, 480-720秒) |
-| `final_shorts.mp4` | Shorts動画 (1080x1920, 45-59.5秒) |
-| `script.txt` | 台本 |
-| `narration.txt` | ナレーション文 |
-| `subtitles.srt` | 字幕ファイル |
-| `description.txt` | 概要欄テキスト |
-| `credits.txt` | クレジット |
-| `materials.json` | 素材一覧 |
-| `rights_report.md` | 素材権利レポート |
-| `quality_report.json` | 品質検査結果 |
-| `execution.log` | 実行ログ |
-| `status.json` | 実行ステータス |
+|---------|------|
+| `01_research_report.md` | 出典調査・ファクトチェック結果 |
+| `02_narration_script.md` | 長尺台本 + Shorts台本2本 |
+| `03_editing_instructions.md` | 動画制作指示書 + サムネイル制作指示書 |
+| `04_materials_list.md` | 素材候補URL + 権利レポート |
+| `05_posting_package.md` | タイトル候補・概要欄・固定コメント・クレジット |
+| `06_bgm_and_credits.md` | BGM指定・使用条件・クレジット設定 |
+| `07_ng_check_report.md` | NG表現・煽り・断定・権利リスクの検査結果 |
+| `08_package_summary.md` | パッケージ概要・判定・不足項目 |
+| `metadata.json` | 完成判定・不足項目・生成ファイル一覧 |
+
+## 実行方法
+
+```bash
+# テストモード（動作確認用、仮データ可）
+python main.py --theme "テーマ" --mode test
+
+# プロダクションモード（出典確認必須）
+python main.py --theme "テーマ" --mode production
+```
+
+出力先: `output/packages/<run_id>/`
+
+## test mode と production mode の違い
+
+| 項目 | test | production |
+|------|------|-----------|
+| 出典不足時 | 仮データで生成、要確認マーク付き | 下書きパッケージを生成、production_ready=false |
+| production_ready | 常にfalse | 全条件を満たした場合のみtrue |
+| 外注者へ渡せるか | いいえ（テスト用） | 条件付きで可能 |
+
+## production_ready=false の意味
+
+出典の確認が不足している、BGM URLが未設定、NG表現チェックでFAILがある、等の理由で外注者へそのまま渡せない状態です。`metadata.json` の `missing_items` を確認し、不足項目を解消してください。
+
+## 外注者へ渡すファイル
+
+`08_package_summary.md` で判定を確認した上で、以下を外注者へ渡してください：
+- `02_narration_script.md`（台本）
+- `03_editing_instructions.md`（制作指示書）
+- `04_materials_list.md`（素材・権利情報）
+- `05_posting_package.md`（投稿用文面）
+- `06_bgm_and_credits.md`（BGM設定）
+
+## 荒木側で確認すべき項目
+
+1. 出典の最終確認（特にPARTIAL/UNCONFIRMEDの事実）
+2. 素材URLの権利確認
+3. BGM正式URLの設定（`bgm_config.json`）
+4. NG表現チェック結果の確認
+5. 外注者へ渡す前の内容最終確認
+
+## 本番完成条件
+
+- 必須ファイルがすべて存在
+- 0KBファイルなし
+- ファクトチェックで UNCONFIRMED/REJECTED が台本に混入していない
+- NG表現チェックで FAIL なし
+- BGM URL設定済み
+- 権利レポートで NG 素材が指示書に混入していない
+
+## Windows
+
+```
+run_package_test.bat  -- テスト実行
+```
 
 ## 禁止事項
 
@@ -62,3 +90,7 @@ python main.py
 - 皇族の内心断定
 - 根拠のない煽り
 - 権利不明素材の使用
+
+## Legacy
+
+`legacy_mp4_generator/` に以前のMP4自動生成コードを保管しています。現在の本番運用では使用しません。

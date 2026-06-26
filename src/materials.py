@@ -32,8 +32,73 @@ RIGHTS_CATEGORIES = [
 
 
 # ---------------------------------------------------------------------------
-# Default material entries for 愛子/敬宮 name-origin proof theme
+# Default material generation
 # ---------------------------------------------------------------------------
+
+def _generate_default_materials(topic, research_data):
+    """Generate default material entries based on topic and research data."""
+    materials = []
+    sources = research_data.get("sources", [])
+
+    materials.append({
+        "material_id": "MAT-001",
+        "scene": "導入・タイトル",
+        "person_or_subject": topic,
+        "source_name": "テロップ・テキストカード",
+        "source_url": "",
+        "source_type": "自作",
+        "rights_status": "OK",
+        "usage_note": "タイトルテキストのみで構成",
+        "image_or_video": "image",
+        "credit_required": False,
+        "alternative": "",
+    })
+
+    materials.append({
+        "material_id": "MAT-002",
+        "scene": "背景イメージ",
+        "person_or_subject": "和紙背景イメージ",
+        "source_name": "ストック素材サイト",
+        "source_url": "",
+        "source_type": "ストック素材",
+        "rights_status": "REVIEW",
+        "usage_note": "商用利用可能なストック素材を使用。ライセンス確認必須",
+        "image_or_video": "image",
+        "credit_required": False,
+        "alternative": "単色背景・グラデーション",
+    })
+
+    for i, src in enumerate(sources[:5]):
+        materials.append({
+            "material_id": f"MAT-{i+3:03d}",
+            "scene": "解説パート",
+            "person_or_subject": src.get("source_name", ""),
+            "source_name": src.get("source_name", ""),
+            "source_url": src.get("source_url", ""),
+            "source_type": src.get("source_type", "要確認"),
+            "rights_status": "REVIEW",
+            "usage_note": "出典として参照。画像使用には別途確認が必要",
+            "image_or_video": "image",
+            "credit_required": True,
+            "alternative": "テロップで情報を表示",
+        })
+
+    materials.append({
+        "material_id": f"MAT-{len(materials)+1:03d}",
+        "scene": "エンディング",
+        "person_or_subject": "エンディングカード",
+        "source_name": "自作",
+        "source_url": "",
+        "source_type": "自作",
+        "rights_status": "OK",
+        "usage_note": "チャンネル名・登録誘導テキスト",
+        "image_or_video": "image",
+        "credit_required": False,
+        "alternative": "",
+    })
+
+    return materials
+
 
 def _default_aiko_materials():
     """Return default material rows for the 愛子/敬宮 name-origin topic."""
@@ -158,8 +223,7 @@ def generate_material_urls_csv(topic, research_data, output_dir):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    # Start with topic-appropriate defaults
-    materials = _default_aiko_materials()
+    materials = _generate_default_materials(topic, research_data)
 
     # Merge in any materials provided via research_data
     extra = research_data.get("materials", [])
