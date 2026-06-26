@@ -184,6 +184,19 @@ def run_pipeline(topic, script_file, mode, config, speakers_config, output_dir):
         logger.error("台本が生成できなかったため中止します。")
         return _finalize(output_dir, status_data, steps_log, errors, topic, mode)
 
+    if not script_data.get("scripts", {}).get("package_complete", True) is True:
+        scripts_info = script_data.get("scripts", {})
+        if scripts_info.get("package_complete") is False:
+            missing = scripts_info.get("missing_items", [])
+            logger.warning("本番モード: 出典不足のため台本パッケージ未完成。動画生成を中止します。")
+            status_data["package_complete"] = False
+            status_data["publishable"] = False
+            status_data["manual_review_required"] = True
+            status_data["missing_items"] = missing
+            log_step("台本パッケージ判定", False,
+                     "出典不足: package_complete=false, missing_items=%d件" % len(missing))
+            return _finalize(output_dir, status_data, steps_log, errors, topic, mode)
+
     # ===== Step 4: Audio Generation =====
     logger.info("=" * 60)
     logger.info("ステップ4: 音声生成")

@@ -26,7 +26,15 @@ PRIORITY_SOURCES = [
 
 # Built-in knowledge base for test mode / offline fallback
 # evidence_type: "direct" = 布かけ習慣の直接的根拠, "background" = テレビ普及等の周辺背景
-# usable_in_script_as: CONFIRMED+出典あり→事実断定, PARTIAL→限定表現のみ, UNCONFIRMED/REJECTED→不可
+#
+# 本番台本への使用条件:
+#   CONFIRMED: source_name + (source_url or resource_identifier) + verified_excerpt + verified_date 必須
+#   PARTIAL:   source_name + (source_url or resource_identifier) + verified_excerpt + 限定表現 必須
+#   出典なしPARTIAL: usable_in_script=False, script_expression="prohibited",
+#                     manual_source_verification_required=True
+#   UNCONFIRMED/REJECTED: 使用不可
+#
+# 内蔵知識ベースのみの事実は本番台本に使用禁止。テスト技術検証のみ許可。
 KNOWLEDGE_BASE = {
     "テレビ_布": {
         "facts": [
@@ -37,16 +45,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "経済史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "全国",
                 "period_scope": "昭和30年代〜40年代（1955-1970頃）",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "具体的な価格は年代・機種により異なる。出典URLなし。"
-                         "限定表現で使用：「月収数ヶ月分に相当したとも言われています」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。出典URL・資料名・確認済み引用なし。"
+                         "本番使用不可。出典確認後に昇格可能。"
+                         "確認推奨先: 経済企画庁年次経済報告、家電メーカー社史",
             },
             {
                 "fact_id": "TV_CLOTH_002",
@@ -56,17 +67,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "技術史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和20年代後半〜40年代（1953-1970頃）",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "真空管の発熱と静電気は技術的に妥当だが、布かけ理由として"
-                         "断定できる一次資料の確認は未実施。"
-                         "限定表現：「ほこりよけも一因と考えられます」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。真空管の発熱と静電気は技術的に妥当だが、"
+                         "布かけ理由として断定できる一次資料の確認は未実施。"
+                         "本番使用不可。確認推奨先: 家電技術史資料、博物館展示解説",
             },
             {
                 "fact_id": "TV_CLOTH_003",
@@ -76,16 +89,18 @@ KNOWLEDGE_BASE = {
                 "source_type": "生活文化史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "全国（都市部中心に普及）",
                 "period_scope": "昭和30年代〜50年代（1955-1980頃）",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "テレビの設置場所は家庭の間取りや地域差がある。出典なし。"
-                         "限定表現：「家庭によっては応接間の中心に置かれることもありました」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。テレビの設置場所は家庭の間取りや地域差がある。"
+                         "本番使用不可。確認推奨先: 国立歴史民俗博物館、NHK放送文化研究所",
             },
             {
                 "fact_id": "TV_CLOTH_004",
@@ -95,17 +110,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "生活文化史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和全期",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "布カバー文化は家電に限らず広く存在したと言われるが"
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。布カバー文化は広く存在したと言われるが"
                          "体系的な研究資料の確認は未実施。"
-                         "限定表現：「高価な物を大切にする意識も一因と考えられます」",
+                         "本番使用不可。確認推奨先: 民俗学資料、生活文化史研究",
             },
             {
                 "fact_id": "TV_CLOTH_005",
@@ -115,17 +132,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "技術史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "全国（世界共通の技術変遷）",
                 "period_scope": "昭和28年〜平成期",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "技術変遷自体は公知の事実だが、本ナレッジベースでは"
-                         "出典URL・資料識別情報を保持していないためPARTIAL。"
-                         "出典確認後にCONFIRMEDへ昇格可能",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。技術変遷自体は公知の事実だが、"
+                         "出典URL・資料識別情報を保持していないため本番使用不可。"
+                         "確認推奨先: 国立科学博物館、電子情報通信学会",
             },
             {
                 "fact_id": "TV_CLOTH_006",
@@ -135,18 +154,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "放送史・統計",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "全国",
                 "period_scope": "昭和28年〜40年代",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "NHK放送開始は公知の事実。普及率の数値は統計により差異あり。"
-                         "本番用には総務省統計局またはNHK放送文化研究所の"
-                         "一次資料での確認を推奨。"
-                         "限定表現：「およそ90%に達したとされています」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。NHK放送開始は公知の事実だが、"
+                         "普及率の数値は統計により差異あり。"
+                         "本番使用不可。確認推奨先: 総務省統計局、NHK放送文化研究所年報",
             },
             {
                 "fact_id": "TV_CLOTH_007",
@@ -156,16 +176,18 @@ KNOWLEDGE_BASE = {
                 "source_type": "生活文化史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "direct",
                 "regional_scope": "全国",
                 "period_scope": "昭和50年代後半〜平成初期",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "布カバー習慣の衰退時期は家庭により異なる。出典なし。"
-                         "限定表現：「家庭によっては、この頃から布をかけなくなったようです」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。布カバー習慣の衰退時期は家庭により異なる。"
+                         "本番使用不可。確認推奨先: 生活文化史資料、家電普及統計",
             },
             {
                 "fact_id": "TV_CLOTH_008",
@@ -175,17 +197,19 @@ KNOWLEDGE_BASE = {
                 "source_type": "工業デザイン史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "全国（世界共通の傾向）",
                 "period_scope": "昭和28年〜40年代",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "初期テレビの木製筐体は博物館等の実物資料でも確認できるが、"
-                         "本ナレッジベースでは出典URL未保持のためPARTIAL。"
-                         "国立科学博物館等の資料で確認後にCONFIRMED昇格可能",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。初期テレビの木製筐体は博物館等の実物資料でも"
+                         "確認できるが、出典URL未保持のため本番使用不可。"
+                         "確認推奨先: 国立科学博物館、家電メーカー社史",
             },
             {
                 "fact_id": "TV_CLOTH_009",
@@ -195,16 +219,18 @@ KNOWLEDGE_BASE = {
                 "source_type": "放送文化史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
                 "evidence_type": "background",
                 "regional_scope": "都市部中心",
                 "period_scope": "昭和28年〜30年代前半",
-                "usable_in_script": True,
-                "script_expression": "limited",
-                "notes": "街頭テレビの普及状況は地域差が大きい。出典なし。"
-                         "限定表現：「街頭テレビが広まるきっかけの一つとされています」",
+                "usable_in_script": False,
+                "script_expression": "prohibited",
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。街頭テレビの普及状況は地域差が大きい。"
+                         "本番使用不可。確認推奨先: NHKアーカイブス、新聞縮刷版",
             },
             {
                 "fact_id": "TV_CLOTH_010",
@@ -214,6 +240,7 @@ KNOWLEDGE_BASE = {
                 "source_type": "生活文化史",
                 "source_name": "",
                 "source_url": "",
+                "resource_identifier": "",
                 "source_date": "",
                 "verified_excerpt": "",
                 "verified_date": "",
@@ -222,7 +249,8 @@ KNOWLEDGE_BASE = {
                 "period_scope": "昭和30年代〜50年代",
                 "usable_in_script": False,
                 "script_expression": "prohibited",
-                "notes": "当時を知る人の証言として語られるが、"
+                "manual_source_verification_required": True,
+                "notes": "内蔵知識ベースのみ。当時を知る人の証言として語られるが、"
                          "体系的な資料での確認は未実施。台本使用不可",
             },
         ],
@@ -344,11 +372,48 @@ def _generate_generic_research_structure(topic):
     ]
 
 
-def fact_check(facts):
+def _has_verifiable_source(fact):
+    """Check if a fact has a verifiable source (URL or resource identifier + source name)."""
+    has_name = bool(fact.get("source_name", "").strip())
+    has_url = bool(fact.get("source_url", "").strip())
+    has_rid = bool(fact.get("resource_identifier", "").strip())
+    has_excerpt = bool(fact.get("verified_excerpt", "").strip())
+    has_date = bool(fact.get("verified_date", "").strip())
+    return has_name, (has_url or has_rid), has_excerpt, has_date
+
+
+def _is_fact_usable_for_production(fact):
+    """
+    Check if a fact meets production script usage requirements.
+
+    CONFIRMED requires: source_name + (source_url or resource_identifier)
+                       + verified_excerpt + verified_date
+    PARTIAL requires:   source_name + (source_url or resource_identifier)
+                       + verified_excerpt + limited expression set
+    """
+    status = fact.get("status", "UNCONFIRMED")
+    if status not in ("CONFIRMED", "PARTIAL"):
+        return False
+
+    has_name, has_source_ref, has_excerpt, has_date = _has_verifiable_source(fact)
+
+    if status == "CONFIRMED":
+        return has_name and has_source_ref and has_excerpt and has_date
+
+    if status == "PARTIAL":
+        return has_name and has_source_ref and has_excerpt
+
+    return False
+
+
+def fact_check(facts, mode="production"):
     """
     Perform fact-checking on research results.
-    CONFIRMED requires: source_url AND source_name both non-empty.
-    Without both, downgrade to PARTIAL regardless of content.
+
+    CONFIRMED requires: source_name + (source_url or resource_identifier)
+                       + verified_excerpt + verified_date.
+    Without all four, downgrade to PARTIAL.
+    Source-less PARTIAL: usable_in_script=False, script_expression="prohibited".
     """
     checked = []
     stats = {
@@ -362,16 +427,30 @@ def fact_check(facts):
         status = fact.get("status", "UNCONFIRMED")
 
         if status == "CONFIRMED":
-            has_url = bool(fact.get("source_url", "").strip())
-            has_name = bool(fact.get("source_name", "").strip())
-            if not (has_url and has_name):
+            has_name, has_source_ref, has_excerpt, has_date = _has_verifiable_source(fact)
+            if not (has_name and has_source_ref and has_excerpt and has_date):
                 fact["status"] = "PARTIAL"
                 status = "PARTIAL"
-                fact["script_expression"] = "limited"
                 fact.setdefault("notes", "")
                 if fact["notes"]:
                     fact["notes"] += "。"
-                fact["notes"] += "出典URL・出典名が未確認のためPARTIALへ降格"
+                missing = []
+                if not has_name:
+                    missing.append("出典名")
+                if not has_source_ref:
+                    missing.append("出典URL/資料識別情報")
+                if not has_excerpt:
+                    missing.append("確認済み引用")
+                if not has_date:
+                    missing.append("確認日")
+                fact["notes"] += f"CONFIRMED要件不足（{', '.join(missing)}）のためPARTIALへ降格"
+
+        if status == "PARTIAL":
+            has_name, has_source_ref, has_excerpt, _ = _has_verifiable_source(fact)
+            if not (has_name and has_source_ref and has_excerpt):
+                fact["usable_in_script"] = False
+                fact["script_expression"] = "prohibited"
+                fact["manual_source_verification_required"] = True
 
         stats[status] = stats.get(status, 0) + 1
         checked.append(fact)
@@ -409,7 +488,8 @@ def write_research_outputs(output_dir, research_results, fact_stats):
         f.write(f"\n## 事実一覧\n\n")
         for fact in facts:
             usable = "○" if fact.get("usable_in_script") else "×"
-            f.write(f"### {fact['fact_id']} [{fact['status']}] (脚本使用: {usable})\n")
+            manual_req = "要" if fact.get("manual_source_verification_required") else "不要"
+            f.write(f"### {fact['fact_id']} [{fact['status']}] (脚本使用: {usable} / 出典確認: {manual_req})\n")
             f.write(f"**主張**: {fact['claim']}\n\n")
             f.write(f"- 出典種別: {fact.get('source_type', '不明')}\n")
             f.write(f"- 出典名: {fact.get('source_name') or '未確認'}\n")
@@ -417,14 +497,21 @@ def write_research_outputs(output_dir, research_results, fact_stats):
                 f.write(f"- URL: {fact['source_url']}\n")
             else:
                 f.write(f"- URL: 未確認\n")
+            if fact.get("resource_identifier"):
+                f.write(f"- 資料識別情報: {fact['resource_identifier']}\n")
             f.write(f"- 根拠分類: {fact.get('evidence_type', '不明')}\n")
             f.write(f"- 脚本表現: {fact.get('script_expression', '不明')}\n")
+            f.write(f"- 本番台本使用: {'可' if fact.get('usable_in_script') else '不可'}\n")
             f.write(f"- 地域範囲: {fact.get('regional_scope', '不明')}\n")
             f.write(f"- 時代範囲: {fact.get('period_scope', '不明')}\n")
             if fact.get("verified_excerpt"):
                 f.write(f"- 確認済み引用: {fact['verified_excerpt']}\n")
+            else:
+                f.write(f"- 確認済み引用: なし\n")
             if fact.get("verified_date"):
                 f.write(f"- 確認日: {fact['verified_date']}\n")
+            else:
+                f.write(f"- 確認日: なし\n")
             if fact.get("notes"):
                 f.write(f"- 備考: {fact['notes']}\n")
             f.write("\n")
@@ -446,20 +533,24 @@ def write_research_outputs(output_dir, research_results, fact_stats):
     with open(sources_path, "w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "fact_id", "status", "evidence_type", "script_expression",
-            "source_type", "source_name", "source_url", "source_date",
-            "verified_excerpt", "verified_date",
+            "fact_id", "status", "usable_in_script", "evidence_type",
+            "script_expression", "manual_source_verification_required",
+            "source_type", "source_name", "source_url", "resource_identifier",
+            "source_date", "verified_excerpt", "verified_date",
             "regional_scope", "period_scope",
         ])
         for fact in facts:
             writer.writerow([
                 fact.get("fact_id", ""),
                 fact.get("status", ""),
+                fact.get("usable_in_script", False),
                 fact.get("evidence_type", ""),
                 fact.get("script_expression", ""),
+                fact.get("manual_source_verification_required", False),
                 fact.get("source_type", ""),
                 fact.get("source_name", ""),
                 fact.get("source_url", ""),
+                fact.get("resource_identifier", ""),
                 fact.get("source_date", ""),
                 fact.get("verified_excerpt", ""),
                 fact.get("verified_date", ""),
@@ -481,27 +572,70 @@ def run_researcher(topic, mode, output_dir):
         output_dir: Output directory path
 
     Returns:
-        dict with research_results, fact_stats, usable_facts, and output paths
+        dict with research_results, fact_stats, usable_facts, production readiness, and output paths
     """
     research_results = research_topic(topic, mode)
-    checked_facts, fact_stats = fact_check(research_results["facts"])
+    checked_facts, fact_stats = fact_check(research_results["facts"], mode=mode)
     research_results["facts"] = checked_facts
 
-    # Filter usable facts for script writing
-    usable_facts = [
-        f for f in checked_facts
-        if f.get("usable_in_script") and f.get("status") in ("CONFIRMED", "PARTIAL")
+    if mode == "production":
+        usable_facts = [
+            f for f in checked_facts
+            if _is_fact_usable_for_production(f)
+        ]
+    else:
+        usable_facts = [
+            f for f in checked_facts
+            if f.get("status") in ("CONFIRMED", "PARTIAL")
+        ]
+
+    missing_sources = [
+        {
+            "fact_id": f["fact_id"],
+            "claim": f["claim"][:80],
+            "evidence_type": f.get("evidence_type", "unknown"),
+            "recommended_sources": f.get("notes", ""),
+        }
+        for f in checked_facts
+        if f.get("manual_source_verification_required")
     ]
+
+    direct_facts = [f for f in usable_facts if f.get("evidence_type") == "direct"]
+    background_facts = [f for f in usable_facts if f.get("evidence_type") == "background"]
+
+    production_ready = (
+        mode == "production"
+        and len(usable_facts) >= 3
+        and len(direct_facts) >= 1
+    )
 
     report_path, fact_check_path, sources_path = write_research_outputs(
         output_dir, research_results, fact_stats
     )
 
-    return {
+    result = {
         "research_results": research_results,
         "fact_stats": fact_stats,
         "usable_facts": usable_facts,
         "report_path": report_path,
         "fact_check_path": fact_check_path,
         "sources_path": sources_path,
+        "production_readiness": {
+            "mode": mode,
+            "production_ready": production_ready,
+            "usable_for_script": len(usable_facts),
+            "direct_evidence_count": len(direct_facts),
+            "background_evidence_count": len(background_facts),
+            "missing_source_count": len(missing_sources),
+            "missing_sources": missing_sources,
+        },
     }
+
+    if mode == "production" and not production_ready:
+        logger.warning(
+            "本番モード: 確認可能な出典付き事実が不足しています "
+            f"(使用可能={len(usable_facts)}, 直接根拠={len(direct_facts)}, "
+            f"出典未確認={len(missing_sources)})"
+        )
+
+    return result

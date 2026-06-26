@@ -552,21 +552,53 @@ def generate_scripts(topic, facts, mode="production"):
 
     Args:
         topic: Topic string
-        facts: List of usable fact dicts (already filtered)
+        facts: List of usable fact dicts (already filtered by researcher)
         mode: "production" or "test"
 
     Returns:
         dict with script_long, script_short_01, script_short_02 texts
-        and their narration-only versions
+        and their narration-only versions.
+        In production mode with insufficient verified facts, returns
+        package_complete=False with missing_items.
     """
     logger.info(f"台本生成開始: {topic} (使用可能事実: {len(facts)}件)")
 
-    # Filter to only CONFIRMED and PARTIAL
+    # Filter to only CONFIRMED and PARTIAL with usable_in_script=True
     usable = [
         f for f in facts
         if f.get("status") in ("CONFIRMED", "PARTIAL")
         and f.get("usable_in_script", False)
     ]
+
+    if mode == "production" and len(usable) == 0:
+        logger.warning("本番モード: 確認済み出典付き事実が0件のため台本生成を中止")
+        all_facts_needing_sources = [
+            f["fact_id"] for f in facts
+            if f.get("manual_source_verification_required")
+        ]
+        return {
+            "package_complete": False,
+            "publishable": False,
+            "manual_review_required": True,
+            "test_only": False,
+            "missing_items": [
+                "確認可能な出典付き事実が0件（内蔵知識ベースのみ）",
+                "中心テーマの直接的根拠の出典確認が必要",
+                f"出典未確認のfact: {', '.join(all_facts_needing_sources)}",
+            ],
+            "script_long": "",
+            "script_short_01": "",
+            "script_short_02": "",
+            "narration_long": "",
+            "narration_short_01": "",
+            "narration_short_02": "",
+            "durations": {
+                "long_seconds": 0,
+                "long_minutes": 0,
+                "short_01_seconds": 0,
+                "short_02_seconds": 0,
+            },
+        }
 
     # Choose template based on topic
     is_tv_cloth = "テレビ" in topic and "布" in topic
@@ -595,6 +627,10 @@ def generate_scripts(topic, facts, mode="production"):
     logger.info(f"Shorts 2: 推定{dur_short_02:.0f}秒")
 
     return {
+        "package_complete": True,
+        "publishable": mode == "production",
+        "test_only": mode == "test",
+        "manual_review_required": mode != "production",
         "script_long": script_long,
         "script_short_01": script_short_01,
         "script_short_02": script_short_02,
@@ -645,15 +681,42 @@ def run_scriptwriter(topic, research_data, mode, output_dir):
         output_dir: Output directory path
 
     Returns:
-        dict with scripts, durations, and output paths
+        dict with scripts, durations, output paths, and production readiness.
+        If production mode lacks verified facts, returns package_complete=False.
     """
     usable_facts = research_data.get("usable_facts", [])
+    production_readiness = research_data.get("production_readiness", {})
 
     scripts = generate_scripts(topic, usable_facts, mode)
+
+    if not scripts.get("package_complete", True):
+        logger.warning("本番モード: 出典不足のため台本パッケージ未完成")
+        if production_readiness.get("missing_sources"):
+            for ms in production_readiness["missing_sources"]:
+                scripts.setdefault("missing_items", []).append(
+                    f"{ms['fact_id']}: {ms['claim']}"
+                )
+        return {
+            "scripts": scripts,
+            "durations": scripts["durations"],
+            "file_paths": {},
+            "package_complete": False,
+            "publishable": False,
+            "manual_review_required": True,
+            "missing_items": scripts.get("missing_items", []),
+        }
+
     file_paths = write_script_outputs(output_dir, scripts)
 
-    return {
+    result = {
         "scripts": scripts,
         "durations": scripts["durations"],
         "file_paths": file_paths,
     }
+
+    if mode == "test":
+        result["test_only"] = True
+        result["publishable"] = False
+        result["package_complete"] = True
+
+    return result
