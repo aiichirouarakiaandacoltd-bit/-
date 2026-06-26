@@ -46,14 +46,14 @@ def generate_video_instructions(topic, research_data, output_dir, bgm_config=Non
 
     lines.append("## 章構成")
     lines.append("")
-    lines.append("台本（long_script.txt）に記載の章立てに従ってください。")
-    lines.append("各章の素材候補は material_urls.csv を参照してください。")
+    lines.append("台本（02_narration_script.md）に記載の章立てに従ってください。")
+    lines.append("各章の素材候補は 04_materials_list.md を参照してください。")
     lines.append("")
 
     if confirmed_facts:
         lines.append("### 主なパート")
         for i, fact in enumerate(confirmed_facts[:5], 1):
-            lines.append(f"{i}. {fact.get('claim', '')[:60]}...")
+            lines.append(f"{i}. {fact.get('claim', '')}")
         lines.append("")
 
     lines.append("## 字幕ルール")
@@ -169,7 +169,7 @@ def generate_thumbnail_instructions(topic, research_data, output_dir):
     lines.append("")
     lines.append("### 画像構成")
     lines.append("- テーマに関連する公式画像または風景")
-    lines.append("- 使用候補画像URLは material_urls.csv を参照")
+    lines.append("- 使用候補画像URLは 04_materials_list.md を参照")
     lines.append("- 画像使用には権利確認が必要")
     lines.append("")
 

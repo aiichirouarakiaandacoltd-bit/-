@@ -15,7 +15,7 @@ def generate_posting_package(topic, research_data, bgm_config, output_dir):
     lines.append(f"チャンネル: {cfg.CHANNEL_NAME}")
     lines.append("")
 
-    lines.append("## タイトル候補（10案）")
+    lines.append("## タイトル候補（5案）")
     lines.append("")
     titles = _generate_title_candidates(topic, research_data)
     for i, t in enumerate(titles, 1):
@@ -64,13 +64,8 @@ def _generate_title_candidates(topic, research_data):
         {"title": topic, "category": "本命", "intent": "企画テーマそのまま", "risk": "低", "priority": 1},
         {"title": f"知っていますか？{short_topic}", "category": "本命", "intent": "問いかけで関心を引く", "risk": "低", "priority": 2},
         {"title": f"{short_topic}｜公式資料から読み解く", "category": "本命", "intent": "信頼性を訴求", "risk": "低", "priority": 3},
-        {"title": f"{short_topic}の意外な背景", "category": "安全", "intent": "軽い驚きで興味喚起", "risk": "低", "priority": 4},
-        {"title": f"【解説】{short_topic}", "category": "安全", "intent": "情報整理として訴求", "risk": "低", "priority": 5},
-        {"title": f"{short_topic}を丁寧に解説します", "category": "安全", "intent": "安心感を与える", "risk": "低", "priority": 6},
-        {"title": f"多くの人が知らない{short_topic}の話", "category": "CTR重視", "intent": "知識欲を刺激", "risk": "中（煽りに見えないよう注意）", "priority": 7},
-        {"title": f"日本人として知っておきたい{short_topic}", "category": "CTR重視", "intent": "当事者意識を刺激", "risk": "中", "priority": 8},
-        {"title": f"{short_topic} 歴史 由来 解説", "category": "検索性重視", "intent": "検索キーワード網羅", "risk": "低", "priority": 9},
-        {"title": f"{short_topic}とは？わかりやすく解説", "category": "検索性重視", "intent": "検索意図に直接対応", "risk": "低", "priority": 10},
+        {"title": f"【解説】{short_topic}", "category": "安全", "intent": "情報整理として訴求", "risk": "低", "priority": 4},
+        {"title": f"{short_topic}を丁寧に解説します", "category": "安全", "intent": "安心感を与える", "risk": "低", "priority": 5},
     ]
     return titles
 
@@ -82,12 +77,15 @@ def _generate_description_lines(topic, research_data, bgm_config):
     lines.append(f"今回は「{topic}」について、公式資料をもとに丁寧に解説します。")
     lines.append("")
     lines.append("【主な参考資料】")
-    for s in research_data.get("sources", []):
-        name = s.get("source_name", "")
-        url = s.get("source_url")
-        if url:
+    seen_urls = set()
+    for f in research_data.get("facts", []):
+        url = f.get("source_url")
+        name = f.get("source_name", "")
+        if url and url not in seen_urls:
+            seen_urls.add(url)
             lines.append(f"・{name}: {url}")
-        else:
+        elif name and name not in seen_urls:
+            seen_urls.add(name)
             lines.append(f"・{name}")
     lines.append("")
     lines.append("【音声】")
@@ -110,7 +108,7 @@ def _generate_fixed_comment_lines(topic):
     lines = []
     lines.append(f"ご視聴ありがとうございます。")
     lines.append(f"")
-    lines.append(f"今回のテーマについて、皆さまはどのようにお感じになりましたか？")
+    lines.append(f"「愛子」と「敬宮」に込められた願いの中で、どの言葉が最も心に残りましたか。")
     lines.append(f"ぜひコメント欄でお聞かせください。")
     lines.append(f"")
     lines.append(f"チャンネル登録・高評価もよろしくお願いいたします。")

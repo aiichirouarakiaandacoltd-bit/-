@@ -288,11 +288,21 @@ def main():
         logger.info("08_bgm_plan.md 生成完了")
 
         logger.info("[9/9] パッケージ検証・サマリー生成...")
+        placeholder_status = {"generated_files": [], "missing_items": []}
+        generate_package_summary(
+            theme, research_data, ng_data, bgm_config,
+            placeholder_status, output_dir
+        )
+        write_status_json(placeholder_status, output_dir)
+
         status = validate_package(
             output_dir, research_data, ng_data, bgm_config,
             theme, topic_source="manual", mode=mode,
+            rights_data=rights_data,
         )
-
+        status["generated_files"] = sorted(
+            f.name for f in output_dir.iterdir() if f.is_file()
+        )
         generate_package_summary(
             theme, research_data, ng_data, bgm_config, status, output_dir
         )

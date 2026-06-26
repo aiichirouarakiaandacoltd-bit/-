@@ -25,6 +25,8 @@ def load_bgm_config():
         "download_or_reference_url": None,
         "license_status": cfg.BGM_SETTINGS.get("license_status", "licensed"),
         "contract_evidence": cfg.BGM_SETTINGS.get("contract_evidence"),
+        "contract_evidence_verified": cfg.BGM_SETTINGS.get("contract_evidence_verified", False),
+        "content_id_status": cfg.BGM_SETTINGS.get("content_id_status", "unconfirmed"),
         "local_file_verified": cfg.BGM_SETTINGS.get("local_file_verified", False),
         "minimum_usage_seconds": cfg.BGM_SETTINGS.get("minimum_usage_seconds", 10),
         "commercial_use": True,
@@ -116,10 +118,11 @@ def generate_bgm_and_credits(bgm_config, output_dir):
     lines.append("")
 
     title = bgm_config.get("title")
+    file_name = bgm_config.get("file_name", "")
     if title:
         lines.append(f"- 楽曲タイトル: {title}")
     else:
-        lines.append("- 楽曲タイトル: 未設定")
+        lines.append(f"- 楽曲タイトル: 契約音源 {file_name}")
 
     composer = bgm_config.get("composer")
     if composer:
@@ -148,12 +151,16 @@ def generate_bgm_and_credits(bgm_config, output_dir):
     else:
         lines.append("- クレジット表記: 必須")
 
+    contract_ev = bgm_config.get("contract_evidence_verified", False)
+    lines.append(f"- 契約証跡確認: {'確認済' if contract_ev else '未確認（荒木側で確認が必要）'}")
+    content_id = bgm_config.get("content_id_status", "unconfirmed")
+    lines.append(f"- Content ID状態: {content_id}")
+    local_v = bgm_config.get("local_file_verified", False)
+    lines.append(f"- ローカルファイル検証: {'検証済' if local_v else '未検証'}")
+
     lines.append("")
     lines.append("## 使用ルール")
     lines.append("")
-    usage = bgm_config.get("usage_note", "")
-    if usage:
-        lines.append(f"- {usage}")
     lines.append("- 別BGMへの変更は禁止")
     lines.append("- 実際に使用した場合のみクレジットを記載")
     lines.append(f"- クレジット表記: {bgm_config.get('credit_text', '要設定')}")
@@ -219,10 +226,11 @@ def generate_bgm_plan(bgm_config, output_dir):
 
     lines.append("## 採用BGM")
     lines.append("")
-    title = bgm_config.get("title", "未選定")
+    title = bgm_config.get("title")
     composer = bgm_config.get("composer", "")
     provider = bgm_config.get("provider", "")
-    lines.append(f"- 楽曲名: {title}")
+    display_title = title if title else f"契約音源 {bgm_config.get('file_name', '')}"
+    lines.append(f"- 楽曲名: {display_title}")
     if composer:
         lines.append(f"- 作曲者: {composer}")
     lines.append(f"- 提供元: {provider}")

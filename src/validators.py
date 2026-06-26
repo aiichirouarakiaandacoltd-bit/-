@@ -15,6 +15,8 @@ REQUIRED_FILES = [
     "06_bgm_and_credits.md",
     "07_ng_check_report.md",
     "08_bgm_plan.md",
+    "09_package_summary.md",
+    "metadata.json",
 ]
 
 
@@ -60,14 +62,21 @@ def _validate_bgm_config(bgm_config):
             issues.append("契約証跡が未設定")
         if not bgm_config.get("credit_text"):
             issues.append("クレジット表記が未設定")
+        if not bgm_config.get("contract_evidence_verified"):
+            issues.append("契約証跡の実確認が未完了")
     else:
         if not bgm_config.get("download_or_reference_url"):
             issues.append("BGM正式参照URL未設定")
+
+    if bgm_config.get("content_id_status", "unconfirmed") == "unconfirmed":
+        issues.append("Content ID状態が未確認")
+    if not bgm_config.get("local_file_verified"):
+        issues.append("BGMローカルファイルの検証が未完了")
     return issues
 
 
 def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
-                     topic_source="manual", mode="production"):
+                     topic_source="manual", mode="production", rights_data=None):
     output_dir = Path(output_dir)
 
     missing_files = []
@@ -87,14 +96,22 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
             has_unconfirmed_in_script = True
 
     ng_has_fail = False
+    ng_has_review = False
     if ng_results:
         for finding in ng_results.get("findings", []):
             if finding.get("verdict") == "FAIL":
                 ng_has_fail = True
+            if finding.get("verdict") == "REVIEW":
+                ng_has_review = True
 
     bgm_license = bgm_config.get("license_status", "")
     bgm_contracted = bgm_license == "contracted"
-    bgm_url_configured = bool(bgm_config.get("download_or_reference_url")) or bgm_contracted
+    bgm_url_configured = bool(bgm_config.get("download_or_reference_url"))
+
+    if rights_data is None:
+        rights_data = {}
+    rights_overall = rights_data.get("overall_status", "REVIEW")
+    rights_has_review = rights_data.get("has_review", False)
     bgm_issues = _validate_bgm_config(bgm_config)
 
     missing_items = list(missing_files)
@@ -198,13 +215,18 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and not script_duration_short
     )
 
+    rights_ok = rights_overall == "OK"
+
+    ng_check_ok = not ng_has_fail and not ng_has_review
+
     production_ready = (
         content_complete
-        and bgm_url_configured
         and len(bgm_issues) == 0
         and len(unconfirmed_facts) == 0
         and len(manual_verify_facts) == 0
         and not credit_duplication
+        and rights_ok
+        and ng_check_ok
         and mode == "production"
     )
 
@@ -212,6 +234,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         not production_ready
         or len(unconfirmed_facts) > 0
         or len(bgm_issues) > 0
+        or rights_has_review
+        or ng_has_review
     )
 
     is_test = mode == "test"
@@ -228,8 +252,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "production_ready": production_ready if not is_test else False,
         "manual_review_required": manual_review_required,
         "fact_check_status": _determine_fact_check_status(all_facts, unconfirmed_facts),
-        "rights_status": "ok",
-        "ng_check_status": "fail" if ng_has_fail else "pass",
+        "rights_status": rights_overall.lower() if rights_overall else "review_required",
+        "ng_check_status": "fail" if ng_has_fail else ("review_required" if ng_has_review else "pass"),
         "bgm_url_configured": bgm_url_configured,
         "bgm_contracted": bgm_contracted,
         "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",

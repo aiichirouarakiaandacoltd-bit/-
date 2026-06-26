@@ -21,6 +21,50 @@ import config as cfg
 _BUILTIN_TOPICS: dict[str, dict] = {
     "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来": {
         "topic": "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来",
+        "topic_context": (
+            "皇族の「御名」と「御称号」には、それぞれ異なる意味と役割があります。\n"
+            "御名は個人としてのお名前であり、御称号は宮号とも呼ばれる皇族としての呼称です。\n"
+            "愛子内親王殿下の御名「愛子」と御称号「敬宮」。\n"
+            "この二つの名前には、中国古典『孟子』の一節に基づく深い願いが込められています。\n"
+            "今回は、公式の記録をたどりながら、その由来を見てまいります。"
+        ),
+        "section_config": [
+            {"title": "御誕生と命名の儀", "fact_ids": ["F001", "F005"]},
+            {"title": "命名の経緯", "fact_ids": ["F004"]},
+            {"title": "『孟子』の教え", "fact_ids": ["F006"]},
+            {"title": "皇太子殿下のお言葉", "fact_ids": ["F008"]},
+            {"title": "御名と御称号に込められた願い", "fact_ids": ["F002", "F003"]},
+        ],
+        "ending_context": (
+            "ここまで、御名「愛子」と御称号「敬宮」の由来を、公式の記録からたどってまいりました。\n\n"
+            "平成13年の御誕生から、命名の儀へ。\n"
+            "上皇陛下が語られた命名の経緯。\n"
+            "典拠となった『孟子』離婁章句下の教え。\n"
+            "そして、平成14年と令和3年の記者会見で語られたお言葉。\n\n"
+            "御名「愛子」には「人を愛してほしい」という願い。\n"
+            "御称号「敬宮」には「人を敬ってほしい」という願い。\n"
+            "二千年以上前に記された『孟子』の教えが、\n"
+            "現代の皇室においても大切にされていることを、公式の記録は伝えています。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "愛子内親王殿下の御名「愛子」と御称号「敬宮」。\n"
+            "その由来は、中国古典『孟子』の一節にあります。\n\n"
+            "「仁者は人を愛し、礼ある者は人を敬う」。\n\n"
+            "平成13年12月1日に御誕生、12月7日に命名の儀が行われました。\n"
+            "御名と御称号には、人を愛し、人を敬ってほしいという願いが込められています。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "「名前のように、人を愛して人からも愛され、\n"
+            "人を敬い人からも敬われるような人に育ってほしい」。\n\n"
+            "これは、平成14年の記者会見で皇太子殿下が述べられたお言葉です。\n\n"
+            "令和3年の記者会見でも、天皇陛下は\n"
+            "「孟子の言葉を参考にした名前には、私たちの願いが込められています」\n"
+            "と改めて語られました。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
         "facts": [
             {
                 "fact_id": "F001",
@@ -38,6 +82,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "宮内庁公式サイト「天皇ご一家」ページから荒木が直接確認。",
+                "narration_lead": "愛子内親王殿下は、平成13年、西暦2001年の12月1日にお生まれになりました。\n天皇皇后両陛下の第一皇女子であられます。",
+                "narration_source_intro": "宮内庁の公式サイト「天皇ご一家」のページには、次のように記されています。",
+                "narration_after": "このように、宮内庁の公式サイトに明確に記されています。",
             },
             {
                 "fact_id": "F005",
@@ -55,6 +102,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "宮内庁公式サイトのご日程ページから荒木が直接確認。天皇皇后両陛下のご日程ページにも「命名の儀（宮殿）」と記載あり。",
+                "narration_lead": "御誕生から6日後の12月7日、命名の儀が東宮御所で執り行われました。\n命名の儀とは、皇族のお名前を正式に定める儀式です。",
+                "narration_source_intro": "宮内庁が公開しているご日程の記録には、次のように記されています。",
+                "narration_after": "この儀式によって、「愛子」という御名と「敬宮」という御称号が正式に定められました。\nでは、この御名と御称号には、どのような由来があるのでしょうか。",
             },
             {
                 "fact_id": "F004",
@@ -72,6 +122,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "平成13年天皇陛下お誕生日記者会見から荒木が直接確認。命名の経緯について、皇太子ご夫妻が勘申者の意見も聞きながら考えたと述べられている。",
+                "narration_lead": "命名の経緯について、重要な記録が残されています。\n平成13年12月、天皇陛下のお誕生日に際しての記者会見がありました。",
+                "narration_source_intro": "この記者会見で、上皇陛下は命名の経緯について、次のように述べられています。",
+                "narration_after": "勘申者とは、御名の候補を考案し提案する学識経験者のことです。\nこの記録から、当時の皇太子ご夫妻が深く関わりながら、専門家の意見も参考にして、御名と御称号を決められたことがわかります。\nそれでは、その典拠となった古典を見てまいりましょう。",
             },
             {
                 "fact_id": "F006",
@@ -89,6 +142,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "古典原文の存在確認。上記底本および各種注釈書・学術データベースで第三者が再確認可能。命名典拠であることはF002・F003の令和3年記者会見で確認済み。",
+                "narration_lead": "御名と御称号の典拠となったのは、中国の古典『孟子』です。\n『孟子』は、紀元前4世紀頃に成立した儒学の経典で、\n「仁」と「礼」の大切さを説いた書物です。\nその離婁章句下に、このような一節があります。",
+                "narration_source_intro": "",
+                "narration_after": "現代語に訳しますと、\n「仁のある者は人を愛し、礼のある者は人を敬う。\n人を愛する者は、人からも常に愛される。\n人を敬う者は、人からも常に敬われる」\nという意味になります。\n二千年以上前に記されたこの教えが、御名と御称号の根底にあるのです。",
             },
             {
                 "fact_id": "F008",
@@ -106,6 +162,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "宮内庁公式サイト掲載の記者会見原文から荒木が直接確認。",
+                "narration_lead": "御誕生から約4か月後の平成14年4月2日。\n皇太子殿下は、愛子内親王殿下の御誕生につき、記者会見に臨まれました。",
+                "narration_source_intro": "宮内庁が公開しているこの記者会見の記録には、次のように記されています。",
+                "narration_after": "「名前のように」という言葉から、御名「愛子」に込められた願いの深さがうかがえます。\n人を愛し、人からも愛される。人を敬い、人からも敬われる。\n『孟子』の教えそのものが、愛子さまへの願いとして語られています。",
             },
             {
                 "fact_id": "F002",
@@ -123,6 +182,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "令和3年天皇陛下お誕生日記者会見で、命名典拠が孟子の言葉であることと、御名に込められた願いが明言されている。荒木が宮内庁公式サイトで原文を直接確認。",
+                "narration_lead": "それから約20年後の令和3年。\n天皇陛下のお誕生日に際しての記者会見で、\n天皇陛下は改めて命名の由来について語られました。",
+                "narration_source_intro": "宮内庁の記録には、次のように記されています。",
+                "narration_after": "「孟子の言葉を参考にした」と、典拠が明確に語られています。\nそして「私たちの願いが込められています」という言葉から、\n御名と御称号がご両親の深い思いとともに選ばれたことが、改めて伝わってまいります。",
             },
             {
                 "fact_id": "F003",
@@ -140,6 +202,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "notes": "F002と同一の令和3年記者会見原文で確認。御称号「敬宮」にも孟子の言葉が参考にされたことが明言されている。荒木が宮内庁公式サイトで原文を直接確認。",
+                "narration_lead": "御称号「敬宮」にも、同じ『孟子』の教えが込められています。\n先ほどの令和3年の記者会見の記録にも、御称号と御名の両方について触れられていました。",
+                "narration_source_intro": "",
+                "narration_after": "御名「愛子」には「人を愛してほしい」という願い。\n御称号「敬宮」には「人を敬ってほしい」という願い。\nそれぞれに異なる意味が込められ、\n合わせて『孟子』の「愛人」「敬人」の教えの全体を表しています。",
             },
             {
                 "fact_id": "F007",
@@ -177,22 +242,6 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "source_type": "古典文献",
                 "reliability": "最高（原典）",
                 "notes": "中国古典。各種注釈書・翻訳で確認可能。",
-            },
-            {
-                "source_id": "S003",
-                "source_name": "NHK報道（2001年12月命名発表時）",
-                "source_url": None,
-                "source_type": "公共放送",
-                "reliability": "高",
-                "notes": "放送アーカイブのURL未確認。",
-            },
-            {
-                "source_id": "S004",
-                "source_name": "主要全国紙報道（2001年12月）",
-                "source_url": None,
-                "source_type": "全国紙",
-                "reliability": "高",
-                "notes": "読売・朝日・毎日・産経・日経各紙。個別記事URLは要確認。",
             },
         ],
     },
@@ -247,9 +296,19 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
             if not has_source:
                 fact["usable_in_script"] = False
                 fact["manual_source_verification_required"] = True
+        topic_context = builtin.get("topic_context", "")
+        section_config = builtin.get("section_config", [])
+        ending_context = builtin.get("ending_context", "")
+        shorts_01_text = builtin.get("shorts_01_text", "")
+        shorts_02_text = builtin.get("shorts_02_text", "")
     else:
         facts = []
         sources = []
+        topic_context = ""
+        section_config = []
+        ending_context = ""
+        shorts_01_text = ""
+        shorts_02_text = ""
 
     # Classify facts by status
     confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
@@ -263,10 +322,13 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "source_priority": [
             "宮内庁公式発表",
             "古典原典",
-            "NHK・共同通信・時事通信",
-            "主要全国紙",
             "学術文献",
         ],
+        "topic_context": topic_context,
+        "section_config": section_config,
+        "ending_context": ending_context,
+        "shorts_01_text": shorts_01_text,
+        "shorts_02_text": shorts_02_text,
         "facts": facts,
         "confirmed": confirmed,
         "partial": partial,

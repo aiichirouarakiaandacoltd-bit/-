@@ -58,6 +58,20 @@ CONFRONTATION_PATTERNS = [
 ]
 
 
+def _is_in_quoted_block(text, pos):
+    """Return True if *pos* falls inside a 『…』 or 「…」 quoted block."""
+    for open_ch, close_ch in [("『", "』"), ("「", "」")]:
+        depth = 0
+        for i, ch in enumerate(text):
+            if i == pos and depth > 0:
+                return True
+            if ch == open_ch:
+                depth += 1
+            elif ch == close_ch and depth > 0:
+                depth -= 1
+    return False
+
+
 # ---------------------------------------------------------------------------
 # Checker
 # ---------------------------------------------------------------------------
@@ -202,8 +216,8 @@ def check_ng_expressions(script_text, title_candidates, description,
 
         # 6. Disrespect check — missing honorifics for imperial family
         disrespect_patterns = [
-            (r"(?<!「)天皇(?!陛下|の|」)", "天皇陛下"),
-            (r"(?<!「)皇后(?!陛下|の|」)", "皇后陛下"),
+            (r"(?<!「)天皇(?!陛下|皇后|の|」)", "天皇陛下"),
+            (r"(?<!「)皇后(?!陛下|両陛下|の|」)", "皇后陛下"),
             (r"(?<!「)愛子(?!さま|内親王|殿下|」)", "愛子さま / 愛子内親王殿下"),
         ]
         for pattern, correct in disrespect_patterns:
@@ -211,13 +225,17 @@ def check_ng_expressions(script_text, title_candidates, description,
             for match in matches:
                 start = match.start()
                 end = match.end()
-                context_before = text[max(0, start - 10):start]
+                if _is_in_quoted_block(text, start):
+                    continue
+                context_before = text[max(0, start - 20):start]
                 context_after = text[end:end + 10]
                 if "「" in context_before or "」" in context_after:
                     continue
                 if "御名" in context_before or "御称号" in context_before:
                     continue
                 if "命名" in context_before:
+                    continue
+                if "名前" in context_before:
                     continue
                 matched_text = match.group(0)
                 findings.append({
@@ -242,10 +260,12 @@ def check_ng_expressions(script_text, title_candidates, description,
         })
 
     # 8. Title-content consistency
+    META_TERMS = {"解説", "丁寧", "わかりやすく", "意外な", "背景", "知らない", "知っておきたい"}
     if title_candidates and script_text:
         for idx, title in enumerate(title_candidates):
-            # Extract key terms from title (longer than 2 chars)
-            title_terms = [t for t in re.findall(r'[一-鿿぀-ゟ゠-ヿ]{3,}', title)]
+            title_terms = [t for t in re.findall(r'[一-鿿぀-ゟ゠-ヿ]{3,}', title)
+                           if t not in META_TERMS
+                           and not any(m in t for m in META_TERMS)]
             missing_terms = [t for t in title_terms if t not in script_text]
             if len(missing_terms) > len(title_terms) // 2 and title_terms:
                 findings.append({

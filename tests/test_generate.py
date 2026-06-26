@@ -104,17 +104,17 @@ class TestBug2NarrationProse:
         import config as cfg
         research_data = {
             "facts": [
-                {"claim": "テスト事実A", "status": cfg.FactStatus.CONFIRMED,
-                 "usable_in_script": True},
-                {"claim": "テスト事実B", "status": cfg.FactStatus.CONFIRMED,
-                 "usable_in_script": True},
+                {"fact_id": "F1", "claim": "テスト事実A", "status": cfg.FactStatus.CONFIRMED,
+                 "usable_in_script": True, "narration_lead": "テスト事実Aについてお伝えします。"},
+                {"fact_id": "F2", "claim": "テスト事実B", "status": cfg.FactStatus.CONFIRMED,
+                 "usable_in_script": True, "narration_lead": "次にテスト事実Bです。"},
             ],
         }
         text = _build_long_script_text("テストテーマ", research_data)
         assert "ご視聴" in text
         assert "【オープニング】" in text
         assert "【エンディング】" in text
-        assert "まず、" in text or "そして、" in text
+        assert "テスト事実A" in text
 
 
 class TestBug3ChannelName:
@@ -127,8 +127,10 @@ class TestBug3ChannelName:
             for f in ["01_research_report.md", "02_narration_script.md",
                        "03_editing_instructions.md", "04_materials_list.md",
                        "05_posting_package.md", "06_bgm_and_credits.md",
-                       "07_ng_check_report.md", "08_bgm_plan.md"]:
+                       "07_ng_check_report.md", "08_bgm_plan.md",
+                       "09_package_summary.md"]:
                 (d / f).write_text("test", encoding="utf-8")
+            (d / "metadata.json").write_text("{}", encoding="utf-8")
             bgm = {"_channel": "ザ・ダンク", "download_or_reference_url": "https://x",
                     "title": "T", "commercial_use": True, "youtube_monetization": True,
                     "license_status": "free"}
@@ -176,11 +178,16 @@ class TestBug4SourceUrlNull:
             for f in ["01_research_report.md", "02_narration_script.md",
                        "03_editing_instructions.md", "04_materials_list.md",
                        "05_posting_package.md", "06_bgm_and_credits.md",
-                       "07_ng_check_report.md", "08_bgm_plan.md"]:
+                       "07_ng_check_report.md", "08_bgm_plan.md",
+                       "09_package_summary.md"]:
                 (d / f).write_text("test", encoding="utf-8")
+            (d / "metadata.json").write_text("{}", encoding="utf-8")
             bgm = {"file_name": "UNL1337.wav", "provider": "箕輪レコーズ",
                     "license_status": "contracted",
                     "contract_evidence": "テスト契約",
+                    "contract_evidence_verified": True,
+                    "content_id_status": "confirmed",
+                    "local_file_verified": True,
                     "credit_text": "楽曲提供：箕輪レコーズ",
                     "download_or_reference_url": None}
             status = validate_package(d, data, {"findings": []}, bgm, topic)

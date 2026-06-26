@@ -35,8 +35,10 @@ BGM_SETTINGS = {
     "credit_text": "楽曲提供：箕輪レコーズ",
     "license_status": "contracted",
     "contract_evidence": "箕輪レコーズとの楽曲使用契約に基づく",
-    "local_file_verified": True,
+    "local_file_verified": False,
     "minimum_usage_seconds": 10,
+    "contract_evidence_verified": False,
+    "content_id_status": "unconfirmed",
 }
 
 BGM_CONFIG_PATH = PROJECT_ROOT / "bgm_config.json"
