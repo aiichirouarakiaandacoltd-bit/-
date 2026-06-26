@@ -130,22 +130,35 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
             credit_duplication = True
             missing_items.append("クレジット二重表記あり")
 
-    package_complete = (
+    package_structure_complete = (
         len(missing_files) == 0
         and len(zero_files) == 0
+    )
+
+    core_facts_confirmed = all(
+        f.get("status") == cfg.FactStatus.CONFIRMED
+        and f.get("verified_excerpt")
+        and f.get("usable_in_script")
+        for f in all_facts
+        if f.get("fact_id") in ("F002", "F003")
+    )
+
+    content_complete = (
+        package_structure_complete
         and not ng_has_fail
         and not has_unconfirmed_in_script
         and not shorts_broken
         and not unsourced_majority
+        and not script_not_narration
+        and core_facts_confirmed
     )
 
     production_ready = (
-        package_complete
+        content_complete
         and bgm_url_configured
         and len(bgm_issues) == 0
         and len(unconfirmed_facts) == 0
         and len(manual_verify_facts) == 0
-        and not script_not_narration
         and not credit_duplication
         and mode == "production"
     )
@@ -165,7 +178,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "topic_source": topic_source,
         "mode": mode,
         "test_mode": is_test,
-        "package_complete": package_complete,
+        "package_structure_complete": package_structure_complete,
+        "content_complete": content_complete,
         "production_ready": production_ready if not is_test else False,
         "manual_review_required": manual_review_required,
         "fact_check_status": _determine_fact_check_status(all_facts, unconfirmed_facts),
@@ -213,7 +227,8 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
 
     lines.append("## パッケージ判定")
     lines.append("")
-    lines.append(f"- package_complete: {status.get('package_complete')}")
+    lines.append(f"- package_structure_complete: {status.get('package_structure_complete')}")
+    lines.append(f"- content_complete: {status.get('content_complete')}")
     lines.append(f"- production_ready: {status.get('production_ready')}")
     lines.append(f"- manual_review_required: {status.get('manual_review_required')}")
     lines.append("")

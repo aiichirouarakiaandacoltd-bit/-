@@ -302,7 +302,8 @@ def main():
         logger.info("=" * 60)
         logger.info(f"制作パッケージ生成完了 ({elapsed:.1f}秒)")
         logger.info(f"  出力先: {output_dir}")
-        logger.info(f"  package_complete: {status.get('package_complete')}")
+        logger.info(f"  package_structure_complete: {status.get('package_structure_complete')}")
+        logger.info(f"  content_complete: {status.get('content_complete')}")
         logger.info(f"  production_ready: {status.get('production_ready')}")
         logger.info(f"  manual_review_required: {status.get('manual_review_required')}")
 

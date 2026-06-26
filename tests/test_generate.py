@@ -47,10 +47,10 @@ class TestGenerateTest:
         zero = [f.name for f in pkg.iterdir() if f.is_file() and f.stat().st_size == 0]
         assert zero == [], f"0KB files found: {zero}"
 
-    def test_package_complete(self):
+    def test_package_structure_complete(self):
         pkg = find_latest_package()
         meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
-        assert meta["package_complete"] is True
+        assert meta["package_structure_complete"] is True
 
     def test_production_ready_false_in_test_mode(self):
         pkg = find_latest_package()
@@ -70,10 +70,10 @@ class TestGenerateProduction:
         zero = [f.name for f in pkg.iterdir() if f.is_file() and f.stat().st_size == 0]
         assert zero == [], f"0KB files found: {zero}"
 
-    def test_package_complete(self):
+    def test_package_structure_complete(self):
         pkg = find_latest_package()
         meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
-        assert meta["package_complete"] is True
+        assert meta["package_structure_complete"] is True
 
     def test_production_ready_false_for_default_theme(self):
         pkg = find_latest_package()
