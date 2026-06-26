@@ -141,6 +141,23 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "manual_source_verification_required": True,
                 "notes": "一般的に認められた慣例だが、単一の公式一次資料を特定できていない。今回の動画テーマに必須ではないため、usable_in_script=falseのまま。",
             },
+            {
+                "fact_id": "F008",
+                "claim": "平成14年4月2日の記者会見で、皇太子殿下は愛子さまについて、「名前のように、人を愛して人からも愛され、人を敬い人からも敬われるような人に育ってほしい」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「愛子内親王殿下御誕生につき（平成14年）」",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/02/kaiken/kaiken-h14-gotanjo.html",
+                "source_type": "公式機関発表（記者会見）",
+                "official_publisher": "宮内庁",
+                "publication_date": "2002-04-02",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 愛子内親王殿下御誕生につき（平成14年）",
+                "verified_excerpt": "また，愛子には一人の皇族として立派に育って欲しいですし，名前のように，人を愛して人からも愛され，人を敬い人からも敬われるような人に育って欲しいです。",
+                "verified_date": "2026-06-26",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "notes": "宮内庁公式サイト掲載の記者会見原文から荒木が直接確認。この発言は命名の趣旨に触れたものであるが、『孟子』が正式な命名典拠であることを直接明言したものではない。命名典拠の公式確認はF002・F003で別途検証が必要。",
+            },
         ],
         "sources": [
             {
