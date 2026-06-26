@@ -4,7 +4,7 @@ from pathlib import Path
 import config as cfg
 
 
-def generate_video_instructions(topic, research_data, output_dir):
+def generate_video_instructions(topic, research_data, output_dir, bgm_config=None):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
     file_path = output_dir / "video_editing_instructions.md"
@@ -86,8 +86,10 @@ def generate_video_instructions(topic, research_data, output_dir):
     lines.append("")
 
     lines.append("## BGM")
-    lines.append(f"- ファイル名: {cfg.BGM_SETTINGS['file_name']}")
-    lines.append(f"- 提供元: {cfg.BGM_SETTINGS['provider']}")
+    bgm_file = (bgm_config or {}).get("file_name") or cfg.BGM_SETTINGS["file_name"]
+    bgm_provider = (bgm_config or {}).get("provider") or cfg.BGM_SETTINGS["provider"]
+    lines.append(f"- ファイル名: {bgm_file}")
+    lines.append(f"- 提供元: {bgm_provider}")
     lines.append("- 別BGMへ勝手に変更しないこと")
     lines.append("- ナレーションを妨げない音量")
     lines.append("- 冒頭フェードイン、末尾フェードアウト")

@@ -21,6 +21,7 @@ def _filter_confirmed_facts(research_data):
 def _build_long_script_text(topic, research_data):
     filtered = _filter_confirmed_facts(research_data)
     confirmed = filtered["confirmed"]
+    usable = [f for f in confirmed if f.get("usable_in_script")]
     partial = filtered["partial"]
     channel = cfg.CHANNEL_NAME
 
@@ -28,11 +29,16 @@ def _build_long_script_text(topic, research_data):
 
     lines.append("【オープニング】")
     lines.append("")
-    lines.append(f"{channel}。")
+    lines.append(f"「{channel}」をご視聴いただきありがとうございます。")
     lines.append("")
 
-    if confirmed:
-        lines.append(f"今回は「{topic}」について、公式の記録や資料をもとにお伝えいたします。")
+    if usable:
+        lines.append(f"今回は「{topic}」について、")
+        lines.append("公式の記録や資料をもとに、丁寧にお伝えしてまいります。")
+        lines.append("")
+        lines.append(f"皆さまは、「{topic}」についてご存じでしょうか。")
+        lines.append("その背景には、深い意味が込められています。")
+        lines.append("順を追って、一つひとつ見ていきましょう。")
     else:
         lines.append(f"今回は「{topic}」についてお話しいたします。")
         lines.append("")
@@ -40,45 +46,58 @@ def _build_long_script_text(topic, research_data):
         lines.append("※ 以下は台本の構成案であり、事実確認後に内容を確定してください。")
     lines.append("")
 
-    if confirmed:
+    if usable:
         chapter_num = 1
-        lines.append(f"【第{_num_kanji(chapter_num)}章　{topic}とは】")
+        lines.append(f"【第{_num_kanji(chapter_num)}章】")
         lines.append("")
-        for fact in confirmed[:3]:
+        for i, fact in enumerate(usable[:3]):
             claim = fact.get("claim", "")
-            lines.append(f"{claim}")
+            if i == 0:
+                lines.append(f"まず、{claim}。")
+            elif i == 1:
+                lines.append(f"そして、{claim}。")
+            else:
+                lines.append(f"さらに、{claim}。")
             lines.append("")
         chapter_num += 1
 
-        if len(confirmed) > 3:
-            lines.append(f"【第{_num_kanji(chapter_num)}章　詳しく見ていきましょう】")
+        if len(usable) > 3:
+            lines.append(f"【第{_num_kanji(chapter_num)}章】")
             lines.append("")
-            for fact in confirmed[3:6]:
+            lines.append("ここからは、もう少し詳しく見ていきましょう。")
+            lines.append("")
+            for fact in usable[3:6]:
                 claim = fact.get("claim", "")
-                lines.append(f"{claim}")
+                lines.append(f"{claim}。")
                 lines.append("")
             chapter_num += 1
 
-        if len(confirmed) > 6:
-            lines.append(f"【第{_num_kanji(chapter_num)}章　さらに深く】")
+        if len(usable) > 6:
+            lines.append(f"【第{_num_kanji(chapter_num)}章】")
             lines.append("")
-            for fact in confirmed[6:]:
+            lines.append("さらに深い背景についてお伝えいたします。")
+            lines.append("")
+            for fact in usable[6:]:
                 claim = fact.get("claim", "")
-                lines.append(f"{claim}")
+                lines.append(f"{claim}。")
                 lines.append("")
             chapter_num += 1
 
         if partial:
-            lines.append(f"【第{_num_kanji(chapter_num)}章　補足情報】")
-            lines.append("")
-            for fact in partial:
-                claim = fact.get("claim", "")
-                note = fact.get("notes", "")
-                lines.append(f"{claim}")
-                if note:
-                    lines.append(f"（※ {note}）")
+            usable_partial = [f for f in partial if f.get("usable_in_script")]
+            if usable_partial:
+                lines.append(f"【第{_num_kanji(chapter_num)}章　補足】")
                 lines.append("")
-            chapter_num += 1
+                lines.append("最後に、補足としてお伝えしたいことがございます。")
+                lines.append("")
+                for fact in usable_partial:
+                    claim = fact.get("claim", "")
+                    note = fact.get("notes", "")
+                    lines.append(f"{claim}。")
+                    if note:
+                        lines.append(f"（※ {note}）")
+                    lines.append("")
+                chapter_num += 1
     else:
         lines.append(f"【第一章　{topic}の概要】")
         lines.append("")
@@ -209,7 +228,7 @@ def generate_shorts_scripts(topic, research_data, output_dir):
         f"ナレーション: VOICEVOX {cfg.VOICEVOX_SETTINGS['speaker_name']}"
         f" speed {cfg.VOICEVOX_SETTINGS['speed']}\n"
         "\n"
-        "=" * 60
+        + "=" * 60
         + "\n\n"
     )
 

@@ -185,8 +185,13 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
     builtin = _BUILTIN_TOPICS.get(topic)
 
     if builtin:
-        facts = builtin["facts"]
-        sources = builtin["sources"]
+        import copy
+        facts = copy.deepcopy(builtin["facts"])
+        sources = copy.deepcopy(builtin["sources"])
+        for fact in facts:
+            if not fact.get("source_url"):
+                fact["usable_in_script"] = False
+                fact["manual_source_verification_required"] = True
     else:
         facts = []
         sources = []

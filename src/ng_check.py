@@ -202,14 +202,24 @@ def check_ng_expressions(script_text, title_candidates, description,
 
         # 6. Disrespect check — missing honorifics for imperial family
         disrespect_patterns = [
-            (r"天皇(?!陛下|(?:の))", "天皇陛下"),
-            (r"皇后(?!陛下|(?:の))", "皇后陛下"),
-            (r"愛子(?!さま|内親王|殿下)", "愛子さま / 愛子内親王殿下"),
+            (r"(?<!「)天皇(?!陛下|の|」)", "天皇陛下"),
+            (r"(?<!「)皇后(?!陛下|の|」)", "皇后陛下"),
+            (r"(?<!「)愛子(?!さま|内親王|殿下|」)", "愛子さま / 愛子内親王殿下"),
         ]
         for pattern, correct in disrespect_patterns:
-            if re.search(pattern, text):
-                match = re.search(pattern, text)
-                matched_text = match.group(0) if match else pattern
+            matches = list(re.finditer(pattern, text))
+            for match in matches:
+                start = match.start()
+                end = match.end()
+                context_before = text[max(0, start - 10):start]
+                context_after = text[end:end + 10]
+                if "「" in context_before or "」" in context_after:
+                    continue
+                if "御名" in context_before or "御称号" in context_before:
+                    continue
+                if "命名" in context_before:
+                    continue
+                matched_text = match.group(0)
                 findings.append({
                     "item": matched_text,
                     "location": location,

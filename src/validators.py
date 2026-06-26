@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import config as cfg
+
 
 REQUIRED_FILES = [
     "01_research_report.md",
@@ -85,11 +87,43 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     if unconfirmed_facts and mode == "production":
         missing_items.append(f"出典未確認の事実が{len(unconfirmed_facts)}件")
 
+    all_facts = research_data.get("facts", [])
+    null_url_facts = [f for f in all_facts if not f.get("source_url")]
+    null_url_majority = len(null_url_facts) > len(all_facts) / 2 if all_facts else False
+    if null_url_majority and mode == "production":
+        missing_items.append(f"主要factの過半数({len(null_url_facts)}/{len(all_facts)})がsource_url未設定")
+
+    script_path = output_dir / "02_narration_script.md"
+    shorts_broken = False
+    script_not_narration = False
+    credit_duplication = False
+    if script_path.exists():
+        script_content = script_path.read_text(encoding="utf-8")
+        separator_lines = [l for l in script_content.split("\n")
+                           if l.strip() and all(c == "=" for c in l.strip())]
+        if len(separator_lines) > 5:
+            shorts_broken = True
+            missing_items.append("Shorts台本にヘッダー重複あり")
+        if "出典確認後に" in script_content:
+            script_not_narration = True
+            if mode == "production":
+                missing_items.append("台本がナレーション原稿になっていない（テンプレートのまま）")
+
+    posting_path = output_dir / "05_posting_package.md"
+    if posting_path.exists():
+        posting_content = posting_path.read_text(encoding="utf-8")
+        import re as _re
+        if _re.search(r"(\w+): \1:", posting_content):
+            credit_duplication = True
+            missing_items.append("クレジット二重表記あり")
+
     package_complete = (
         len(missing_files) == 0
         and len(zero_files) == 0
         and not ng_has_fail
         and not has_unconfirmed_in_script
+        and not shorts_broken
+        and not null_url_majority
     )
 
     production_ready = (
@@ -97,6 +131,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and bgm_url_configured
         and len(bgm_issues) == 0
         and len(unconfirmed_facts) == 0
+        and not script_not_narration
+        and not credit_duplication
         and mode == "production"
     )
 
@@ -110,7 +146,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
 
     status = {
         "project_name": "imperial-video-automation",
-        "channel_name": bgm_config.get("_channel") or "日本が誇る皇室物語",
+        "channel_name": cfg.CHANNEL_NAME,
         "topic": topic,
         "topic_source": topic_source,
         "mode": mode,

@@ -240,8 +240,9 @@ def main():
         generate_shorts_scripts(theme, research_data, output_dir)
         consolidate_scripts(output_dir, logger)
 
-        logger.info("[3/9] 編集指示書・サムネイル指示書作成...")
-        generate_video_instructions(theme, research_data, output_dir)
+        logger.info("[3/9] BGM設定読み込み・編集指示書・サムネイル指示書作成...")
+        bgm_config = load_bgm_config()
+        generate_video_instructions(theme, research_data, output_dir, bgm_config=bgm_config)
         generate_thumbnail_instructions(theme, research_data, output_dir)
         consolidate_instructions(output_dir, logger)
 
@@ -249,7 +250,6 @@ def main():
         materials_data = generate_material_urls_csv(theme, research_data, output_dir)
 
         logger.info("[5/9] 投稿用文面作成...")
-        bgm_config = load_bgm_config()
         posting_result = generate_posting_package(
             theme, research_data, bgm_config, output_dir
         )

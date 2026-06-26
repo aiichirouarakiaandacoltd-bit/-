@@ -1,5 +1,6 @@
 """Smoke tests for package generation."""
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -8,6 +9,7 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MAIN_PY = PROJECT_ROOT / "main.py"
+sys.path.insert(0, str(PROJECT_ROOT))
 
 
 def run_main(*args):
@@ -73,7 +75,113 @@ class TestGenerateProduction:
         meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
         assert meta["package_complete"] is True
 
-    def test_production_ready_true(self):
+    def test_production_ready_false_for_default_theme(self):
         pkg = find_latest_package()
         meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
-        assert meta["production_ready"] is True
+        assert meta["production_ready"] is False
+
+
+class TestBug1ShortsHeader:
+    def test_no_header_repetition(self):
+        from src.script_writer import generate_shorts_scripts
+        import config as cfg
+        import tempfile
+        research_data = {
+            "facts": [{"claim": "テスト事実", "status": cfg.FactStatus.CONFIRMED,
+                        "usable_in_script": True}],
+        }
+        with tempfile.TemporaryDirectory() as d:
+            p1, p2 = generate_shorts_scripts("テスト", research_data, d)
+            content = p1.read_text(encoding="utf-8")
+            eq_lines = [l for l in content.split("\n") if l.strip() == "=" * 60]
+            assert len(eq_lines) == 1, f"Expected 1 separator line, got {len(eq_lines)}"
+            assert content.count("\n=\n=") == 0
+
+
+class TestBug2NarrationProse:
+    def test_long_script_is_prose(self):
+        from src.script_writer import _build_long_script_text
+        import config as cfg
+        research_data = {
+            "facts": [
+                {"claim": "テスト事実A", "status": cfg.FactStatus.CONFIRMED,
+                 "usable_in_script": True},
+                {"claim": "テスト事実B", "status": cfg.FactStatus.CONFIRMED,
+                 "usable_in_script": True},
+            ],
+        }
+        text = _build_long_script_text("テストテーマ", research_data)
+        assert "ご視聴" in text
+        assert "【オープニング】" in text
+        assert "【エンディング】" in text
+        assert "まず、" in text or "そして、" in text
+
+
+class TestBug3ChannelName:
+    def test_channel_name_from_config(self):
+        from src.validators import validate_package
+        import config as cfg
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            for f in ["01_research_report.md", "02_narration_script.md",
+                       "03_editing_instructions.md", "04_materials_list.md",
+                       "05_posting_package.md", "06_bgm_and_credits.md",
+                       "07_ng_check_report.md", "08_bgm_plan.md"]:
+                (d / f).write_text("test", encoding="utf-8")
+            bgm = {"_channel": "ザ・ダンク", "download_or_reference_url": "https://x",
+                    "title": "T", "commercial_use": True, "youtube_monetization": True,
+                    "license_status": "free"}
+            status = validate_package(d, {"facts": []}, {"findings": []}, bgm, "T")
+            assert status["channel_name"] == cfg.CHANNEL_NAME
+
+
+class TestBug4SourceUrlNull:
+    def test_null_url_sets_unusable(self):
+        from src.research import research_topic
+        import tempfile
+        topic = "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            for fact in data["facts"]:
+                if not fact.get("source_url"):
+                    assert fact["usable_in_script"] is False
+                    assert fact.get("manual_source_verification_required") is True
+
+
+class TestBug5InstructionsBGM:
+    def test_instructions_use_bgm_config(self):
+        from src.instructions import generate_video_instructions
+        import config as cfg
+        import tempfile
+        research_data = {"facts": []}
+        bgm = {"file_name": "TestTrack.mp3", "provider": "TestProvider"}
+        with tempfile.TemporaryDirectory() as d:
+            generate_video_instructions("T", research_data, d, bgm_config=bgm)
+            content = (Path(d) / "video_editing_instructions.md").read_text(encoding="utf-8")
+            assert "TestTrack.mp3" in content
+            assert "TestProvider" in content
+            assert cfg.BGM_SETTINGS["file_name"] not in content
+
+
+class TestBug6CreditDuplication:
+    def test_no_double_bgm_prefix(self):
+        from src.posting import _generate_credits_lines
+        bgm = {"download_or_reference_url": "https://x",
+               "credit_text": "BGM: Test / Artist (Provider)"}
+        lines = _generate_credits_lines({}, bgm)
+        text = "\n".join(lines)
+        assert "BGM: BGM:" not in text
+        assert "BGM: Test / Artist (Provider)" in text
+
+
+class TestBug7NGFalsePositive:
+    def test_quoted_name_not_flagged(self):
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = 'なぜ「愛子」と「敬宮」なのか'
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            honorific_findings = [f for f in result["findings"]
+                                  if f["category"] == "敬称・敬語" and "愛子" in f["item"]]
+            assert len(honorific_findings) == 0, f"False positive: {honorific_findings}"

@@ -129,7 +129,10 @@ def _generate_credits_lines(research_data, bgm_config):
 
     bgm_url = bgm_config.get("download_or_reference_url")
     if bgm_url:
-        lines.append(f"BGM: {bgm_config.get('credit_text', cfg.BGM_SETTINGS['credit_text'])}")
+        credit = bgm_config.get("credit_text", cfg.BGM_SETTINGS["credit_text"])
+        if credit.startswith("BGM:") or credit.startswith("BGM："):
+            credit = credit.split(":", 1)[1].strip() if ":" in credit else credit.split("：", 1)[1].strip()
+        lines.append(f"BGM: {credit}")
     else:
         lines.append("BGM: 要確認（BGM正式URLが未設定）")
     lines.append("")
