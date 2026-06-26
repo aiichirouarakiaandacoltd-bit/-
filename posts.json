@@ -69,16 +69,15 @@
       }
     ],
     "id": "whole-house-water-carousel-b0ebe6ed",
-    "status": "scheduled",
+    "status": "draft",
     "risk": {
       "ok": true,
       "level": "ok",
       "hit_count": 0,
       "hits": []
     },
-    "scheduled_date": "2026-06-30",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "shower-chlorine",
@@ -142,16 +141,15 @@
       ]
     },
     "id": "shower-chlorine-reel-8abe0f7b",
-    "status": "scheduled",
+    "status": "draft",
     "risk": {
       "ok": true,
       "level": "ok",
       "hit_count": 0,
       "hits": []
     },
-    "scheduled_date": "2026-07-04",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "bath-water",
@@ -188,7 +186,7 @@
     },
     "scheduled_date": "2026-07-02",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "beyond-kitchen",
@@ -249,7 +247,7 @@
     },
     "scheduled_date": "2026-07-07",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "nanobubble",
@@ -330,7 +328,7 @@
     },
     "scheduled_date": "2026-07-09",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "detached-house",
@@ -367,7 +365,7 @@
     },
     "scheduled_date": "2026-07-11",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "apartment",
@@ -440,7 +438,7 @@
     },
     "scheduled_date": "2026-07-14",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "faq",
@@ -501,7 +499,7 @@
     },
     "scheduled_date": "2026-07-16",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "ease-anxiety",
@@ -582,7 +580,7 @@
     },
     "scheduled_date": "2026-07-18",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "free-consult",
@@ -619,7 +617,7 @@
     },
     "scheduled_date": "2026-07-21",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "whole-house-water",
@@ -692,7 +690,7 @@
     },
     "scheduled_date": "2026-07-23",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   },
   {
     "theme_id": "bath-water",
@@ -753,6 +751,6 @@
     },
     "scheduled_date": "2026-07-25",
     "created_at": "2026-06-26T04:02:38+00:00",
-    "updated_at": "2026-06-26T04:04:28+00:00"
+    "updated_at": "2026-06-26T04:07:20+00:00"
   }
 ]

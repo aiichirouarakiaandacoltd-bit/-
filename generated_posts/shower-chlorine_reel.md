@@ -3,8 +3,7 @@
 - ID: `shower-chlorine-reel-8abe0f7b`
 - テーマ: シャワーの塩素が気になる方へ
 - フォーマット: reel
-- ステータス: scheduled
-- 投稿予定日: 2026-07-04
+- ステータス: draft
 
 ## 画像内テキスト
 

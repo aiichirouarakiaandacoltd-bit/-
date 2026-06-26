@@ -3,8 +3,7 @@
 - ID: `whole-house-water-carousel-b0ebe6ed`
 - テーマ: 家中の水を見直す
 - フォーマット: carousel
-- ステータス: scheduled
-- 投稿予定日: 2026-06-30
+- ステータス: draft
 
 ## 画像内テキスト
 
