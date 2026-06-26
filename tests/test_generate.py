@@ -165,7 +165,7 @@ class TestBug4SourceUrlNull:
                 assert not fact.get("manual_source_verification_required"), \
                     f"{fact['fact_id']} still requires manual verification"
 
-    def test_fact_check_status_not_all_confirmed_when_manual_needed(self):
+    def test_fact_check_status_ignores_non_blocking_facts(self):
         from src.research import research_topic
         from src.validators import validate_package
         import tempfile
@@ -179,10 +179,16 @@ class TestBug4SourceUrlNull:
                        "07_ng_check_report.md", "08_bgm_plan.md"]:
                 (d / f).write_text("test", encoding="utf-8")
             bgm = {"file_name": "UNL1337.wav", "provider": "箕輪レコーズ",
+                    "license_status": "contracted",
+                    "contract_evidence": "テスト契約",
+                    "credit_text": "楽曲提供：箕輪レコーズ",
                     "download_or_reference_url": None}
             status = validate_package(d, data, {"findings": []}, bgm, topic)
-            assert status["fact_check_status"] != "all_confirmed"
-            assert status["fact_check_status"] == "manual_verification_required"
+            assert status["fact_check_status"] == "all_confirmed"
+            f007 = [f for f in data["facts"] if f["fact_id"] == "F007"]
+            assert len(f007) == 1
+            assert f007[0]["blocking"] is False
+            assert f007[0]["required_for_content"] is False
 
 
 class TestBug5InstructionsBGM:

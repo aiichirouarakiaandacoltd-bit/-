@@ -156,7 +156,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "direct_or_contextual": "contextual",
                 "usable_in_script": False,
                 "manual_source_verification_required": True,
-                "notes": "一般的に認められた慣例だが、単一の公式一次資料を特定できていない。今回の動画テーマに必須ではないため、usable_in_script=falseのまま。",
+                "required_for_content": False,
+                "blocking": False,
+                "notes": "一般的に認められた慣例だが、単一の公式一次資料を特定できていない。今回の動画テーマに必須ではないため、usable_in_script=falseのまま。content_completeおよびproduction_readyの判定には影響しない。",
             },
         ],
         "sources": [

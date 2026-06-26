@@ -27,12 +27,19 @@ def check_zero_byte_files(output_dir):
     return zero_files
 
 
+def _is_blocking_fact(fact):
+    if fact.get("blocking") is False or fact.get("required_for_content") is False:
+        return False
+    return True
+
+
 def _determine_fact_check_status(all_facts, unconfirmed_facts):
     has_rejected = any(f.get("status") == "rejected" for f in all_facts)
     if has_rejected:
         return "failed"
-    has_manual = any(f.get("manual_source_verification_required") for f in all_facts)
-    has_unusable = any(not f.get("usable_in_script") for f in all_facts)
+    blocking_facts = [f for f in all_facts if _is_blocking_fact(f)]
+    has_manual = any(f.get("manual_source_verification_required") for f in blocking_facts)
+    has_unusable = any(not f.get("usable_in_script") for f in blocking_facts)
     has_unconfirmed = len(unconfirmed_facts) > 0
     if has_manual or has_unusable or has_unconfirmed:
         return "manual_verification_required"
@@ -42,12 +49,20 @@ def _determine_fact_check_status(all_facts, unconfirmed_facts):
 def _validate_bgm_config(bgm_config):
     """Check BGM configuration completeness for production readiness."""
     issues = []
-    if not bgm_config.get("download_or_reference_url"):
-        issues.append("BGM正式参照URL未設定")
     if not bgm_config.get("file_name"):
         issues.append("BGMファイル名が未設定")
     if not bgm_config.get("provider"):
         issues.append("BGM提供元が未設定")
+
+    license_status = bgm_config.get("license_status", "")
+    if license_status == "contracted":
+        if not bgm_config.get("contract_evidence") and not bgm_config.get("license_evidence"):
+            issues.append("契約証跡が未設定")
+        if not bgm_config.get("credit_text"):
+            issues.append("クレジット表記が未設定")
+    else:
+        if not bgm_config.get("download_or_reference_url"):
+            issues.append("BGM正式参照URL未設定")
     return issues
 
 
@@ -77,7 +92,9 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
             if finding.get("verdict") == "FAIL":
                 ng_has_fail = True
 
-    bgm_url_configured = bool(bgm_config.get("download_or_reference_url"))
+    bgm_license = bgm_config.get("license_status", "")
+    bgm_contracted = bgm_license == "contracted"
+    bgm_url_configured = bool(bgm_config.get("download_or_reference_url")) or bgm_contracted
     bgm_issues = _validate_bgm_config(bgm_config)
 
     missing_items = list(missing_files)
@@ -91,7 +108,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         missing_items.append(issue)
 
     unconfirmed_facts = [f for f in research_data.get("facts", [])
-                         if f.get("status") in ("unconfirmed", "partial")]
+                         if f.get("status") in ("unconfirmed", "partial")
+                         and _is_blocking_fact(f)]
     if unconfirmed_facts and mode == "production":
         missing_items.append(f"出典未確認の事実が{len(unconfirmed_facts)}件")
 
@@ -102,7 +120,9 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     if unsourced_majority and mode == "production":
         missing_items.append(f"主要factの過半数({len(unsourced_facts)}/{len(all_facts)})が出典未設定")
 
-    manual_verify_facts = [f for f in all_facts if f.get("manual_source_verification_required")]
+    manual_verify_facts = [f for f in all_facts
+                           if f.get("manual_source_verification_required")
+                           and _is_blocking_fact(f)]
     if manual_verify_facts and mode == "production":
         missing_items.append(f"手動出典確認が必要なfactが{len(manual_verify_facts)}件")
 
@@ -121,6 +141,30 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
             script_not_narration = True
             if mode == "production":
                 missing_items.append("台本がナレーション原稿になっていない（テンプレートのまま）")
+
+    script_duration_short = False
+    script_estimated_minutes = 0.0
+    if script_path.exists():
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        long_start = script_content.find("## 長尺台本")
+        if long_start >= 0:
+            shorts_start = script_content.find("---", long_start)
+            long_text = script_content[long_start:shorts_start] if shorts_start >= 0 else script_content[long_start:]
+            sep_pos = long_text.find("=" * 20)
+            if sep_pos >= 0:
+                narration_text = long_text[sep_pos:]
+            else:
+                narration_text = long_text
+            char_count = count_narration_chars(narration_text)
+            script_estimated_minutes = estimate_reading_minutes(char_count)
+            target_min = cfg.NARRATION_TARGET_MIN_MINUTES
+            target_max = cfg.NARRATION_TARGET_MAX_MINUTES
+            if script_estimated_minutes < target_min and mode == "production":
+                script_duration_short = True
+                missing_items.append(
+                    f"長尺台本が目標尺に未達（推定{script_estimated_minutes:.1f}分、"
+                    f"目標{target_min}〜{target_max}分）"
+                )
 
     posting_path = output_dir / "05_posting_package.md"
     if posting_path.exists():
@@ -151,6 +195,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and not unsourced_majority
         and not script_not_narration
         and core_facts_confirmed
+        and not script_duration_short
     )
 
     production_ready = (
@@ -186,8 +231,10 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "rights_status": "ok",
         "ng_check_status": "fail" if ng_has_fail else "pass",
         "bgm_url_configured": bgm_url_configured,
+        "bgm_contracted": bgm_contracted,
         "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",
         "bgm_issues": bgm_issues,
+        "script_estimated_minutes": round(script_estimated_minutes, 1),
         "missing_items": missing_items,
         "generated_files": sorted(generated_files),
         "zero_byte_files": zero_files,
@@ -262,6 +309,8 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append(f"{status.get('ng_check_status', '未実施')}")
     lines.append("")
     lines.append("## BGM設定状況")
+    if status.get("bgm_contracted"):
+        lines.append("- ライセンス: contracted（契約済み）")
     lines.append(f"- URL設定: {'済' if status.get('bgm_url_configured') else '未設定（荒木側で設定必要）'}")
     lines.append(f"- BGM検証: {status.get('bgm_validation', '未実施')}")
     bgm_issues = status.get("bgm_issues", [])

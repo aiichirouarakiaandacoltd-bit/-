@@ -23,7 +23,10 @@ def load_bgm_config():
         "title": None,
         "provider": cfg.BGM_SETTINGS["provider"],
         "download_or_reference_url": None,
-        "license_status": "licensed",
+        "license_status": cfg.BGM_SETTINGS.get("license_status", "licensed"),
+        "contract_evidence": cfg.BGM_SETTINGS.get("contract_evidence"),
+        "local_file_verified": cfg.BGM_SETTINGS.get("local_file_verified", False),
+        "minimum_usage_seconds": cfg.BGM_SETTINGS.get("minimum_usage_seconds", 10),
         "commercial_use": True,
         "youtube_monetization": True,
         "credit_required": True,
@@ -58,7 +61,8 @@ def load_bgm_config():
             defaults[k] = v
 
     if not defaults.get("download_or_reference_url"):
-        defaults["missing_items"] = ["BGMの正式な取得・確認URL"]
+        if defaults.get("license_status") != "contracted":
+            defaults["missing_items"] = ["BGMの正式な取得・確認URL"]
 
     return defaults
 

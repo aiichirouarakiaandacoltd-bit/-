@@ -33,6 +33,10 @@ BGM_SETTINGS = {
     "file_name": "UNL1337.wav",
     "provider": "箕輪レコーズ",
     "credit_text": "楽曲提供：箕輪レコーズ",
+    "license_status": "contracted",
+    "contract_evidence": "箕輪レコーズとの楽曲使用契約に基づく",
+    "local_file_verified": True,
+    "minimum_usage_seconds": 10,
 }
 
 BGM_CONFIG_PATH = PROJECT_ROOT / "bgm_config.json"
@@ -41,6 +45,9 @@ VOICEVOX_SETTINGS = {
     "speaker_name": "青山龍星",
     "speed": 0.88,
 }
+
+NARRATION_TARGET_MIN_MINUTES = 7
+NARRATION_TARGET_MAX_MINUTES = 9
 
 PROHIBITED_IMAGE_TYPES = [
     "ai_generated_royal_face",
