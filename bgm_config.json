@@ -1,0 +1,68 @@
+{
+  "channel": "ザ・ダンク",
+  "search_criteria": {
+    "genre": ["HipHop", "Sports", "Energetic", "Epic"],
+    "mood": ["Fast", "Exciting", "Powerful"],
+    "bpm_min": 110,
+    "bpm_max": 145,
+    "vocals": false,
+    "loopable": true,
+    "commercial_use_required": true,
+    "youtube_monetization_required": true,
+    "priority_sources": [
+      "DOVA-SYNDROME",
+      "甘茶の音楽工房",
+      "BGMer"
+    ]
+  },
+  "selected": {
+    "title": "Sports Digest",
+    "composer": "MagaMaga",
+    "provider": "DOVA-SYNDROME",
+    "download_or_reference_url": "https://dova-s.jp/bgm/detail/21432",
+    "license_status": "free",
+    "license_url": "https://dova-s.jp/en/contents/license",
+    "commercial_use": true,
+    "youtube_monetization": true,
+    "content_id_risk": "low",
+    "vocals": false,
+    "credit_required": false,
+    "credit_text": "BGM: Sports Digest / MagaMaga (DOVA-SYNDROME)",
+    "duration_seconds": 104,
+    "file_name": "Sports_Digest.mp3",
+    "usage_note": "ループ再生可。ナレーションを妨げない音量で使用。冒頭フェードイン、末尾フェードアウト。"
+  },
+  "candidates": [
+    {
+      "title": "Sports Digest",
+      "composer": "MagaMaga",
+      "provider": "DOVA-SYNDROME",
+      "url": "https://dova-s.jp/bgm/detail/21432",
+      "genre": "Sports / Upbeat Rock",
+      "duration": "1:44",
+      "reason": "スポーツダイジェスト風のポジティブなロック。バスケ映像との相性良好。",
+      "status": "adopted"
+    },
+    {
+      "title": "Chrome Rush",
+      "composer": "MFP (Marron Fields Production)",
+      "provider": "DOVA-SYNDROME",
+      "url": "https://dova-s.jp/bgm/detail/23428",
+      "genre": "Electronic / Action",
+      "bpm": 130,
+      "duration": "unknown",
+      "reason": "高速エレクトロニック。アクション系映像向け。テンポ感は良いがロック寄り。",
+      "status": "alternative"
+    },
+    {
+      "title": "HIPHOP BEAT 03",
+      "composer": "Y8MD",
+      "provider": "DOVA-SYNDROME",
+      "url": "https://www.youtube.com/watch?v=ATj1WNF1vBs",
+      "genre": "HipHop",
+      "duration": "unknown",
+      "reason": "ヒップホップビート。NBA映像との親和性が高い。クレジット任意。",
+      "status": "alternative"
+    }
+  ]
+}

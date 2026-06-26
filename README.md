@@ -23,7 +23,8 @@ FFmpeg、VOICEVOX、BGMファイルは不要です（制作指示書に情報と
 | `05_posting_package.md` | タイトル候補・概要欄・固定コメント・クレジット |
 | `06_bgm_and_credits.md` | BGM指定・使用条件・クレジット設定 |
 | `07_ng_check_report.md` | NG表現・煽り・断定・権利リスクの検査結果 |
-| `08_package_summary.md` | パッケージ概要・判定・不足項目 |
+| `08_bgm_plan.md` | BGM選定プラン・検索条件・候補一覧 |
+| `09_package_summary.md` | パッケージ概要・判定・不足項目 |
 | `metadata.json` | 完成判定・不足項目・生成ファイル一覧 |
 
 ## 実行方法
@@ -52,7 +53,7 @@ python main.py --theme "テーマ" --mode production
 
 ## 外注者へ渡すファイル
 
-`08_package_summary.md` で判定を確認した上で、以下を外注者へ渡してください：
+`09_package_summary.md` で判定を確認した上で、以下を外注者へ渡してください：
 - `02_narration_script.md`（台本）
 - `03_editing_instructions.md`（制作指示書）
 - `04_materials_list.md`（素材・権利情報）

@@ -145,7 +145,7 @@ def rename_ng_report(output_dir, logger):
 
 def cleanup_intermediate(output_dir):
     """Remove intermediate files, keeping only numbered outputs and metadata."""
-    keep_prefixes = ("01_", "02_", "03_", "04_", "05_", "06_", "07_", "08_",
+    keep_prefixes = ("01_", "02_", "03_", "04_", "05_", "06_", "07_", "08_", "09_",
                      "metadata.json", "execution.log")
     for f in output_dir.iterdir():
         if f.is_file() and not any(f.name.startswith(p) for p in keep_prefixes):
@@ -190,41 +190,42 @@ def main():
         from src.materials import generate_material_urls_csv, generate_rights_report
         from src.ng_check import check_ng_expressions
         from src.posting import generate_posting_package
-        from src.bgm_config import load_bgm_config, generate_bgm_and_credits
+        from src.bgm_config import load_bgm_config, generate_bgm_and_credits, generate_bgm_plan
         from src.validators import (
             validate_package, write_status_json, generate_package_summary,
         )
 
-        logger.info("[1/8] 出典調査・ファクトチェック...")
+        logger.info("[1/9] 出典調査・ファクトチェック...")
         research_data = research_topic(args.theme, output_dir)
         generate_research_report(research_data, output_dir)
         generate_fact_check(research_data, output_dir)
         generate_sources_csv(research_data, output_dir)
         consolidate_research(output_dir, logger)
 
-        logger.info("[2/8] ナレーション台本作成...")
+        logger.info("[2/9] ナレーション台本作成...")
         generate_long_script(args.theme, research_data, output_dir)
         generate_shorts_scripts(args.theme, research_data, output_dir)
         consolidate_scripts(output_dir, logger)
 
-        logger.info("[3/8] 編集指示書・サムネイル指示書作成...")
+        logger.info("[3/9] 編集指示書・サムネイル指示書作成...")
         generate_video_instructions(args.theme, research_data, output_dir)
         generate_thumbnail_instructions(args.theme, research_data, output_dir)
         consolidate_instructions(output_dir, logger)
 
-        logger.info("[4/8] 素材候補・権利レポート作成...")
+        logger.info("[4/9] 素材候補・権利レポート作成...")
         materials_data = generate_material_urls_csv(args.theme, research_data, output_dir)
 
-        logger.info("[5/8] 投稿用文面作成...")
+        logger.info("[5/9] 投稿用文面作成...")
         bgm_config = load_bgm_config()
         posting_result = generate_posting_package(
             args.theme, research_data, bgm_config, output_dir
         )
 
-        logger.info("[6/8] BGM・クレジット設定...")
+        logger.info("[6/9] BGM・クレジット設定...")
         generate_bgm_and_credits(bgm_config, output_dir)
+        generate_bgm_plan(bgm_config, output_dir)
 
-        logger.info("[7/8] NG表現チェック...")
+        logger.info("[7/9] NG表現チェック...")
         long_script_path = output_dir / "long_script.txt"
         script_text = ""
         if long_script_path.exists():
@@ -250,7 +251,10 @@ def main():
 
         cleanup_intermediate(output_dir)
 
-        logger.info("[8/8] パッケージ検証・サマリー生成...")
+        logger.info("[8/9] BGMプラン確認...")
+        logger.info("08_bgm_plan.md 生成完了")
+
+        logger.info("[9/9] パッケージ検証・サマリー生成...")
         status = validate_package(
             output_dir, research_data, ng_data, bgm_config,
             args.theme, topic_source="manual", mode=args.mode,

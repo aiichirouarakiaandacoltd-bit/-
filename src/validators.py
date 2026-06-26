@@ -12,6 +12,7 @@ REQUIRED_FILES = [
     "05_posting_package.md",
     "06_bgm_and_credits.md",
     "07_ng_check_report.md",
+    "08_bgm_plan.md",
 ]
 
 
@@ -22,6 +23,22 @@ def check_zero_byte_files(output_dir):
         if f.is_file() and f.stat().st_size == 0:
             zero_files.append(f.name)
     return zero_files
+
+
+def _validate_bgm_config(bgm_config):
+    """Check BGM configuration completeness for production readiness."""
+    issues = []
+    if not bgm_config.get("download_or_reference_url"):
+        issues.append("BGM取得・確認URLが未設定")
+    if not bgm_config.get("title"):
+        issues.append("BGM楽曲タイトルが未設定")
+    if bgm_config.get("commercial_use") is not True:
+        issues.append("BGM商用利用可が未確認")
+    if bgm_config.get("youtube_monetization") is not True:
+        issues.append("BGM YouTube収益化可が未確認")
+    if bgm_config.get("license_status") in (None, "unknown", ""):
+        issues.append("BGMライセンス状態が未確認")
+    return issues
 
 
 def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
@@ -51,6 +68,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                 ng_has_fail = True
 
     bgm_url_configured = bool(bgm_config.get("download_or_reference_url"))
+    bgm_issues = _validate_bgm_config(bgm_config)
 
     missing_items = list(missing_files)
     if zero_files:
@@ -59,8 +77,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         missing_items.append("UNCONFIRMED/REJECTEDの事実が台本に混入の可能性")
     if ng_has_fail:
         missing_items.append("NG表現チェックにFAILあり")
-    if not bgm_url_configured:
-        missing_items.append("BGM正式URLが未設定")
+    for issue in bgm_issues:
+        missing_items.append(issue)
 
     unconfirmed_facts = [f for f in research_data.get("facts", [])
                          if f.get("status") in ("unconfirmed", "partial")]
@@ -77,6 +95,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     production_ready = (
         package_complete
         and bgm_url_configured
+        and len(bgm_issues) == 0
         and len(unconfirmed_facts) == 0
         and mode == "production"
     )
@@ -84,14 +103,14 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     manual_review_required = (
         not production_ready
         or len(unconfirmed_facts) > 0
-        or not bgm_url_configured
+        or len(bgm_issues) > 0
     )
 
     is_test = mode == "test"
 
     status = {
         "project_name": "imperial-video-automation",
-        "channel_name": "日本が誇る皇室物語",
+        "channel_name": bgm_config.get("_channel") or "日本が誇る皇室物語",
         "topic": topic,
         "topic_source": topic_source,
         "mode": mode,
@@ -103,6 +122,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "rights_status": "ok",
         "ng_check_status": "fail" if ng_has_fail else "pass",
         "bgm_url_configured": bgm_url_configured,
+        "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",
+        "bgm_issues": bgm_issues,
         "missing_items": missing_items,
         "generated_files": sorted(generated_files),
         "zero_byte_files": zero_files,
@@ -125,7 +146,7 @@ def write_status_json(status, output_dir):
 
 def generate_package_summary(topic, research_data, ng_results, bgm_config,
                              status, output_dir):
-    """Generate 08_package_summary.md."""
+    """Generate 09_package_summary.md."""
     output_dir = Path(output_dir)
     lines = []
     lines.append("# 制作パッケージ概要")
@@ -177,6 +198,11 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append("")
     lines.append("## BGM設定状況")
     lines.append(f"- URL設定: {'済' if status.get('bgm_url_configured') else '未設定（荒木側で設定必要）'}")
+    lines.append(f"- BGM検証: {status.get('bgm_validation', '未実施')}")
+    bgm_issues = status.get("bgm_issues", [])
+    if bgm_issues:
+        for issue in bgm_issues:
+            lines.append(f"  - {issue}")
     lines.append("")
 
     if status.get("test_mode"):
@@ -198,4 +224,4 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append(f"生成日時: {status.get('created_at', '')}")
 
     content = "\n".join(lines)
-    (output_dir / "08_package_summary.md").write_text(content, encoding="utf-8")
+    (output_dir / "09_package_summary.md").write_text(content, encoding="utf-8")
