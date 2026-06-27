@@ -4,18 +4,23 @@ CHANNEL_NAME = "日本が誇る皇室物語"
 CHANNEL_PROMISE = "公式事実で、静かな感動を。"
 TARGET_AUDIENCE = "55歳以上、特に65歳以上の女性、スマートフォン視聴中心"
 
-SCORING_WEIGHTS = {
-    "viewer_fit": 20,
-    "official_facts": 20,
-    "emotion": 15,
-    "rights_safety": 15,
-    "long_video": 10,
-    "shorts": 10,
-    "outsource": 10,
+# --- 新スコアリング（10軸・各10点満点＝合計100点） ---
+SCORING_AXES = {
+    "demand":             {"label": "需要スコア",               "max": 10},
+    "competitor_growth":  {"label": "競合伸長スコア",           "max": 10},
+    "reproducibility":    {"label": "少登録者でも伸びる再現性", "max": 10},
+    "channel_fit":        {"label": "皇室チャンネル適合性",     "max": 10},
+    "official_evidence":  {"label": "公式根拠の有無",           "max": 10},
+    "rights_safety":      {"label": "権利リスク",               "max": 10},
+    "senior_fit":         {"label": "65歳以上女性への適合性",   "max": 10},
+    "long_video":         {"label": "長尺化可否",               "max": 10},
+    "shorts_potential":   {"label": "Shorts展開可否",           "max": 10},
+    "production_cost":    {"label": "推定制作コスト",           "max": 10},
 }
 
-PASS_THRESHOLD = 70
-PRIORITY_THRESHOLD = 80
+PASS_THRESHOLD = 60
+PRIORITY_THRESHOLD = 75
+HOLD_THRESHOLD = 50
 
 PROHIBITED_EXPRESSIONS = [
     "衝撃", "激震", "涙が止まらない", "世界が絶賛", "神対応",
@@ -62,5 +67,15 @@ OUTPUT_FILES = [
     "07_title_thumbnail_plan.md",
     "08_risk_check_report.md",
     "09_package_summary.md",
+    "topic_plan.json",
     "execution.log",
 ]
+
+# YouTube指標の重み（需要スコア算出用）
+YOUTUBE_METRIC_WEIGHTS = {
+    "views": 0.15,
+    "ctr": 0.25,
+    "avg_watch_time_pct": 0.25,
+    "repeat_viewers_pct": 0.15,
+    "shorts_to_long_rate": 0.20,
+}
