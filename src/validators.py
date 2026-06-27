@@ -207,23 +207,36 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     shorts_duration_short = False
     shorts_01_estimated_seconds = 0.0
     shorts_02_estimated_seconds = 0.0
+    shorts_03_estimated_seconds = 0.0
     if script_path.exists():
         s01_start = script_content.find("## Shorts 01 台本")
         s02_start = script_content.find("## Shorts 02 台本")
+        s03_start = script_content.find("## Shorts 03 台本")
         if s01_start >= 0 and s02_start >= 0:
             min_shorts_sec = cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]
-            for s_label, s_text, is_first in [
-                ("01", script_content[s01_start:s02_start], True),
-                ("02", script_content[s02_start:], False),
-            ]:
+            shorts_sections = []
+            if s03_start >= 0:
+                shorts_sections = [
+                    ("01", script_content[s01_start:s02_start]),
+                    ("02", script_content[s02_start:s03_start]),
+                    ("03", script_content[s03_start:]),
+                ]
+            else:
+                shorts_sections = [
+                    ("01", script_content[s01_start:s02_start]),
+                    ("02", script_content[s02_start:]),
+                ]
+            for s_label, s_text in shorts_sections:
                 sep = s_text.find("=" * 20)
                 narr = s_text[sep:] if sep >= 0 else s_text
                 c = count_narration_chars(narr)
                 est_sec = estimate_reading_minutes(c) * 60
-                if is_first:
+                if s_label == "01":
                     shorts_01_estimated_seconds = round(est_sec, 1)
-                else:
+                elif s_label == "02":
                     shorts_02_estimated_seconds = round(est_sec, 1)
+                else:
+                    shorts_03_estimated_seconds = round(est_sec, 1)
                 if est_sec < min_shorts_sec:
                     shorts_duration_short = True
                     missing_items.append(
@@ -247,13 +260,13 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and len(zero_files) == 0
     )
 
-    core_facts_confirmed = all(
-        f.get("status") == cfg.FactStatus.CONFIRMED
+    usable_confirmed = [
+        f for f in all_facts
+        if f.get("status") == cfg.FactStatus.CONFIRMED
         and f.get("verified_excerpt")
         and f.get("usable_in_script")
-        for f in all_facts
-        if f.get("fact_id") in ("F002", "F003")
-    )
+    ]
+    core_facts_confirmed = len(usable_confirmed) >= 2 if all_facts else False
 
     content_complete = (
         package_structure_complete
@@ -314,6 +327,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "script_estimated_minutes": round(script_estimated_minutes, 1),
         "shorts_01_estimated_seconds": shorts_01_estimated_seconds,
         "shorts_02_estimated_seconds": shorts_02_estimated_seconds,
+        "shorts_03_estimated_seconds": shorts_03_estimated_seconds,
         "missing_items": missing_items,
         "generated_files": sorted(generated_files),
         "zero_byte_files": zero_files,
@@ -388,6 +402,8 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append(f"- 長尺: 推定{status.get('script_estimated_minutes', 0)}分")
     lines.append(f"- Shorts 01: 推定{status.get('shorts_01_estimated_seconds', 0)}秒")
     lines.append(f"- Shorts 02: 推定{status.get('shorts_02_estimated_seconds', 0)}秒")
+    if status.get('shorts_03_estimated_seconds', 0) > 0:
+        lines.append(f"- Shorts 03: 推定{status.get('shorts_03_estimated_seconds', 0)}秒")
     lines.append("")
     lines.append("## 権利確認状況")
     lines.append(f"- rights_status: {status.get('rights_status', '未実施')}")

@@ -80,7 +80,7 @@ def consolidate_scripts(output_dir, logger):
         parts.append("## 長尺台本\n")
         parts.append(long_path.read_text(encoding="utf-8"))
 
-    for i in range(1, 3):
+    for i in range(1, 4):
         sp = output_dir / f"shorts_{i:02d}_script.txt"
         if sp.exists():
             parts.append(f"\n---\n\n## Shorts {i:02d} 台本\n")
@@ -265,7 +265,7 @@ def main():
         if auto_fix:
             from src.ng_check import auto_fix_honorifics
             logger.info("敬称自動補正を実行中...")
-            for script_file in ["long_script.txt", "shorts_01_script.txt", "shorts_02_script.txt"]:
+            for script_file in ["long_script.txt", "shorts_01_script.txt", "shorts_02_script.txt", "shorts_03_script.txt"]:
                 sp = output_dir / script_file
                 if sp.exists():
                     original = sp.read_text(encoding="utf-8")

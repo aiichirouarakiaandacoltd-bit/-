@@ -235,6 +235,13 @@ def _build_shorts_02_text(topic, research_data):
     return "\n".join(lines)
 
 
+def _build_shorts_03_text(topic, research_data):
+    pre_written = research_data.get("shorts_03_text", "")
+    if pre_written:
+        return pre_written
+    return ""
+
+
 def generate_long_script(topic, research_data, output_dir):
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -285,5 +292,11 @@ def generate_shorts_scripts(topic, research_data, output_dir):
     text_02 = _build_shorts_02_text(topic, research_data)
     path_02 = output_dir / "shorts_02_script.txt"
     path_02.write_text(header + text_02, encoding="utf-8")
+
+    text_03 = _build_shorts_03_text(topic, research_data)
+    if text_03:
+        path_03 = output_dir / "shorts_03_script.txt"
+        path_03.write_text(header + text_03, encoding="utf-8")
+        return path_01, path_02, path_03
 
     return path_01, path_02

@@ -248,6 +248,244 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             },
         ],
     },
+
+    "天皇皇后両陛下オランダ・ベルギー公式訪問――公式記録に残る友好の記録": {
+        "topic": "天皇皇后両陛下オランダ・ベルギー公式訪問――公式記録に残る友好の記録",
+        "topic_context": (
+            "令和8年6月、天皇皇后両陛下はオランダ及びベルギーを公式訪問されました。\n"
+            "オランダのウィレム＝アレクサンダー国王陛下及びベルギーのフィリップ国王陛下からの招請に基づくご訪問です。\n"
+            "6月13日に日本を出発され、6月26日に帰国されるまでの2週間。\n"
+            "両国の王室との交流、歓迎行事、そして「次世代への橋渡し」と語られた日々を、\n"
+            "公式の記録からたどってまいります。"
+        ),
+        "section_config": [
+            {"title": "ご出発とオランダへ", "fact_ids": ["NB001", "NB002"]},
+            {"title": "オランダでの公式行事", "fact_ids": ["NB003", "NB004"]},
+            {"title": "20年ぶりの再会", "fact_ids": ["NB005"]},
+            {"title": "ベルギーでの交流", "fact_ids": ["NB006"]},
+            {"title": "次世代への橋渡し", "fact_ids": ["NB007"]},
+        ],
+        "ending_context": (
+            "ここまで、天皇皇后両陛下のオランダ及びベルギー公式訪問の記録をたどってまいりました。\n\n"
+            "6月13日の出発から6月26日の帰国まで、2週間にわたるご訪問。\n"
+            "オランダではウィレム＝アレクサンダー国王王妃両陛下に温かく迎えられ、\n"
+            "ダム広場での歓迎式典、アムステルダム王宮での晩餐会、\n"
+            "そして20年ぶりとなるアマリア王女との再会がありました。\n\n"
+            "ベルギーではフィリップ国王陛下及びマチルド王妃陛下との旧交を温められ、\n"
+            "両国の人々との交流と相互理解を深められました。\n\n"
+            "天皇陛下が述べられた「次世代への橋渡しができた」というお言葉は、\n"
+            "このご訪問が持つ意義を静かに、しかし確かに物語っています。\n"
+            "皇室と王室の友好は、世代を超えて受け継がれていくものなのでしょう。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "令和8年6月、天皇皇后両陛下がオランダとベルギーを公式訪問されました。\n"
+            "オランダ国王陛下及びベルギー国王陛下からの招請に基づくご訪問です。\n\n"
+            "6月13日に羽田空港を出発され、アムステルダムへ。\n"
+            "ダム広場での歓迎式典、アムステルダム王宮での国賓晩餐会が行われました。\n\n"
+            "天皇陛下は晩餐会のスピーチで、オランダとの友好の歴史に触れられ、\n"
+            "「両国の交流や相互理解、友好関係が更に深まる機会になれば」と述べられました。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "「次世代への橋渡しができたのではないかと思います」。\n\n"
+            "これは、ベルギー滞在中の天皇陛下のお言葉です。\n"
+            "オランダ・ベルギー両国との2週間にわたる公式訪問を振り返られてのものです。\n\n"
+            "オランダではウィレム＝アレクサンダー国王に温かく迎えられ、\n"
+            "ベルギーではフィリップ国王及びマチルド王妃と旧交を温められました。\n\n"
+            "皇室と欧州王室の友好は、上皇上皇后両陛下の時代から受け継がれてきたものです。\n"
+            "両陛下はその絆を次の世代へとつないでおられます。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_03_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "20年前、オランダのヘット・アウデ・ロー城での夏休み。\n"
+            "4歳の愛子さまと2歳のアマリア王女が手をつないで過ごした日々がありました。\n\n"
+            "令和8年6月、両陛下のオランダ公式訪問の際に、\n"
+            "アマリア王女との20年ぶりの再会が実現しました。\n\n"
+            "天皇陛下は「素晴らしい夏休みを過ごした」と当時を振り返られました。\n"
+            "アマリア王女は現在、アムステルダム大学で学びながら次期女王としての道を歩んでおられます。\n\n"
+            "皇室と王室の友情が、世代を超えて受け継がれていく姿がここにあります。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "facts": [
+            {
+                "fact_id": "NB001",
+                "claim": "天皇皇后両陛下は令和8年6月13日から6月26日までオランダ及びベルギーを公式訪問された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「オランダ及びベルギーご訪問（令和8年）」",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/schedule01/2026nld-bel/",
+                "source_type": "公式機関発表",
+                "official_publisher": "宮内庁",
+                "publication_date": "2026-06-13",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > オランダ及びベルギーご訪問（令和8年）",
+                "verified_excerpt": "天皇皇后両陛下のオランダ及びベルギーご訪問（令和8年6月13日～6月26日）",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "notes": "宮内庁公式サイトのご訪問特設ページから確認。",
+                "narration_lead": "令和8年、西暦2026年の6月13日。\n天皇皇后両陛下は、オランダ及びベルギーの公式訪問のため、羽田空港を出発されました。\n6月26日に帰国されるまでの、2週間にわたるご訪問です。",
+                "narration_source_intro": "宮内庁の公式サイトには、このご訪問について次のように記されています。",
+                "narration_after": "このご訪問は、オランダのウィレム＝アレクサンダー国王陛下及びベルギーのフィリップ国王陛下からの招請に基づくものです。",
+            },
+            {
+                "fact_id": "NB002",
+                "claim": "このご訪問はオランダ国王陛下及びベルギー国王陛下からの招請に基づくものである",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「オランダ及びベルギーご訪問に際し（令和8年）」記者会見",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/2026nld-bel.html",
+                "source_type": "公式機関発表（記者会見）",
+                "official_publisher": "宮内庁",
+                "publication_date": "2026-06-12",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > オランダ及びベルギーご訪問に際し（令和8年）",
+                "verified_excerpt": "オランダ国王陛下及びベルギー国王陛下からの招請に基づき訪問",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "notes": "宮内庁公式サイト掲載の記者会見原文から確認。",
+                "narration_lead": "このご訪問に先立ち、天皇陛下は記者会見に臨まれました。\n両国の王室との長年にわたる交流に触れられ、訪問への思いを語られました。",
+                "narration_source_intro": "宮内庁が公開している記者会見の記録には、次のように記されています。",
+                "narration_after": "天皇陛下は、「両国の人々との交流や相互理解、友好関係が更に深まる機会になればと思っている」と述べられました。\nこのお言葉に、ご訪問に込められた思いが表れています。",
+            },
+            {
+                "fact_id": "NB003",
+                "claim": "天皇陛下はオランダ訪問について「両国の人々との交流や相互理解、友好関係が更に深まる機会になれば」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "NHKニュース「天皇陛下 オランダとベルギー 公式訪問を前に記者会見」",
+                "source_url": "https://news.web.nhk.or.jp/",
+                "source_type": "信頼できる報道（NHK）",
+                "official_publisher": "NHK",
+                "publication_date": "2026-06-12",
+                "resource_identifier": "NHKニュース 2026年6月12日報道 / 宮内庁記者会見公式記録に基づく",
+                "verified_excerpt": "両国の人々との交流や相互理解、友好関係が更に深まる機会になればと思っている",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": True,
+                "notes": "NHK報道で確認。宮内庁公式記者会見ページで原文の再確認を推奨。",
+                "narration_lead": "",
+                "narration_source_intro": "",
+                "narration_after": "",
+            },
+            {
+                "fact_id": "NB004",
+                "claim": "オランダでの公式行事は6月17日から19日を中心に行われ、ダム広場での歓迎式典とアムステルダム王宮での国賓晩餐会が含まれる",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「オランダ及びベルギーご訪問（令和8年）」ご日程",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/schedule01/2026nld-bel/",
+                "source_type": "公式機関発表（ご日程）",
+                "official_publisher": "宮内庁",
+                "publication_date": "2026-06-13",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > オランダ及びベルギーご訪問（令和8年）> ご日程",
+                "verified_excerpt": "ダム広場での歓迎式典、アムステルダム王宮での晩餐会",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "notes": "宮内庁公式サイトのご日程ページから確認。",
+                "narration_lead": "オランダでの公式行事は、6月17日から19日を中心に行われました。\nアムステルダムを拠点に、さまざまな行事に臨まれました。",
+                "narration_source_intro": "宮内庁のご日程記録によりますと、主な行事は次の通りです。",
+                "narration_after": "ダム広場は、オランダの国家的行事が行われる象徴的な場所です。\nそこで歓迎式典が行われたことは、両国の友好の深さを物語っています。\n\nそして同日夜、アムステルダム王宮での国賓晩餐会が行われました。\n天皇陛下は晩餐会でのスピーチにおいて、オランダとの長きにわたる友好と交流の歴史に触れられました。",
+            },
+            {
+                "fact_id": "NB005",
+                "claim": "20年前にヘット・アウデ・ロー城で当時4歳の愛子さまと2歳のアマリア王女が手をつないで過ごし、今回のご訪問で20年ぶりの再会が実現した",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "ANNnewsCH「愛子さまの幼なじみアマリア王女と交流 両陛下オランダ訪問」",
+                "source_url": "https://www.youtube.com/watch?v=XqYLV6qwbaM",
+                "source_type": "信頼できる報道（テレビ朝日）",
+                "official_publisher": "ANNnewsCH（テレビ朝日系列）",
+                "publication_date": "2026-06-20",
+                "resource_identifier": "ANNnewsCH YouTube 2026年6月20日公開",
+                "verified_excerpt": "20年ぶりの再会。愛子さまの幼なじみアマリア王女と交流。天皇陛下は素晴らしい夏休みを過ごしたと当時を振り返られた",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": True,
+                "notes": "テレビ朝日系列の報道映像から確認。宮内庁公式ページでの補強確認を推奨。",
+                "narration_lead": "このオランダ訪問で、特に多くの関心を集めた出来事があります。\n20年ぶりとなる、アマリア王女との再会です。\n\n20年前の平成18年、当時の皇太子ご一家はオランダのヘット・アウデ・ロー城で夏休みを過ごされました。\n当時4歳の愛子さまと、2歳のアマリア王女が手をつないで過ごした日々。\n天皇陛下はこのご訪問に際し、「素晴らしい夏休みを過ごした」と当時を振り返られました。",
+                "narration_source_intro": "",
+                "narration_after": "20年の歳月を経て、お二人とも成年皇族・王族として歩みを進めておられます。\nアマリア王女は現在、アムステルダム大学で学びながら、次期女王としての道を歩んでおられます。\n皇室と王室の友情が、まさに次の世代へと受け継がれていく姿がここにあります。",
+            },
+            {
+                "fact_id": "NB006",
+                "claim": "ベルギーではフィリップ国王陛下及びマチルド王妃陛下との旧交を温められた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「オランダ及びベルギーご訪問に際し（令和8年）」記者会見",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/2026nld-bel.html",
+                "source_type": "公式機関発表（記者会見）",
+                "official_publisher": "宮内庁",
+                "publication_date": "2026-06-12",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > オランダ及びベルギーご訪問に際し（令和8年）",
+                "verified_excerpt": "フィリップ国王陛下及びマチルド王妃陛下との旧交を温める",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "notes": "宮内庁公式サイト掲載の記者会見記録から確認。",
+                "narration_lead": "オランダでの日程を終え、両陛下はベルギーへ向かわれました。\nベルギーでは、フィリップ国王陛下及びマチルド王妃陛下との旧交を温められました。",
+                "narration_source_intro": "宮内庁の記録によりますと、",
+                "narration_after": "日本とベルギーの皇室・王室の交流は、長い歴史を持っています。\n両陛下がベルギー王室と直接お会いになることで、その絆はさらに深まりました。",
+            },
+            {
+                "fact_id": "NB007",
+                "claim": "天皇陛下はベルギー滞在中に「次世代への橋渡しができたのではないかと思います」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "毎日新聞「欧州歴訪の天皇陛下『次世代への橋渡しができた』」",
+                "source_url": None,
+                "source_type": "信頼できる報道（毎日新聞）",
+                "official_publisher": "毎日新聞",
+                "publication_date": "2026-06-25",
+                "resource_identifier": "毎日新聞 2026年6月25日報道 / ナミュールでの報道陣取材に対する天皇陛下のご発言",
+                "verified_excerpt": "次世代への橋渡しができたのではないかと思います",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": True,
+                "notes": "毎日新聞の報道で確認。宮内庁公式おことばページで原文確認を推奨。",
+                "narration_lead": "2週間にわたるご訪問の終盤。\nベルギーのナミュールで、天皇陛下は報道陣の取材に応じられました。\n「楽しく充実した日々を送ることができている」と述べられた上で、\n両国の王室との交流について、このように語られました。",
+                "narration_source_intro": "",
+                "narration_after": "「次世代への橋渡し」。\nこのお言葉は、このご訪問が持つ意義を静かに、しかし確かに物語っています。\n\n上皇上皇后両陛下が平成12年にオランダを国賓として訪問されてから、24年。\nその友好の絆は、天皇皇后両陛下へと受け継がれ、\nそして愛子さまとアマリア王女の世代へとつながろうとしています。\n\n皇室と王室の交流は、一朝一夕に築かれるものではありません。\n長い年月をかけて、丁寧に紡がれてきた信頼と友情。\nそれを「次の世代へ渡す」という天皇陛下のお言葉に、\n深い思いが込められているように感じられます。",
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "SNB01",
+                "source_name": "宮内庁「オランダ及びベルギーご訪問（令和8年）」",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/schedule01/2026nld-bel/",
+                "source_type": "公式機関",
+                "reliability": "最高",
+                "notes": "ご訪問の日程・行事の公式記録",
+            },
+            {
+                "source_id": "SNB02",
+                "source_name": "宮内庁「オランダ及びベルギーご訪問に際し（令和8年）」記者会見",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/2026nld-bel.html",
+                "source_type": "公式機関",
+                "reliability": "最高",
+                "notes": "出発前の天皇陛下記者会見の公式記録",
+            },
+            {
+                "source_id": "SNB03",
+                "source_name": "宮内庁「オランダ及びベルギーご訪問時のおことば（一覧）」",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/addresses/2026nld-bel.html",
+                "source_type": "公式機関",
+                "reliability": "最高",
+                "notes": "ご訪問中の天皇陛下のおことば一覧",
+            },
+            {
+                "source_id": "SNB04",
+                "source_name": "NHKニュース 天皇陛下記者会見報道",
+                "source_url": "https://news.web.nhk.or.jp/",
+                "source_type": "信頼できる報道",
+                "reliability": "高",
+                "notes": "NHK報道。宮内庁公式記者会見に基づく。",
+            },
+        ],
+    },
 }
 
 
@@ -304,6 +542,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         ending_context = builtin.get("ending_context", "")
         shorts_01_text = builtin.get("shorts_01_text", "")
         shorts_02_text = builtin.get("shorts_02_text", "")
+        shorts_03_text = builtin.get("shorts_03_text", "")
     else:
         facts = []
         sources = []
@@ -312,6 +551,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         ending_context = ""
         shorts_01_text = ""
         shorts_02_text = ""
+        shorts_03_text = ""
 
     # Classify facts by status
     confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
@@ -332,6 +572,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "ending_context": ending_context,
         "shorts_01_text": shorts_01_text,
         "shorts_02_text": shorts_02_text,
+        "shorts_03_text": shorts_03_text,
         "facts": facts,
         "confirmed": confirmed,
         "partial": partial,
