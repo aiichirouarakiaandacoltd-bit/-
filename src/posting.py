@@ -102,7 +102,8 @@ def _generate_description_lines(topic, research_data, bgm_config):
     lines.append("※ 本動画の内容は公式資料に基づいていますが、解釈を含む部分があります。")
     lines.append("※ 皇族のAI生成画像は一切使用しておりません。")
     lines.append("")
-    lines.append(f"#皇室 #日本 #伝統 #令和 #天皇陛下")
+    hashtags = research_data.get("hashtags", "#皇室 #日本 #伝統 #令和 #天皇陛下")
+    lines.append(hashtags)
     return lines
 
 

@@ -156,7 +156,7 @@ def _build_long_script_text(topic, research_data):
                     src_name = first_fact.get("source_name", "")
                     lines.append(f"{_num_kanji(idx + 1)}つ目の「{s_title}」では、")
                     lines.append(f"{claim}ことを確認いたしました。")
-                    if ex and src_name:
+                    if ex and src_name and ex not in claim and ex not in src_name:
                         lines.append(f"{src_name}には「{ex}」と記されています。")
                     lines.append("")
             lines.append("これらの事実は、すべて公式の記録に基づいてお伝えいたしました。")

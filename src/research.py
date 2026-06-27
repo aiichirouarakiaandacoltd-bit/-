@@ -968,8 +968,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             "携わっておられます。\n\n"
             "令和7年の全国赤十字大会では、\n"
             "名誉総裁である皇后陛下をお迎えする大会に、\n"
-            "職員として運営に参加されました。\n"
-            "翌年の大会にも、同様に職員として参加されています。\n\n"
+            "職員として運営に参加されました。\n\n"
+            "殿下が編集に携わられた情報誌は、\n"
+            "日本赤十字社の公式サイトで公開されています。\n\n"
             "成年皇族として公務を果たしながら、\n"
             "日本赤十字社の職員としてのお仕事にも取り組まれるお姿が、\n"
             "宮内庁の公式記録に残されています。\n\n"
@@ -977,7 +978,13 @@ _BUILTIN_TOPICS: dict[str, dict] = {
         ),
         "thumbnail_text_a": {"upper": "なぜ日赤へ？", "lower": "愛子さまのご決意"},
         "thumbnail_text_b": {"upper": "困難な方の力に", "lower": "日赤を選ばれた理由"},
+        "hashtags": "#愛子さま #日本赤十字社 #皇室 #宮内庁",
         "material_hints": {
+            "opening": {
+                "required_material": "愛子内親王殿下の公式記録写真、日本赤十字社本社または赤十字を示す公式素材、タイトルテキストカード、チャンネルロゴ",
+                "source_suggestion": "宮内庁公式ページ／日本赤十字社公式ページ／自作テキストカード／単色背景",
+                "self_made_alternative": "テーマ名と「日本が誇る皇室物語」ロゴをテキストカードで構成。赤十字マークは公式素材から引用",
+            },
             "ch1": {
                 "required_material": "宮内庁公式ページ、日本赤十字社本社外観、文書回答引用テキストカード",
                 "source_suggestion": "宮内庁公式ページ／日本赤十字社公式ページ／自作テキストカード",
@@ -1316,6 +1323,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         thumbnail_text_a = builtin.get("thumbnail_text_a")
         thumbnail_text_b = builtin.get("thumbnail_text_b")
         material_hints = builtin.get("material_hints", {})
+        hashtags = builtin.get("hashtags", "")
     else:
         facts = []
         sources = []
@@ -1328,6 +1336,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         thumbnail_text_a = None
         thumbnail_text_b = None
         material_hints = {}
+        hashtags = ""
 
     # Classify facts by status
     confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
@@ -1358,6 +1367,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "thumbnail_text_a": thumbnail_text_a,
         "thumbnail_text_b": thumbnail_text_b,
         "material_hints": material_hints,
+        "hashtags": hashtags,
         "notes": (
             "組み込み知識ベースから取得。"
             "ソースURLがNoneの項目は、正確なURLを手動で確認してください。"

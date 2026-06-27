@@ -48,18 +48,19 @@ def _build_scene_materials(topic, research_data):
     facts_by_id = {f["fact_id"]: f for f in research_data.get("facts", [])
                    if f.get("usable_in_script")}
 
+    material_hints = research_data.get("material_hints", {})
+    opening_hint = material_hints.get("opening", {})
+
     scenes.append({
         "material_id": "MAT-001",
         "scene": "オープニング（0:00〜）",
         "script_content": f"テーマ「{topic}」の導入",
-        "required_material": "タイトルテキストカード、チャンネルロゴ",
-        "source_suggestion": "自作テキストカード／単色背景",
+        "required_material": opening_hint.get("required_material", "タイトルテキストカード、チャンネルロゴ"),
+        "source_suggestion": opening_hint.get("source_suggestion", "自作テキストカード／単色背景"),
         "prohibited": "皇族のAI生成画像",
-        "self_made_alternative": "テーマ名と「日本が誇る皇室物語」ロゴをテキストカードで構成",
+        "self_made_alternative": opening_hint.get("self_made_alternative", "テーマ名と「日本が誇る皇室物語」ロゴをテキストカードで構成"),
         "outsourcer_url": "",
     })
-
-    material_hints = research_data.get("material_hints", {})
 
     for ch_idx, section in enumerate(section_config):
         title = section.get("title", "")
