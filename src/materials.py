@@ -59,6 +59,8 @@ def _build_scene_materials(topic, research_data):
         "outsourcer_url": "",
     })
 
+    material_hints = research_data.get("material_hints", {})
+
     for ch_idx, section in enumerate(section_config):
         title = section.get("title", "")
         fact_ids = section.get("fact_ids", [])
@@ -70,14 +72,17 @@ def _build_scene_materials(topic, research_data):
                 if claim:
                     content_summary.append(claim)
 
+        ch_key = f"ch{ch_idx + 1}"
+        hint = material_hints.get(ch_key, {})
+
         scenes.append({
             "material_id": f"MAT-{ch_idx + 2:03d}",
             "scene": f"第{ch_idx + 1}章「{title}」",
             "script_content": "／".join(content_summary) if content_summary else title,
-            "required_material": "テーマに合った背景画像またはテキストカード",
-            "source_suggestion": "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード",
-            "prohibited": "AI生成画像／出典不明画像／報道写真の無断使用",
-            "self_made_alternative": "公式情報をテロップで引用表示。背景は単色またはグラデーション",
+            "required_material": hint.get("required_material", "テーマに合った背景画像またはテキストカード"),
+            "source_suggestion": hint.get("source_suggestion", "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード"),
+            "prohibited": hint.get("prohibited", "AI生成画像／出典不明画像／報道写真の無断使用"),
+            "self_made_alternative": hint.get("self_made_alternative", "公式情報をテロップで引用表示。背景は単色またはグラデーション"),
             "outsourcer_url": "",
         })
 

@@ -144,6 +144,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         missing_items.append("NG表現チェックにFAILあり")
     for issue in bgm_issues:
         missing_items.append(issue)
+    for warning in bgm_warnings:
+        missing_items.append(warning)
 
     unconfirmed_facts = [f for f in research_data.get("facts", [])
                          if f.get("status") in ("unconfirmed", "partial")
@@ -322,7 +324,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "ng_check_status": "fail" if ng_has_fail else ("review_required" if ng_has_review else "pass"),
         "bgm_url_configured": bgm_url_configured,
         "bgm_contracted": bgm_contracted,
-        "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",
+        "bgm_validation": "ok" if len(bgm_issues) == 0 and len(bgm_warnings) == 0 else ("pending" if len(bgm_issues) == 0 else "incomplete"),
         "bgm_issues": bgm_issues,
         "bgm_warnings": bgm_warnings,
         "script_estimated_minutes": round(script_estimated_minutes, 1),

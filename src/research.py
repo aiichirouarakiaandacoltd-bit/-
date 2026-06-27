@@ -929,6 +929,333 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             },
         ],
     },
+    "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み": {
+        "topic_context": (
+            "令和6年4月1日、愛子内親王殿下は日本赤十字社に常勤嘱託職員として入社されました。\n"
+            "大学卒業後の進路として、なぜ日本赤十字社を選ばれたのか。\n"
+            "宮内庁が公開した公式の文書回答と、日本赤十字社の公式記録をもとに、\n"
+            "その歩みをたどります。"
+        ),
+        "section_config": [
+            {"title": "日本赤十字社への就職のご決意", "fact_ids": ["JR001", "JR002", "JR008"]},
+            {"title": "青少年・ボランティア課でのお仕事", "fact_ids": ["JR003", "JR004", "JR009"]},
+            {"title": "成年皇族として広がる活動", "fact_ids": ["JR005", "JR006", "JR007"]},
+        ],
+        "ending_context": (
+            "日本赤十字社の職員として、そして成年皇族として、\n"
+            "愛子内親王殿下の活動の記録は着実に積み重ねられています。\n"
+            "宮内庁の文書回答に記された\n"
+            "「困難を抱えている方の力になれる仕事ができれば」というおことばが、\n"
+            "公式の記録の中に確かに残されています。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "令和6年4月、愛子内親王殿下は日本赤十字社に\n"
+            "常勤嘱託職員として入社されました。\n\n"
+            "なぜ日本赤十字社を選ばれたのか。\n"
+            "ご就職に際しての宮内庁の文書回答で、\n"
+            "殿下はこのように述べられています。\n\n"
+            "「公務以外でも、さまざまな困難を抱えている方の\n"
+            "力になれる仕事ができればと考えるようになりました」。\n\n"
+            "困難を抱える方々の力になりたいという殿下のおことばが、\n"
+            "宮内庁の公式の記録に残されています。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "愛子内親王殿下は、令和6年4月に日本赤十字社に入社され、\n"
+            "ボランティア情報誌「赤十字ボランティア」の編集業務に\n"
+            "携わっておられます。\n\n"
+            "令和7年の全国赤十字大会では、\n"
+            "名誉総裁である皇后陛下をお迎えする大会に、\n"
+            "職員として運営に参加されました。\n"
+            "翌年の大会にも、同様に職員として参加されています。\n\n"
+            "成年皇族として公務を果たしながら、\n"
+            "日本赤十字社の職員としてのお仕事にも取り組まれるお姿が、\n"
+            "宮内庁の公式記録に残されています。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "thumbnail_text_a": {"upper": "なぜ日赤へ？", "lower": "愛子さまのご決意"},
+        "thumbnail_text_b": {"upper": "困難な方の力に", "lower": "日赤を選ばれた理由"},
+        "material_hints": {
+            "ch1": {
+                "required_material": "宮内庁公式ページ、日本赤十字社本社外観、文書回答引用テキストカード",
+                "source_suggestion": "宮内庁公式ページ／日本赤十字社公式ページ／自作テキストカード",
+                "self_made_alternative": "就職に際しての文書回答の引用をテロップ表示。日本赤十字社の活動を示す公式素材または自作テキストカード",
+            },
+            "ch2": {
+                "required_material": "RCV82号掲載ページ、全国赤十字大会の公式素材、編集業務を示すテキストカード",
+                "source_suggestion": "日本赤十字社公式ページ（RCV掲載）／宮内庁公式ページ／自作テキストカード",
+                "self_made_alternative": "赤十字ボランティア情報誌の内容をテロップ表示。全国赤十字大会の概要を自作テキストカードで構成",
+            },
+            "ch3": {
+                "required_material": "WADEM会場・演台の公式素材、ラオス訪問の宮内庁公式素材、赤十字パビリオンの公式素材、日付・活動内容の整理テキストカード",
+                "source_suggestion": "宮内庁公式ページ（ご活動・外国訪問）／日本赤十字社公式ページ／自作テキストカード",
+                "self_made_alternative": "各活動の日付・内容を整理した自作テキストカード。ラオス訪問のおことば引用をテロップ表示",
+            },
+        },
+        "facts": [
+            {
+                "fact_id": "JR001",
+                "claim": "愛子内親王殿下は宮内庁の文書回答で「公務以外でも、さまざまな困難を抱えている方の力になれる仕事ができればと考えるようになりました」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のご就職に際しての文書回答",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/employment.html",
+                "source_type": "公式文書回答",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-03-27",
+                "resource_identifier": "宮内庁公式サイト > おことば > 愛子内親王殿下 > ご就職に際しての文書回答",
+                "verified_excerpt": "公務以外でも、さまざまな困難を抱えている方の力になれる仕事ができればと考えるようになりました",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "令和6年3月、愛子内親王殿下のご就職に際し、\n"
+                    "宮内庁から文書回答が公開されました。\n"
+                    "殿下がなぜ日本赤十字社を選ばれたのか。\n"
+                    "その理由が、公式のおことばとして記されています。"
+                ),
+                "narration_source_intro": "宮内庁の文書回答には、殿下のおことばとして次のように記録されています。",
+                "narration_after": (
+                    "困難を抱える方の力になりたいというおことばが、\n"
+                    "日本赤十字社という選択の背景として\n"
+                    "公式の記録に残されています。"
+                ),
+            },
+            {
+                "fact_id": "JR002",
+                "claim": "愛子内親王殿下は文書回答で「ボランティアに関する業務を始め、赤十字の活動に幅広く触れ」ることへの意欲を述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のご就職に際しての文書回答",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/employment.html",
+                "source_type": "公式文書回答",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-03-27",
+                "resource_identifier": "宮内庁公式サイト > おことば > 愛子内親王殿下 > ご就職に際しての文書回答",
+                "verified_excerpt": "ボランティアに関する業務を始め、赤十字の活動に幅広く触れ",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "同じ文書回答の中で、殿下は日本赤十字社での\n"
+                    "お仕事への意欲についても述べられています。"
+                ),
+                "narration_source_intro": "文書回答には、次のように記されています。",
+                "narration_after": "",
+            },
+            {
+                "fact_id": "JR008",
+                "claim": "愛子内親王殿下は令和6年4月1日に日本赤十字社に常勤嘱託職員として入社され、事業局パートナーシップ推進部ボランティア活動推進室青少年・ボランティア課に配属された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のご活動",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-04-01",
+                "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
+                "verified_excerpt": "日本赤十字社",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "",
+                "narration_source_intro": "",
+                "narration_after": (
+                    "令和6年4月1日、愛子内親王殿下は日本赤十字社に\n"
+                    "常勤嘱託職員として入社されました。\n"
+                    "配属先は、事業局パートナーシップ推進部\n"
+                    "ボランティア活動推進室の青少年・ボランティア課です。"
+                ),
+            },
+            {
+                "fact_id": "JR003",
+                "claim": "愛子内親王殿下は日本赤十字社でボランティア情報誌「赤十字ボランティア」の編集業務に携わっておられる",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "日本赤十字社 赤十字ボランティア（RCV）82号",
+                "source_url": "https://www.jrc.or.jp/volunteer-and-youth/volunteer/news/2025/0318_045891.html",
+                "source_type": "公式機関発表",
+                "official_publisher": "日本赤十字社",
+                "publication_date": "2025-03-18",
+                "resource_identifier": "日本赤十字社公式サイト > ボランティア > ニュース > RCV82号",
+                "verified_excerpt": "赤十字ボランティア（RCV）82号",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "contextual",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "日本赤十字社での殿下のお仕事の一つが、\n"
+                    "ボランティア情報誌「赤十字ボランティア」、通称RCVの編集です。\n"
+                    "この情報誌は、全国の赤十字ボランティアに届けられるものです。"
+                ),
+                "narration_source_intro": "日本赤十字社の公式サイトには、この情報誌について次のように掲載されています。",
+                "narration_after": "",
+            },
+            {
+                "fact_id": "JR009",
+                "claim": "日本赤十字社のボランティア情報誌RCV83号が発行されている",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "日本赤十字社 赤十字ボランティア（RCV）83号",
+                "source_url": "https://www.jrc.or.jp/volunteer-and-youth/volunteer/news/2026/0317_052057.html",
+                "source_type": "公式機関発表",
+                "official_publisher": "日本赤十字社",
+                "publication_date": "2026-03-17",
+                "resource_identifier": "日本赤十字社公式サイト > ボランティア > ニュース > RCV83号",
+                "verified_excerpt": "赤十字ボランティア（RCV）83号",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "contextual",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "",
+                "narration_source_intro": "",
+                "narration_after": (
+                    "殿下が編集に携わられたRCVは、\n"
+                    "82号、83号と継続して発行されています。"
+                ),
+            },
+            {
+                "fact_id": "JR004",
+                "claim": "愛子内親王殿下は令和7年の全国赤十字大会に職員として運営に参加された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のご活動",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2025-05-01",
+                "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
+                "verified_excerpt": "全国赤十字大会",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "令和7年5月、全国赤十字大会が開催されました。\n"
+                    "名誉総裁である皇后陛下をお迎えするこの大会に、\n"
+                    "殿下は日本赤十字社の職員として運営に加わられました。"
+                ),
+                "narration_source_intro": "宮内庁の公式サイトには、殿下のご活動として記録されています。",
+                "narration_after": (
+                    "皇族としてではなく、\n"
+                    "職員として運営を支える立場で参加されたことが、\n"
+                    "公式の記録に残されています。"
+                ),
+            },
+            {
+                "fact_id": "JR005",
+                "claim": "愛子内親王殿下は令和7年5月3日にWADEM国際学会で公式スピーチを行われた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のご活動",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2025-05-03",
+                "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
+                "verified_excerpt": "世界災害・救急医学会（WADEM）",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "同じ令和7年5月、殿下のご活動はさらに記録されています。\n"
+                    "5月3日、世界災害・救急医学会、WADEMの国際会議が開催され、\n"
+                    "殿下は公式なスピーチに臨まれました。"
+                ),
+                "narration_source_intro": "宮内庁の公式サイトには、このご活動が記録されています。",
+                "narration_after": "国際的な学会の場でのご活動でした。",
+            },
+            {
+                "fact_id": "JR006",
+                "claim": "愛子内親王殿下は令和7年11月17日から22日までラオスを初めて公式に外国訪問された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁 愛子内親王殿下のラオスご訪問",
+                "source_url": "https://www.kunaicho.go.jp/page/gaikoku/show/335",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2025-11-17",
+                "resource_identifier": "宮内庁公式サイト > 外国ご訪問 > 令和7年ラオス",
+                "verified_excerpt": "愛子内親王殿下のラオス人民民主共和国ご訪問",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "令和7年11月、殿下にとって初めての公式な外国訪問が実現しました。\n"
+                    "訪問先は、ラオス人民民主共和国。\n"
+                    "11月17日から22日までの6日間にわたるご訪問です。"
+                ),
+                "narration_source_intro": "宮内庁の公式サイトには、このご訪問について詳細に記録されています。",
+                "narration_after": "",
+            },
+            {
+                "fact_id": "JR007",
+                "claim": "愛子内親王殿下は令和7年5月の万博で赤十字パビリオンを視察された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "日本赤十字社 赤十字パビリオン視察",
+                "source_url": "https://www.jrc.or.jp/about/publication/news/202507_topics01.html",
+                "source_type": "公式機関発表",
+                "official_publisher": "日本赤十字社",
+                "publication_date": "2025-05-09",
+                "resource_identifier": "日本赤十字社公式サイト > 広報 > ニュース",
+                "verified_excerpt": "赤十字パビリオン",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": (
+                    "さらに令和7年5月、大阪・関西万博の会場で、\n"
+                    "殿下は日本赤十字社の赤十字パビリオンを視察されました。"
+                ),
+                "narration_source_intro": "日本赤十字社の公式サイトには、この視察について掲載されています。",
+                "narration_after": (
+                    "万博という国際的な場で\n"
+                    "赤十字の活動を視察されたことが記録されています。"
+                ),
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "SJR01",
+                "source_name": "宮内庁 愛子内親王殿下ご就職に際しての文書回答",
+                "source_url": "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/employment.html",
+                "source_type": "公式文書回答",
+                "reliability": "最高",
+                "notes": "宮内庁公式サイト。ご就職の理由に関する殿下のおことば。",
+            },
+            {
+                "source_id": "SJR02",
+                "source_name": "日本赤十字社 RCV（赤十字ボランティア情報誌）",
+                "source_url": "https://www.jrc.or.jp/volunteer-and-youth/volunteer/news/2025/0318_045891.html",
+                "source_type": "公式機関発表",
+                "reliability": "高",
+                "notes": "日本赤十字社公式サイト。殿下が編集に携わるRCV。",
+            },
+            {
+                "source_id": "SJR03",
+                "source_name": "宮内庁 愛子内親王殿下のご活動",
+                "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
+                "source_type": "公式記録",
+                "reliability": "最高",
+                "notes": "宮内庁公式サイト。殿下のご活動の公式記録。",
+            },
+            {
+                "source_id": "SJR04",
+                "source_name": "宮内庁 愛子内親王殿下ラオスご訪問",
+                "source_url": "https://www.kunaicho.go.jp/page/gaikoku/show/335",
+                "source_type": "公式記録",
+                "reliability": "最高",
+                "notes": "宮内庁公式サイト。初の公式外国ご訪問の記録。",
+            },
+            {
+                "source_id": "SJR05",
+                "source_name": "日本赤十字社 RCV83号",
+                "source_url": "https://www.jrc.or.jp/volunteer-and-youth/volunteer/news/2026/0317_052057.html",
+                "source_type": "公式機関発表",
+                "reliability": "高",
+                "notes": "日本赤十字社公式サイト。RCV83号の掲載。",
+            },
+        ],
+    },
 }
 
 
@@ -986,6 +1313,9 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         shorts_01_text = builtin.get("shorts_01_text", "")
         shorts_02_text = builtin.get("shorts_02_text", "")
         shorts_03_text = builtin.get("shorts_03_text", "")
+        thumbnail_text_a = builtin.get("thumbnail_text_a")
+        thumbnail_text_b = builtin.get("thumbnail_text_b")
+        material_hints = builtin.get("material_hints", {})
     else:
         facts = []
         sources = []
@@ -995,6 +1325,9 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         shorts_01_text = ""
         shorts_02_text = ""
         shorts_03_text = ""
+        thumbnail_text_a = None
+        thumbnail_text_b = None
+        material_hints = {}
 
     # Classify facts by status
     confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
@@ -1022,6 +1355,9 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "unconfirmed": unconfirmed,
         "rejected": rejected,
         "sources": sources,
+        "thumbnail_text_a": thumbnail_text_a,
+        "thumbnail_text_b": thumbnail_text_b,
+        "material_hints": material_hints,
         "notes": (
             "組み込み知識ベースから取得。"
             "ソースURLがNoneの項目は、正確なURLを手動で確認してください。"

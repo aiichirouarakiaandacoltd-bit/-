@@ -133,6 +133,9 @@ def generate_thumbnail_instructions(topic, research_data, output_dir):
     output_dir.mkdir(parents=True, exist_ok=True)
     file_path = output_dir / "thumbnail_instructions.md"
 
+    thumb_a = research_data.get("thumbnail_text_a")
+    thumb_b = research_data.get("thumbnail_text_b")
+
     lines = []
     lines.append("# サムネイル制作指示書")
     lines.append("")
@@ -163,9 +166,13 @@ def generate_thumbnail_instructions(topic, research_data, output_dir):
     lines.append("分かりやすく、人物と出来事を明示する案")
     lines.append("")
     lines.append(f"### 文字案")
-    short_topic = topic.split("――")[0] if "――" in topic else topic
-    lines.append(f"- 上段: 「{short_topic[:15]}」")
-    lines.append(f"- 下段: 「公式記録から読み解く」")
+    if thumb_a:
+        lines.append(f"- 上段: 「{thumb_a['upper']}」")
+        lines.append(f"- 下段: 「{thumb_a['lower']}」")
+    else:
+        short_topic = topic.split("――")[0] if "――" in topic else topic
+        lines.append(f"- 上段: 「{short_topic[:15]}」")
+        lines.append(f"- 下段: 「公式記録から読み解く」")
     lines.append("")
     lines.append("### 画像構成")
     lines.append("- テーマに関連する公式画像または風景")
@@ -178,8 +185,13 @@ def generate_thumbnail_instructions(topic, research_data, output_dir):
     lines.append("文化・歴史・知識への関心を重視する案")
     lines.append("")
     lines.append(f"### 文字案")
-    lines.append(f"- 上段: 「知っていますか？」")
-    lines.append(f"- 下段: 「{short_topic[:20]}」")
+    if thumb_b:
+        lines.append(f"- 上段: 「{thumb_b['upper']}」")
+        lines.append(f"- 下段: 「{thumb_b['lower']}」")
+    else:
+        short_topic = topic.split("――")[0] if "――" in topic else topic
+        lines.append(f"- 上段: 「知っていますか？」")
+        lines.append(f"- 下段: 「{short_topic[:20]}」")
     lines.append("")
     lines.append("### 画像構成")
     lines.append("- 歴史的資料や文化的背景を感じさせる画像")
