@@ -78,14 +78,16 @@ def _generate_description_lines(topic, research_data, bgm_config):
     lines.append("")
     lines.append("【主な参考資料】")
     seen_urls = set()
+    seen_names = set()
     for f in research_data.get("facts", []):
         url = f.get("source_url")
         name = f.get("source_name", "")
         if url and url not in seen_urls:
             seen_urls.add(url)
+            seen_names.add(name)
             lines.append(f"・{name}: {url}")
-        elif name and name not in seen_urls:
-            seen_urls.add(name)
+        elif name and name not in seen_names:
+            seen_names.add(name)
             lines.append(f"・{name}")
     lines.append("")
     lines.append("【音声】")

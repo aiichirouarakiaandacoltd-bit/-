@@ -183,6 +183,36 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                     f"目標{target_min}〜{target_max}分）"
                 )
 
+    shorts_duration_short = False
+    shorts_01_estimated_seconds = 0.0
+    shorts_02_estimated_seconds = 0.0
+    if script_path.exists():
+        s01_start = script_content.find("## Shorts 01 台本")
+        s02_start = script_content.find("## Shorts 02 台本")
+        if s01_start >= 0 and s02_start >= 0:
+            min_shorts_sec = cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]
+            for s_label, s_text, is_first in [
+                ("01", script_content[s01_start:s02_start], True),
+                ("02", script_content[s02_start:], False),
+            ]:
+                sep = s_text.find("=" * 20)
+                narr = s_text[sep:] if sep >= 0 else s_text
+                c = count_narration_chars(narr)
+                est_sec = estimate_reading_minutes(c) * 60
+                if is_first:
+                    shorts_01_estimated_seconds = round(est_sec, 1)
+                else:
+                    shorts_02_estimated_seconds = round(est_sec, 1)
+                if est_sec < min_shorts_sec:
+                    shorts_duration_short = True
+                    missing_items.append(
+                        f"Shorts {s_label}が目標尺に未達"
+                        f"（推定{est_sec:.1f}秒、最低{min_shorts_sec}秒）"
+                    )
+
+    if rights_has_review:
+        missing_items.append("素材の権利REVIEWが未解決")
+
     posting_path = output_dir / "05_posting_package.md"
     if posting_path.exists():
         posting_content = posting_path.read_text(encoding="utf-8")
@@ -213,6 +243,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and not script_not_narration
         and core_facts_confirmed
         and not script_duration_short
+        and not shorts_duration_short
     )
 
     rights_ok = rights_overall == "OK"
@@ -259,6 +290,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",
         "bgm_issues": bgm_issues,
         "script_estimated_minutes": round(script_estimated_minutes, 1),
+        "shorts_01_estimated_seconds": shorts_01_estimated_seconds,
+        "shorts_02_estimated_seconds": shorts_02_estimated_seconds,
         "missing_items": missing_items,
         "generated_files": sorted(generated_files),
         "zero_byte_files": zero_files,
@@ -328,6 +361,14 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
 
     lines.append("## ファクトチェック状況")
     lines.append(f"{status.get('fact_check_status', '未実施')}")
+    lines.append("")
+    lines.append("## 推定尺")
+    lines.append(f"- 長尺: 推定{status.get('script_estimated_minutes', 0)}分")
+    lines.append(f"- Shorts 01: 推定{status.get('shorts_01_estimated_seconds', 0)}秒")
+    lines.append(f"- Shorts 02: 推定{status.get('shorts_02_estimated_seconds', 0)}秒")
+    lines.append("")
+    lines.append("## 権利確認状況")
+    lines.append(f"- rights_status: {status.get('rights_status', '未実施')}")
     lines.append("")
     lines.append("## NG表現チェック状況")
     lines.append(f"{status.get('ng_check_status', '未実施')}")
