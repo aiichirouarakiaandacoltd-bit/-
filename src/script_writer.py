@@ -18,6 +18,22 @@ def _filter_confirmed_facts(research_data):
     }
 
 
+def _num_kanji(n):
+    kanji = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六", 7: "七"}
+    return kanji.get(n, str(n))
+
+
+def _chars_per_minute():
+    speed = cfg.VOICEVOX_SETTINGS.get("speed", 1.0)
+    return 350 * speed
+
+
+def _estimate_seconds(text):
+    c = count_narration_chars(text)
+    cpm = _chars_per_minute()
+    return (c / cpm * 60) if cpm > 0 else 0
+
+
 def _build_long_script_text(topic, research_data):
     filtered = _filter_confirmed_facts(research_data)
     confirmed = filtered["confirmed"]
@@ -30,9 +46,13 @@ def _build_long_script_text(topic, research_data):
 
     lines = []
 
+    # --- Opening ---
     lines.append("【オープニング】")
     lines.append("")
     lines.append(f"「{channel}」をご視聴いただきありがとうございます。")
+    lines.append("")
+    lines.append("公式事実で、静かな感動を。")
+    lines.append("これがこのチャンネルの約束です。")
     lines.append("")
 
     if usable and section_config:
@@ -42,13 +62,31 @@ def _build_long_script_text(topic, research_data):
         if topic_context:
             lines.append(topic_context)
             lines.append("")
-        lines.append("ぜひ最後までお付き合いください。")
+
+        lines.append("本動画では、宮内庁をはじめとする公式機関が公開した記録のみを根拠としています。")
+        lines.append("推測や憶測ではなく、記録に残された事実そのものを、丁寧にたどってまいります。")
         lines.append("")
 
+        # Content preview
+        if len(section_config) > 1:
+            lines.append(f"本動画では、以下の{_num_kanji(len(section_config))}つの章に分けてお伝えしてまいります。")
+            lines.append("")
+            for idx, section in enumerate(section_config):
+                lines.append(f"　{_num_kanji(idx + 1)}、{section.get('title', '')}。")
+            lines.append("")
+            lines.append("それでは、順にたどってまいりましょう。")
+            lines.append("")
+
+        # --- Chapter body ---
         seen_excerpts = set()
         for ch_idx, section in enumerate(section_config):
             title = section.get("title", "")
             fact_ids = section.get("fact_ids", [])
+
+            if ch_idx > 0:
+                lines.append(f"続いて、{title}について見てまいりましょう。")
+                lines.append("")
+
             lines.append(f"【第{_num_kanji(ch_idx + 1)}章　{title}】")
             lines.append("")
 
@@ -84,11 +122,52 @@ def _build_long_script_text(topic, research_data):
                     lines.append(narration_after)
                     lines.append("")
 
+                # Source context for facts with short narration
+                narr_len = len((narration_lead or "") + (narration_after or ""))
+                if narr_len < 120:
+                    pub = fact.get("official_publisher", "")
+                    stype = fact.get("source_type", "")
+                    if pub and stype:
+                        lines.append(f"この{stype}は、{pub}によって公式に公開されています。")
+                        lines.append("")
+
+        # --- Summary / Recap ---
         lines.append("【まとめ】")
         lines.append("")
+
+        # Build the body text so far and check duration
+        body_text = "\n".join(lines)
+        body_chars = count_narration_chars(body_text)
+        body_min = estimate_reading_minutes(body_chars)
+        target_min = cfg.NARRATION_TARGET_MIN_MINUTES
+
+        # Add recap section if body is under target duration
+        if body_min < target_min and len(section_config) > 1:
+            lines.append(f"ここまで、{_num_kanji(len(section_config))}つの章に分けて、")
+            lines.append(f"「{topic}」についてお伝えしてまいりました。")
+            lines.append("")
+            for idx, section in enumerate(section_config):
+                s_title = section.get("title", "")
+                s_fids = section.get("fact_ids", [])
+                first_fact = facts_by_id.get(s_fids[0]) if s_fids else None
+                if first_fact:
+                    ex = first_fact.get("verified_excerpt", "")
+                    claim = first_fact.get("claim", "")
+                    src_name = first_fact.get("source_name", "")
+                    lines.append(f"{_num_kanji(idx + 1)}つ目の「{s_title}」では、")
+                    lines.append(f"{claim}ことを確認いたしました。")
+                    if ex and src_name:
+                        lines.append(f"{src_name}には「{ex}」と記されています。")
+                    lines.append("")
+            lines.append("これらの事実は、すべて公式の記録に基づいてお伝えいたしました。")
+            lines.append("公式の記録を丁寧にたどることで、確かな事実に基づいた理解を深めていただければ幸いです。")
+            lines.append("記録に残された事実をお届けすることが、このチャンネルの約束です。")
+            lines.append("")
+
         if ending_context:
             lines.append(ending_context)
             lines.append("")
+
     elif usable:
         lines.append(f"今回は「{topic}」について、")
         lines.append("公式の記録や資料をもとに、お伝えしてまいります。")
@@ -130,6 +209,7 @@ def _build_long_script_text(topic, research_data):
         lines.append("※ 以下は台本の構成案であり、事実確認後に内容を確定してください。")
         lines.append("")
 
+    # --- Ending ---
     lines.append("【エンディング】")
     lines.append("")
     lines.append(f"以上、「{topic}」についてお伝えいたしました。")
@@ -174,16 +254,11 @@ def estimate_reading_minutes(char_count, speed=None):
     return char_count / effective_rate if effective_rate > 0 else 0
 
 
-def _num_kanji(n):
-    kanji = {1: "一", 2: "二", 3: "三", 4: "四", 5: "五", 6: "六", 7: "七"}
-    return kanji.get(n, str(n))
+def _build_shorts_generic(topic, research_data, variant):
+    """Generic Shorts builder that produces 45-59.5s scripts from fact data.
 
-
-def _build_shorts_01_text(topic, research_data):
-    pre_written = research_data.get("shorts_01_text", "")
-    if pre_written:
-        return pre_written
-
+    variant: 1 uses first facts, 2 uses later facts.
+    """
     filtered = _filter_confirmed_facts(research_data)
     usable = [f for f in filtered["confirmed"] if f.get("usable_in_script")]
     channel = cfg.CHANNEL_NAME
@@ -192,47 +267,95 @@ def _build_shorts_01_text(topic, research_data):
     lines.append(f"「{channel}」をご視聴いただきありがとうございます。")
     lines.append("")
 
-    if usable:
-        lines.append(f"今回は「{topic}」についてお伝えします。")
-        lines.append("")
-        lines.append(f"{usable[0].get('claim', '')}。")
-        lines.append("")
-        if len(usable) > 1:
-            lines.append(f"そして、{usable[1].get('claim', '')}。")
-            lines.append("")
-    else:
+    if not usable:
         lines.append(f"「{topic}」について、ご存じですか。")
         lines.append("")
+        lines.append("詳しくは関連動画からご覧ください。")
+        lines.append("")
+        return "\n".join(lines)
 
+    if variant == 1:
+        facts_to_use = usable[:3]
+    else:
+        facts_to_use = usable[max(0, len(usable) - 3):]
+        if facts_to_use == usable[:3] and len(usable) > 1:
+            facts_to_use = usable[1:4]
+
+    primary = facts_to_use[0]
+    excerpt = primary.get("verified_excerpt", "")
+    claim = primary.get("claim", "")
+    source_name = primary.get("source_name", "")
+
+    if variant == 1:
+        lines.append(f"今回は「{topic}」についてお伝えします。")
+        lines.append("")
+        lines.append(f"{claim}。")
+        lines.append("")
+        if excerpt:
+            intro = primary.get("narration_source_intro", "")
+            if intro:
+                lines.append(intro)
+            else:
+                lines.append(f"{source_name}には、次のように記されています。")
+            lines.append("")
+            lines.append(f"「{excerpt}」")
+            lines.append("")
+    else:
+        if excerpt:
+            lines.append(f"「{excerpt}」")
+            lines.append("")
+            if source_name:
+                lines.append(f"これは、{source_name}に記されたおことばです。")
+                lines.append("")
+        else:
+            lines.append(f"{claim}。")
+            lines.append("")
+
+    if len(facts_to_use) > 1:
+        second = facts_to_use[1]
+        second_claim = second.get("claim", "")
+        second_excerpt = second.get("verified_excerpt", "")
+        if variant == 2 and second_excerpt and second_excerpt != excerpt:
+            lines.append(f"{second_claim}。")
+            lines.append("")
+            lines.append(f"「{second_excerpt}」")
+            lines.append("")
+        else:
+            lines.append(f"{second_claim}。")
+            lines.append("")
+
+    if len(facts_to_use) > 2:
+        third = facts_to_use[2]
+        third_claim = third.get("claim", "")
+        lines.append(f"{third_claim}。")
+        lines.append("")
+
+    lines.append("すべて公式の記録に基づいた事実を、丁寧にお伝えしています。")
+    lines.append("")
     lines.append("詳しくは関連動画からご覧ください。")
     lines.append("")
 
     return "\n".join(lines)
+
+
+def _build_shorts_01_text(topic, research_data):
+    pre_written = research_data.get("shorts_01_text", "")
+    if pre_written:
+        est = _estimate_seconds(pre_written)
+        if est >= cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]:
+            return pre_written
+
+    return _build_shorts_generic(topic, research_data, variant=1)
 
 
 def _build_shorts_02_text(topic, research_data):
     pre_written = research_data.get("shorts_02_text", "")
     if pre_written:
-        return pre_written
+        est = _estimate_seconds(pre_written)
+        if est >= cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]:
+            return pre_written
 
-    filtered = _filter_confirmed_facts(research_data)
-    usable = [f for f in filtered["confirmed"] if f.get("usable_in_script")]
-
-    lines = []
-    lines.append(f"「{cfg.CHANNEL_NAME}」をご視聴いただきありがとうございます。")
-    lines.append("")
-
-    if usable:
-        lines.append(f"{usable[-1].get('claim', '')}。")
-        lines.append("")
-    else:
-        lines.append("このテーマについて、詳しくは長尺動画をご覧ください。")
-
-    lines.append("")
-    lines.append("詳しくは関連動画からご覧ください。")
-    lines.append("")
-
-    return "\n".join(lines)
+    return _build_shorts_generic(topic, research_data, variant=2)
 
 
 def _build_shorts_03_text(topic, research_data):

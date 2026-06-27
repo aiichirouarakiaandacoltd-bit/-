@@ -110,7 +110,7 @@ def _generate_fixed_comment_lines(topic):
     lines = []
     lines.append(f"ご視聴ありがとうございます。")
     lines.append(f"")
-    lines.append(f"「愛子」と「敬宮」に込められた願いの中で、どの言葉が最も心に残りましたか。")
+    lines.append(f"「{topic}」について、最も印象に残ったことは何ですか。")
     lines.append(f"ぜひコメント欄でお聞かせください。")
     lines.append(f"")
     lines.append(f"チャンネル登録・高評価もよろしくお願いいたします。")
