@@ -1,0 +1,16 @@
+__pycache__/
+*.pyc
+*.pyo
+output/
+logs/
+screenshots/
+*.mp4
+*.wav
+!assets/bgm/README_bgm.txt
+.env
+venv/
+.venv/
+final_review_package/
+imperial_package_final_review_*.zip
+production_package_*.zip
+topic_plan_*.zip

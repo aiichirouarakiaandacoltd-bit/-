@@ -1,0 +1,266 @@
+{
+  "competitor_channels": [
+    {"url": "https://www.youtube.com/@KOUSHITSU_JAPAN", "name": "皇室JAPAN"},
+    {"url": "https://www.youtube.com/channel/UCYdgM8BizBuEVu9Jba_ydIA", "name": "皇室ニュース"},
+    {"url": "https://www.youtube.com/@Imperial_Household_Agency_jp", "name": "宮内庁公式YouTube"}
+  ],
+  "reference_videos": [
+    {
+      "url": "https://www.youtube.com/watch?v=EDzqJrTOWC4",
+      "title": "天皇皇后両陛下 馬車パレードでバッキンガム宮殿へ チャールズ国王・カミラ王妃と（英国訪問全記録）",
+      "channel": "日テレNEWS",
+      "theme": "英国訪問",
+      "views": 3500000,
+      "published": "2024-06-25",
+      "subscribers_at_publish": 4500000,
+      "ctr_estimate": 12.5,
+      "avg_watch_time_pct": 55,
+      "is_shorts": false,
+      "drove_long_views": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=7u0zlzVUi_A",
+      "title": "【愛子さま 24歳に】海外公務に宮中晩さん会…初めてづくしの1年",
+      "channel": "TBS NEWS DIG",
+      "theme": "愛子さま",
+      "views": 1200000,
+      "published": "2025-11-30",
+      "subscribers_at_publish": 5000000,
+      "ctr_estimate": 9.0,
+      "avg_watch_time_pct": 48,
+      "is_shorts": false,
+      "drove_long_views": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=loSqERZtZtA",
+      "title": "愛子さま「初めての単独公務」をノーカットで公開【皇室ちょっといい話】",
+      "channel": "日テレNEWS",
+      "theme": "愛子さま",
+      "views": 850000,
+      "published": "2024-10-15",
+      "subscribers_at_publish": 4500000,
+      "ctr_estimate": 8.5,
+      "avg_watch_time_pct": 52,
+      "is_shorts": false,
+      "drove_long_views": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=CU6f2b-R3Lo",
+      "title": "【LIVE】新年一般参賀…皇居宮殿東庭より完全生中継！天皇皇后両陛下お出まし…悠仁さま初めての参列",
+      "channel": "テレ東BIZ",
+      "theme": "一般参賀",
+      "views": 2800000,
+      "published": "2026-01-02",
+      "subscribers_at_publish": 2500000,
+      "ctr_estimate": 11.0,
+      "avg_watch_time_pct": 35,
+      "is_shorts": false,
+      "drove_long_views": false
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=uReVMeTGpnM",
+      "title": "【愛子さま 初の海外公務へ】ラオス公式訪問に出発",
+      "channel": "TBS NEWS DIG",
+      "theme": "愛子さま",
+      "views": 950000,
+      "published": "2025-11-17",
+      "subscribers_at_publish": 5000000,
+      "ctr_estimate": 8.0,
+      "avg_watch_time_pct": 42,
+      "is_shorts": false,
+      "drove_long_views": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=oqQhir2j_pc",
+      "title": "天皇陛下66歳に 誕生日を祝う一般参賀 3回目の様子",
+      "channel": "ANNnewsCH",
+      "theme": "天皇誕生日",
+      "views": 450000,
+      "published": "2026-02-23",
+      "subscribers_at_publish": 3000000,
+      "ctr_estimate": 7.5,
+      "avg_watch_time_pct": 38,
+      "is_shorts": false,
+      "drove_long_views": false
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=XqYLV6qwbaM",
+      "title": "愛子さまの幼なじみアマリア王女と交流 両陛下オランダ訪問",
+      "channel": "ANNnewsCH",
+      "theme": "オランダ訪問",
+      "views": 680000,
+      "published": "2026-06-20",
+      "subscribers_at_publish": 3000000,
+      "ctr_estimate": 10.0,
+      "avg_watch_time_pct": 50,
+      "is_shorts": false,
+      "drove_long_views": true
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=r6pY8ppXloI",
+      "title": "宮内庁がYouTube公式チャンネル開設 登録者4万人突破 天皇皇后両陛下の活動を紹介",
+      "channel": "TBS NEWS DIG",
+      "theme": "宮内庁公式",
+      "views": 520000,
+      "published": "2025-04-01",
+      "subscribers_at_publish": 5000000,
+      "ctr_estimate": 7.0,
+      "avg_watch_time_pct": 40,
+      "is_shorts": false,
+      "drove_long_views": false
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=qW4XxI_37VQ",
+      "title": "天皇皇后両陛下が6月13日からオランダ・ベルギーを公式訪問",
+      "channel": "日テレNEWS",
+      "theme": "オランダ訪問",
+      "views": 380000,
+      "published": "2026-06-10",
+      "subscribers_at_publish": 4500000,
+      "ctr_estimate": 8.5,
+      "avg_watch_time_pct": 45,
+      "is_shorts": false,
+      "drove_long_views": true
+    }
+  ],
+  "own_channel_videos": [
+    {
+      "url": "https://www.youtube.com/watch?v=own_sample_1",
+      "title": "天皇皇后両陛下 英国訪問の記録――公式事実で振り返る8日間",
+      "views": 15000,
+      "published": "2026-03-10",
+      "ctr": 6.8,
+      "avg_watch_time_pct": 58,
+      "repeat_viewers_pct": 38
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=own_sample_2",
+      "title": "愛子内親王殿下の成年皇族としての歩み",
+      "views": 22000,
+      "published": "2026-04-20",
+      "ctr": 7.2,
+      "avg_watch_time_pct": 55,
+      "repeat_viewers_pct": 42
+    }
+  ],
+  "banned_themes": [
+    "皇位継承問題",
+    "週刊誌検証",
+    "秋篠宮家批判",
+    "皇室廃止論"
+  ],
+  "official_sources": [
+    {"url": "https://www.kunaicho.go.jp/", "name": "宮内庁公式サイト", "type": "宮内庁"},
+    {"url": "https://www.kunaicho.go.jp/activity/", "name": "皇室のご活動・ご日程", "type": "宮内庁"},
+    {"url": "https://www.kunaicho.go.jp/about/gokomu/shinzen/gaikoku/UnitedKingdom1.html", "name": "天皇皇后両陛下英国ご訪問", "type": "宮内庁"},
+    {"url": "https://www.kunaicho.go.jp/event/sanga/sanga.html", "name": "一般参賀", "type": "宮内庁"},
+    {"url": "https://www.kunaicho.go.jp/event/", "name": "宮内庁イベント情報", "type": "宮内庁"},
+    {"url": "https://www.youtube.com/@Imperial_Household_Agency_jp", "name": "宮内庁公式YouTube", "type": "公式SNS"},
+    {"url": "https://www.mofa.go.jp/mofaj/erp/we/gb/page1_001732_00001.html", "name": "外務省 天皇皇后両陛下の英国御訪問", "type": "公的機関"},
+    {"url": "https://www.kunaicho.go.jp/watch/activity/schedule01/2026nld-bel/", "name": "オランダ及びベルギーご訪問（令和8年）", "type": "宮内庁"},
+    {"url": "https://www.gov-online.go.jp/imperial_family_channel/", "name": "政府広報オンライン 皇室チャンネル", "type": "公的機関"},
+    {"url": "https://www.kunaicho.go.jp/page/kaiken/show/169", "name": "英国ご訪問に際しての会見", "type": "宮内庁"}
+  ],
+  "topic_ideas": [
+    {
+      "title": "天皇皇后両陛下オランダ・ベルギー公式訪問――公式記録に残る友好の記録",
+      "center_pin": "2026年6月のオランダ・ベルギー公式訪問における両陛下の外交活動と王室交流の公式記録",
+      "theme_keywords": ["オランダ訪問", "天皇", "皇后", "外交", "ベルギー"],
+      "official_source_urls": [
+        "https://www.kunaicho.go.jp/watch/activity/schedule01/2026nld-bel/",
+        "https://www.kunaicho.go.jp/activity/"
+      ],
+      "viewer_reason": "直近のご訪問であり、愛子さまの幼なじみアマリア王女との交流も話題になっている",
+      "long_reason": "出発から帰国まで2週間の日程があり、オランダ・ベルギー両国の訪問先ごとに構成できる",
+      "shorts_reason": "アマリア王女との再会、王室晩餐会、歓迎式典など場面ごとに切り出せる",
+      "expected_emotion": "誇り、国際友好への温かさ、皇室外交への敬意",
+      "rights_risk": "低",
+      "notes": "訪問終了直後で関心が最も高い時期"
+    },
+    {
+      "title": "愛子内親王殿下の成年皇族としての歩み――初の単独公務から初の海外公務まで",
+      "center_pin": "成年皇族として初の単独公務（佐賀県）から初の海外公務（ラオス）に至る公式記録の軌跡",
+      "theme_keywords": ["愛子さま", "成年", "公務", "ラオス", "日本赤十字社"],
+      "official_source_urls": [
+        "https://www.kunaicho.go.jp/activity/",
+        "https://www.youtube.com/@Imperial_Household_Agency_jp"
+      ],
+      "viewer_reason": "愛子さまの成長を見守ってきた65歳以上女性の関心が極めて高く、YouTube需要データでも愛子さま関連動画は常に高再生数",
+      "long_reason": "2024年の単独公務開始からラオス訪問まで時系列で構成でき、エピソードが豊富で7〜9分の情報量がある",
+      "shorts_reason": "初の単独公務、ラオス訪問出発、日赤勤務の姿など個別エピソードで切り出せる",
+      "expected_emotion": "成長への感動、品格への敬意、親しみ",
+      "rights_risk": "低",
+      "notes": "参考動画3本がテーマ一致。CTR 8.0-9.0%、平均視聴時間42-52%と高水準"
+    },
+    {
+      "title": "天皇皇后両陛下の英国公式訪問――馬車パレードから思い出の地まで",
+      "center_pin": "2024年6月の英国国賓訪問における公式記録：馬車パレード、晩餐会、オックスフォード再訪",
+      "theme_keywords": ["英国訪問", "天皇", "皇后", "バッキンガム宮殿", "チャールズ国王"],
+      "official_source_urls": [
+        "https://www.kunaicho.go.jp/about/gokomu/shinzen/gaikoku/UnitedKingdom1.html",
+        "https://www.mofa.go.jp/mofaj/erp/we/gb/page1_001732_00001.html",
+        "https://www.kunaicho.go.jp/page/kaiken/show/169"
+      ],
+      "viewer_reason": "馬車パレードの映像は350万回再生を記録。留学時代の思い出と重ねて視聴する層が多い",
+      "long_reason": "8日間の訪問を日程順に構成でき、馬車パレード・晩餐会・大学訪問など見どころが多い",
+      "shorts_reason": "馬車パレード、晩餐会でのスピーチ、チャールズ国王との握手など場面ごとに切り出せる",
+      "expected_emotion": "誇り、留学時代への懐かしさ、日英友好への温かさ",
+      "rights_risk": "低",
+      "notes": "日テレ全記録動画が350万回再生。公式根拠が宮内庁・外務省ともに豊富"
+    },
+    {
+      "title": "新年一般参賀2026――悠仁親王殿下初のお出ましと皇室三代の姿",
+      "center_pin": "2026年新年一般参賀における悠仁親王殿下の初出席と、三代揃ってのお出まし",
+      "theme_keywords": ["一般参賀", "悠仁さま", "皇居", "新年"],
+      "official_source_urls": [
+        "https://www.kunaicho.go.jp/event/sanga/sanga.html",
+        "https://www.kunaicho.go.jp/activity/"
+      ],
+      "viewer_reason": "悠仁さまの初参列は大きな話題となり、テレ東BIZ完全生中継が280万回再生",
+      "long_reason": "一般参賀の歴史、令和の参賀の変遷、三代揃う意味を掘り下げて7分以上を構成できる",
+      "shorts_reason": "悠仁さまの初お出まし、天皇陛下のお言葉、6万人の参賀者の列など場面ごとに切り出せる",
+      "expected_emotion": "新年の清々しさ、皇室の継承への安心感",
+      "rights_risk": "低",
+      "notes": "参考動画が280万回再生。CTR 11%は皇室テーマで極めて高い水準"
+    },
+    {
+      "title": "宮内庁公式YouTubeチャンネル開設――皇室の新しい発信のかたち",
+      "center_pin": "2025年4月の宮内庁公式YouTube開設と、SNS発信拡充の公式記録",
+      "theme_keywords": ["宮内庁公式", "YouTube", "SNS", "広報"],
+      "official_source_urls": [
+        "https://www.youtube.com/@Imperial_Household_Agency_jp",
+        "https://www.kunaicho.go.jp/"
+      ],
+      "viewer_reason": "開設初日に登録者4万人を突破した話題性。皇室とデジタルの融合に関心を持つ視聴者が多い",
+      "long_reason": "公式YouTube開設の経緯、Instagram開設との関連、発信内容の紹介を構成できる",
+      "shorts_reason": "「宮内庁がYouTubeを始めた理由」「初日で4万人」など話題ごとに切り出せる",
+      "expected_emotion": "新鮮さ、皇室の現代化への好感",
+      "rights_risk": "低",
+      "notes": "公式チャンネルの紹介であり権利リスクが最も低い"
+    },
+    {
+      "title": "皇位継承問題の最新動向を徹底解説",
+      "center_pin": "皇位継承制度と有識者会議の議論",
+      "theme_keywords": ["皇位継承問題", "制度改正"],
+      "official_source_urls": [],
+      "viewer_reason": "制度への関心はあるが対立煽りになりやすい",
+      "long_reason": "制度解説として構成可能だが対立軸が生まれやすい",
+      "shorts_reason": "断片化で誤解を招きやすい",
+      "expected_emotion": "関心、不安",
+      "rights_risk": "中",
+      "notes": "採用禁止テーマ「皇位継承問題」に該当するため自動不採用"
+    },
+    {
+      "title": "週刊誌報道は正しいのか？皇室報道の検証",
+      "center_pin": "週刊誌報道と公式発表の比較検証",
+      "theme_keywords": ["週刊誌検証", "メディア批判"],
+      "official_source_urls": [],
+      "viewer_reason": "週刊誌への不信感から需要はあるが炎上リスクが高い",
+      "long_reason": "対立構造になりやすく、チャンネル方針に反する",
+      "shorts_reason": "煽りに寄りやすくShorts展開は困難",
+      "expected_emotion": "怒り、不満",
+      "rights_risk": "高",
+      "notes": "採用禁止テーマ「週刊誌検証」に該当し、権利リスクも高く自動不採用"
+    }
+  ]
+}
