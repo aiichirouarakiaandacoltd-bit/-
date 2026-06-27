@@ -168,6 +168,8 @@ def main():
     mode_group = gen_parser.add_mutually_exclusive_group()
     mode_group.add_argument("--test", action="store_true", help="テストモード（動作確認用）")
     mode_group.add_argument("--production", action="store_true", help="プロダクションモード（出典確認必須）")
+    gen_parser.add_argument("--auto-fix-honorifics", action="store_true",
+                            help="敬称不足を自動補正してから台本を出力")
     gen_parser.add_argument(
         "--mode", choices=["test", "production"], default=None,
         help="(後方互換) test / production"
@@ -183,6 +185,7 @@ def main():
 
     if args.command == "generate":
         theme = args.theme
+        auto_fix = args.auto_fix_honorifics
         if args.mode:
             mode = args.mode
         elif args.production:
@@ -192,6 +195,7 @@ def main():
     elif args.command is None and args.mode:
         theme = args.theme
         mode = args.mode
+        auto_fix = False
     else:
         parser.print_help()
         sys.exit(0)
@@ -257,6 +261,25 @@ def main():
         logger.info("[6/9] BGM・クレジット設定...")
         generate_bgm_and_credits(bgm_config, output_dir)
         generate_bgm_plan(bgm_config, output_dir)
+
+        if auto_fix:
+            from src.ng_check import auto_fix_honorifics
+            logger.info("敬称自動補正を実行中...")
+            for script_file in ["long_script.txt", "shorts_01_script.txt", "shorts_02_script.txt"]:
+                sp = output_dir / script_file
+                if sp.exists():
+                    original = sp.read_text(encoding="utf-8")
+                    fixed = auto_fix_honorifics(original)
+                    if fixed != original:
+                        sp.write_text(fixed, encoding="utf-8")
+                        logger.info(f"  {script_file}: 敬称補正適用")
+            script_md = output_dir / "02_narration_script.md"
+            if script_md.exists():
+                original = script_md.read_text(encoding="utf-8")
+                fixed = auto_fix_honorifics(original)
+                if fixed != original:
+                    script_md.write_text(fixed, encoding="utf-8")
+                    logger.info("  02_narration_script.md: 敬称補正適用")
 
         logger.info("[7/9] NG表現チェック...")
         long_script_path = output_dir / "long_script.txt"

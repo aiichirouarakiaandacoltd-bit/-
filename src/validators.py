@@ -49,30 +49,51 @@ def _determine_fact_check_status(all_facts, unconfirmed_facts):
 
 
 def _validate_bgm_config(bgm_config):
-    """Check BGM configuration completeness for production readiness."""
+    """Check BGM configuration completeness for production readiness.
+
+    Returns (issues, warnings) tuple. For contracted BGM with contract_evidence,
+    verification items (contract_evidence_verified, content_id_status,
+    local_file_verified) are warnings, not blocking issues.
+    """
     issues = []
+    warnings = []
     if not bgm_config.get("file_name"):
         issues.append("BGMファイル名が未設定")
     if not bgm_config.get("provider"):
         issues.append("BGM提供元が未設定")
 
     license_status = bgm_config.get("license_status", "")
-    if license_status == "contracted":
-        if not bgm_config.get("contract_evidence") and not bgm_config.get("license_evidence"):
+    is_contracted = license_status == "contracted"
+    has_evidence = bool(bgm_config.get("contract_evidence") or bgm_config.get("license_evidence"))
+
+    if is_contracted:
+        if not has_evidence:
             issues.append("契約証跡が未設定")
         if not bgm_config.get("credit_text"):
             issues.append("クレジット表記が未設定")
-        if not bgm_config.get("contract_evidence_verified"):
-            issues.append("契約証跡の実確認が未完了")
+        if has_evidence:
+            if not bgm_config.get("contract_evidence_verified"):
+                warnings.append("契約証跡の実確認が未完了（荒木側で確認必要）")
+            if not bgm_config.get("download_or_reference_url"):
+                warnings.append("BGM参照URLが未設定（公開URLがない契約ファイルのため警告のみ）")
+        else:
+            if not bgm_config.get("contract_evidence_verified"):
+                issues.append("契約証跡の実確認が未完了")
     else:
         if not bgm_config.get("download_or_reference_url"):
             issues.append("BGM正式参照URL未設定")
 
     if bgm_config.get("content_id_status", "unconfirmed") == "unconfirmed":
-        issues.append("Content ID状態が未確認")
+        if is_contracted and has_evidence:
+            warnings.append("Content ID状態が未確認（荒木側で確認必要）")
+        else:
+            issues.append("Content ID状態が未確認")
     if not bgm_config.get("local_file_verified"):
-        issues.append("BGMローカルファイルの検証が未完了")
-    return issues
+        if is_contracted and has_evidence:
+            warnings.append("BGMローカルファイルの検証が未完了（荒木側で確認必要）")
+        else:
+            issues.append("BGMローカルファイルの検証が未完了")
+    return issues, warnings
 
 
 def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
@@ -112,7 +133,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         rights_data = {}
     rights_overall = rights_data.get("overall_status", "REVIEW")
     rights_has_review = rights_data.get("has_review", False)
-    bgm_issues = _validate_bgm_config(bgm_config)
+    bgm_issues, bgm_warnings = _validate_bgm_config(bgm_config)
 
     missing_items = list(missing_files)
     if zero_files:
@@ -289,6 +310,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "bgm_contracted": bgm_contracted,
         "bgm_validation": "ok" if len(bgm_issues) == 0 else "incomplete",
         "bgm_issues": bgm_issues,
+        "bgm_warnings": bgm_warnings,
         "script_estimated_minutes": round(script_estimated_minutes, 1),
         "shorts_01_estimated_seconds": shorts_01_estimated_seconds,
         "shorts_02_estimated_seconds": shorts_02_estimated_seconds,
@@ -382,6 +404,11 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     if bgm_issues:
         for issue in bgm_issues:
             lines.append(f"  - {issue}")
+    bgm_warnings = status.get("bgm_warnings", [])
+    if bgm_warnings:
+        lines.append("- BGM警告（production_readyには影響しない）:")
+        for w in bgm_warnings:
+            lines.append(f"  - {w}")
     lines.append("")
 
     if status.get("test_mode"):

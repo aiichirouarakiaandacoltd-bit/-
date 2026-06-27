@@ -51,7 +51,8 @@ def load_bgm_config():
     if "selected" in raw and isinstance(raw["selected"], dict):
         loaded_channel = raw.get("channel", "")
         if loaded_channel and loaded_channel != cfg.CHANNEL_NAME:
-            defaults["missing_items"] = ["BGM正式参照URL未設定"]
+            if defaults.get("license_status") != "contracted":
+                defaults["missing_items"] = ["BGM正式参照URL未設定"]
             defaults["_channel"] = cfg.CHANNEL_NAME
             return defaults
         return _load_search_based(raw)
@@ -237,6 +238,8 @@ def generate_bgm_plan(bgm_config, output_dir):
     url = bgm_config.get("download_or_reference_url")
     if url:
         lines.append(f"- URL: {url}")
+    else:
+        lines.append("- URL: **未設定（荒木側で設定が必要）**")
     lines.append(f"- ライセンス: {bgm_config.get('license_status', '要確認')}")
     license_url = bgm_config.get("license_url")
     if license_url:

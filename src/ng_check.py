@@ -47,6 +47,73 @@ INNER_FEELINGS_PATTERNS = [
     "本心は.*だった",
 ]
 
+IMPERIAL_HONORIFIC_RULES = [
+    {
+        "name": "愛子",
+        "pattern": r"(?<!「)愛子(?!さま|内親王|殿下|」)",
+        "correct": "愛子さま / 愛子内親王殿下",
+        "first_fix": "愛子内親王殿下",
+        "subsequent_fix": "愛子さま",
+        "context_skip": ["御名", "御称号", "命名", "名前"],
+    },
+    {
+        "name": "雅子",
+        "pattern": r"(?<!「)雅子(?!さま|皇后|陛下|妃|殿下|」)",
+        "correct": "雅子さま / 雅子皇后陛下",
+        "first_fix": "雅子皇后陛下",
+        "subsequent_fix": "雅子さま",
+        "context_skip": ["御名", "名前"],
+    },
+    {
+        "name": "徳仁",
+        "pattern": r"(?<!「)徳仁(?!天皇|陛下|親王|殿下|」)",
+        "correct": "徳仁天皇陛下",
+        "first_fix": "徳仁天皇陛下",
+        "subsequent_fix": "徳仁天皇陛下",
+        "context_skip": ["御名", "名前"],
+    },
+    {
+        "name": "佳子",
+        "pattern": r"(?<!「)佳子(?!さま|内親王|殿下|」)",
+        "correct": "佳子さま / 佳子内親王殿下",
+        "first_fix": "佳子内親王殿下",
+        "subsequent_fix": "佳子さま",
+        "context_skip": ["御名", "名前"],
+    },
+    {
+        "name": "眞子",
+        "pattern": r"(?<!「)眞子(?!さま|内親王|殿下|さん|」)",
+        "correct": "眞子さま / 眞子内親王殿下",
+        "first_fix": "眞子内親王殿下",
+        "subsequent_fix": "眞子さま",
+        "context_skip": ["御名", "名前"],
+    },
+    {
+        "name": "悠仁",
+        "pattern": r"(?<!「)悠仁(?!さま|親王|殿下|」)",
+        "correct": "悠仁さま / 悠仁親王殿下",
+        "first_fix": "悠仁親王殿下",
+        "subsequent_fix": "悠仁さま",
+        "context_skip": ["御名", "名前"],
+    },
+    {
+        "name": "秋篠宮",
+        "pattern": r"(?<!「)秋篠宮(?!さま|殿下|皇嗣|家|の|」)",
+        "correct": "秋篠宮さま / 秋篠宮皇嗣殿下",
+        "first_fix": "秋篠宮皇嗣殿下",
+        "subsequent_fix": "秋篠宮さま",
+        "context_skip": [],
+    },
+    {
+        "name": "紀子",
+        "pattern": r"(?<!「)紀子(?!さま|妃|殿下|」)",
+        "correct": "紀子さま / 紀子妃殿下",
+        "first_fix": "紀子妃殿下",
+        "subsequent_fix": "紀子さま",
+        "context_skip": ["御名", "名前"],
+    },
+]
+
 CONFRONTATION_PATTERNS = [
     r".*vs\s*.*",
     r".*VS\s*.*",
@@ -215,27 +282,19 @@ def check_ng_expressions(script_text, title_candidates, description,
                 })
 
         # 6. Disrespect check — missing honorifics for imperial family
-        disrespect_patterns = [
+        general_patterns = [
             (r"(?<!「)天皇(?!陛下|皇后|の|」)", "天皇陛下"),
             (r"(?<!「)皇后(?!陛下|両陛下|の|」)", "皇后陛下"),
-            (r"(?<!「)愛子(?!さま|内親王|殿下|」)", "愛子さま / 愛子内親王殿下"),
         ]
-        for pattern, correct in disrespect_patterns:
+        for pattern, correct in general_patterns:
             matches = list(re.finditer(pattern, text))
             for match in matches:
                 start = match.start()
-                end = match.end()
                 if _is_in_quoted_block(text, start):
                     continue
                 context_before = text[max(0, start - 20):start]
-                context_after = text[end:end + 10]
+                context_after = text[match.end():match.end() + 10]
                 if "「" in context_before or "」" in context_after:
-                    continue
-                if "御名" in context_before or "御称号" in context_before:
-                    continue
-                if "命名" in context_before:
-                    continue
-                if "名前" in context_before:
                     continue
                 matched_text = match.group(0)
                 findings.append({
@@ -246,6 +305,37 @@ def check_ng_expressions(script_text, title_candidates, description,
                     "detail": (
                         f"「{matched_text}」に敬称が不足している可能性があります。"
                         f"正しくは「{correct}」等の敬称を使用してください。"
+                    ),
+                })
+
+        for rule in IMPERIAL_HONORIFIC_RULES:
+            matches = list(re.finditer(rule["pattern"], text))
+            for match in matches:
+                start = match.start()
+                if _is_in_quoted_block(text, start):
+                    continue
+                context_before = text[max(0, start - 20):start]
+                context_after = text[match.end():match.end() + 10]
+                if "「" in context_before or "」" in context_after:
+                    continue
+                skip = False
+                for ctx in rule["context_skip"]:
+                    if ctx in context_before:
+                        skip = True
+                        break
+                if "御称号" in context_before:
+                    skip = True
+                if skip:
+                    continue
+                matched_text = match.group(0)
+                findings.append({
+                    "item": matched_text,
+                    "location": location,
+                    "category": "敬称・敬語",
+                    "verdict": "REVIEW",
+                    "detail": (
+                        f"「{matched_text}」に敬称が不足している可能性があります。"
+                        f"正しくは「{rule['correct']}」等の敬称を使用してください。"
                     ),
                 })
 
@@ -390,3 +480,40 @@ def _write_ng_report(result, output_dir):
 
     report_path = output_dir / "ng_expression_report.md"
     report_path.write_text("\n".join(lines), encoding="utf-8")
+
+
+def auto_fix_honorifics(text):
+    """Auto-fix missing honorifics in text.
+
+    First occurrence of each name uses the formal form (e.g. 愛子内親王殿下),
+    subsequent occurrences use the shorter form (e.g. 愛子さま).
+    Names in quoted blocks or preceded by context words like 御名/御称号 are
+    left unchanged.
+    """
+    fixed = text
+    for rule in IMPERIAL_HONORIFIC_RULES:
+        replacements = []
+        first_done = False
+        for match in re.finditer(rule["pattern"], fixed):
+            start = match.start()
+            if _is_in_quoted_block(fixed, start):
+                continue
+            context_before = fixed[max(0, start - 20):start]
+            context_after = fixed[match.end():match.end() + 10]
+            if "「" in context_before or "」" in context_after:
+                continue
+            skip = False
+            for ctx in rule["context_skip"]:
+                if ctx in context_before:
+                    skip = True
+                    break
+            if "御称号" in context_before:
+                skip = True
+            if skip:
+                continue
+            replacement = rule["first_fix"] if not first_done else rule["subsequent_fix"]
+            replacements.append((match.start(), match.end(), replacement))
+            first_done = True
+        for start, end, replacement in reversed(replacements):
+            fixed = fixed[:start] + replacement + fixed[end:]
+    return fixed

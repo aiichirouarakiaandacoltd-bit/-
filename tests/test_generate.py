@@ -243,3 +243,109 @@ class TestBug7NGFalsePositive:
             honorific_findings = [f for f in result["findings"]
                                   if f["category"] == "敬称・敬語" and "愛子" in f["item"]]
             assert len(honorific_findings) == 0, f"False positive: {honorific_findings}"
+
+
+class TestBGMContractedWarnings:
+    def test_contracted_bgm_warnings_not_blocking(self):
+        """contracted BGM with contract_evidence → verification items are warnings, not issues."""
+        from src.validators import _validate_bgm_config
+        bgm = {
+            "file_name": "UNL1337.wav",
+            "provider": "箕輪レコーズ",
+            "license_status": "contracted",
+            "contract_evidence": "箕輪レコーズとの楽曲使用契約に基づく",
+            "credit_text": "楽曲提供：箕輪レコーズ",
+            "contract_evidence_verified": False,
+            "content_id_status": "unconfirmed",
+            "local_file_verified": False,
+            "download_or_reference_url": None,
+        }
+        issues, warnings = _validate_bgm_config(bgm)
+        assert len(issues) == 0, f"Should have no issues but got: {issues}"
+        assert len(warnings) >= 1, "Should have warnings for unverified items"
+
+    def test_contracted_bgm_production_ready(self):
+        """contracted BGM + evidence → production_ready=true achievable."""
+        from src.validators import validate_package
+        from src.research import research_topic
+        import tempfile
+        topic = "なぜ「愛子」と「敬宮」なのか――『孟子』に記された御名と御称号の由来"
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            data = research_topic(topic, str(d))
+            for f in ["01_research_report.md", "02_narration_script.md",
+                       "03_editing_instructions.md", "04_materials_list.md",
+                       "05_posting_package.md", "06_bgm_and_credits.md",
+                       "07_ng_check_report.md", "08_bgm_plan.md",
+                       "09_package_summary.md"]:
+                (d / f).write_text("出典：参考", encoding="utf-8")
+            (d / "metadata.json").write_text("{}", encoding="utf-8")
+            bgm = {
+                "file_name": "UNL1337.wav",
+                "provider": "箕輪レコーズ",
+                "license_status": "contracted",
+                "contract_evidence": "箕輪レコーズとの楽曲使用契約に基づく",
+                "credit_text": "楽曲提供：箕輪レコーズ",
+                "contract_evidence_verified": False,
+                "content_id_status": "unconfirmed",
+                "local_file_verified": False,
+                "download_or_reference_url": None,
+            }
+            status = validate_package(
+                d, data, {"findings": []}, bgm, topic,
+                mode="production", rights_data={"overall_status": "OK", "has_review": False},
+            )
+            assert len(status["bgm_issues"]) == 0
+            assert len(status["bgm_warnings"]) >= 1
+
+
+class TestHonorificsExpanded:
+    def test_masako_bare_name_detected(self):
+        """雅子 without honorific is detected."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = "雅子が出席された。出典あり。"
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            findings = [f for f in result["findings"]
+                        if f["category"] == "敬称・敬語" and "雅子" in f["item"]]
+            assert len(findings) >= 1
+
+    def test_masako_with_honorific_not_flagged(self):
+        """雅子さま / 雅子皇后陛下 should not be flagged."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = "雅子さまが出席された。雅子皇后陛下のお言葉。出典あり。"
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            findings = [f for f in result["findings"]
+                        if f["category"] == "敬称・敬語" and "雅子" in f["item"]]
+            assert len(findings) == 0, f"False positive: {findings}"
+
+    def test_auto_fix_first_and_subsequent(self):
+        """Auto-fix: first occurrence → formal, subsequent → さま."""
+        from src.ng_check import auto_fix_honorifics
+        text = "愛子が誕生した。愛子は成長された。"
+        fixed = auto_fix_honorifics(text)
+        assert "愛子内親王殿下" in fixed
+        assert "愛子さま" in fixed
+        assert fixed.index("愛子内親王殿下") < fixed.index("愛子さま")
+
+    def test_auto_fix_preserves_quoted(self):
+        """Auto-fix: 御名『愛子』 is not modified."""
+        from src.ng_check import auto_fix_honorifics
+        text = '御名「愛子」と御称号「敬宮」の由来'
+        fixed = auto_fix_honorifics(text)
+        assert '御名「愛子」' in fixed
+        assert '御称号「敬宮」' in fixed
+
+    def test_hisahito_bare_name_detected(self):
+        """悠仁 without honorific is detected."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = "悠仁が入学された。出典あり。"
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            findings = [f for f in result["findings"]
+                        if f["category"] == "敬称・敬語" and "悠仁" in f["item"]]
+            assert len(findings) >= 1
