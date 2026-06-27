@@ -135,7 +135,7 @@ def _build_long_script_text(topic, research_data):
     lines.append(f"以上、「{topic}」についてお伝えいたしました。")
     lines.append("")
     if usable:
-        lines.append("公式の記録をもとに、その由来をたどってまいりました。")
+        lines.append("出典となる公式の記録をもとに、その歩みをたどってまいりました。")
         lines.append("この動画が、皆さまの知識の一助となれば幸いです。")
         lines.append("")
     lines.append("最後までご視聴いただき、ありがとうございます。")

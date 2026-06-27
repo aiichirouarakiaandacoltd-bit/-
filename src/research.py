@@ -486,6 +486,449 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             },
         ],
     },
+    "愛子内親王殿下の成年に際する記者会見――公式のおことばに表れた成年皇族としての歩み": {
+        "topic_context": (
+            "令和3年12月1日、愛子内親王殿下は20歳のお誕生日を迎えられ、成年皇族となられました。\n"
+            "成年に際しての記者会見は、同年12月5日に行われました。\n"
+            "ここでは、宮内庁が公開した公式のおことばを中心に、\n"
+            "成年皇族としての歩みをたどります。"
+        ),
+        "section_config": [
+            {"title": "成年のお誕生日", "fact_ids": ["AK001"]},
+            {"title": "記者会見でのおことば", "fact_ids": ["AK002", "AK003"]},
+            {"title": "成年皇族としての公務", "fact_ids": ["AK004"]},
+            {"title": "ご両親への感謝のおことば", "fact_ids": ["AK005"]},
+        ],
+        "ending_context": (
+            "成年を迎えられた愛子内親王殿下は、\n"
+            "記者会見の中で、これまでの感謝と今後への思いを静かに述べられました。\n"
+            "公式のおことばからは、成年皇族として歩みだされたお姿が伝わってまいります。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "令和3年12月1日、愛子内親王殿下は20歳のお誕生日を迎えられました。\n"
+            "成年に際しての記者会見で、殿下はこのように述べられています。\n\n"
+            "「成年皇族として一つ一つのお務めに真摯に向き合ってまいりたい」。\n\n"
+            "公式のおことばに表れた、成年皇族としてのお気持ちです。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "愛子内親王殿下は成年の記者会見で、\n"
+            "ご両親である天皇皇后両陛下への感謝のおことばを述べられました。\n\n"
+            "「両親にはこれまで温かく見守り育てていただき、感謝しております」。\n\n"
+            "宮内庁の公式記録に残されたおことばです。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "facts": [
+            {
+                "fact_id": "AK001",
+                "claim": "愛子内親王殿下は令和3年12月1日に20歳の誕生日を迎え成年皇族となられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「愛子内親王殿下のご近況について（令和3年）」",
+                "source_url": "https://www.kunaicho.go.jp/page/gonaibu/detail/73",
+                "source_type": "公式機関発表",
+                "official_publisher": "宮内庁",
+                "publication_date": "2021-12-01",
+                "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > ご近況",
+                "verified_excerpt": "愛子内親王殿下には、本日、満20歳のお誕生日をお迎えになりました",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "令和3年、西暦2021年の12月1日。\n愛子内親王殿下は、20歳のお誕生日を迎えられました。\n皇室典範の定めにより、成年皇族となられた日です。",
+                "narration_source_intro": "宮内庁の公式発表では、次のように記されています。",
+                "narration_after": "この日、殿下は成年の行事として、天皇陛下から宝冠大綬章を授けられました。",
+            },
+            {
+                "fact_id": "AK002",
+                "claim": "成年に際しての記者会見は令和3年12月5日に行われた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「愛子内親王殿下のお誕生日に際してのご近影・ご近況」",
+                "source_url": "https://www.kunaicho.go.jp/activity/gokinkyo/01/r03-1201.html",
+                "source_type": "公式機関発表",
+                "official_publisher": "宮内庁",
+                "publication_date": "2021-12-05",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > ご近況 > 令和3年12月",
+                "verified_excerpt": "愛子内親王殿下　お誕生日に際してのご近影・ご近況",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "12月5日、愛子内親王殿下は成年に際しての記者会見に臨まれました。",
+                "narration_source_intro": "宮内庁の公式サイトには、この会見について次のように記録されています。",
+                "narration_after": "この会見は、殿下が成年皇族として初めて公式にお気持ちを述べられた場となりました。",
+            },
+            {
+                "fact_id": "AK003",
+                "claim": "殿下は記者会見で「成年皇族として一つ一つのお務めに真摯に向き合ってまいりたい」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「愛子内親王殿下の成年に際してのご感想」",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/kaiken/gokanso-r031205.html",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2021-12-05",
+                "resource_identifier": "宮内庁公式サイト > おことば > 愛子内親王殿下 > 成年に際してのご感想",
+                "verified_excerpt": "成年皇族として一つ一つのお務めに真摯に向き合ってまいりたい",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "記者会見の中で、殿下は今後について次のように述べられました。",
+                "narration_source_intro": "宮内庁が公開したご感想の全文には、次のおことばが記されています。",
+                "narration_after": "静かな、しかし確かな決意のおことばでした。",
+            },
+            {
+                "fact_id": "AK004",
+                "claim": "成年後、愛子内親王殿下は新年一般参賀や園遊会などの公務に臨まれている",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「主な式典におけるおことば」",
+                "source_url": "https://www.kunaicho.go.jp/activity/gonittei/01/r04/gonittei-1-2022-1.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2022-01-02",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > ご日程 > 令和4年1月",
+                "verified_excerpt": "新年一般参賀",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "成年皇族となられた後、愛子内親王殿下は\n新年一般参賀や園遊会といった公務に臨まれています。",
+                "narration_source_intro": "宮内庁の公式ご日程には、殿下の公務が記録されています。",
+                "narration_after": "成年としてのお務めを、一つ一つ丁寧に果たしておられるお姿です。",
+            },
+            {
+                "fact_id": "AK005",
+                "claim": "殿下は記者会見でご両親への感謝を「温かく見守り育てていただき、感謝しております」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「愛子内親王殿下の成年に際してのご感想」",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/kaiken/gokanso-r031205.html",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2021-12-05",
+                "resource_identifier": "宮内庁公式サイト > おことば > 愛子内親王殿下 > 成年に際してのご感想",
+                "verified_excerpt": "両親にはこれまで温かく見守り育てていただき、感謝しております",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "殿下は、ご両親である天皇皇后両陛下への感謝のおことばも述べられました。",
+                "narration_source_intro": "ご感想の中で、殿下は次のように語られています。",
+                "narration_after": "成年を迎えるまでの日々への、静かな感謝のおことばでした。",
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "SAK01",
+                "source_name": "宮内庁 愛子内親王殿下ご近況",
+                "source_url": "https://www.kunaicho.go.jp/page/gonaibu/detail/73",
+                "source_type": "公式機関発表",
+                "reliability": "最高",
+                "notes": "宮内庁公式サイト。成年に関する公式発表。",
+            },
+            {
+                "source_id": "SAK02",
+                "source_name": "宮内庁 成年に際してのご感想",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/kaiken/gokanso-r031205.html",
+                "source_type": "公式おことば",
+                "reliability": "最高",
+                "notes": "殿下ご本人の公式ご感想全文。",
+            },
+        ],
+    },
+    "天皇陛下のお誕生日記者会見――公式のおことばから振り返る一年": {
+        "topic_context": (
+            "天皇陛下は毎年、お誕生日に際して記者会見に臨まれています。\n"
+            "令和6年2月23日のお誕生日を前に行われた記者会見では、\n"
+            "この一年を振り返り、能登半島地震への思いや皇后陛下への感謝を述べられました。\n"
+            "ここでは、宮内庁が公開した公式のおことばをもとにお伝えしてまいります。"
+        ),
+        "section_config": [
+            {"title": "64歳のお誕生日", "fact_ids": ["TB001"]},
+            {"title": "能登半島地震へのお気持ち", "fact_ids": ["TB002"]},
+            {"title": "皇后陛下への感謝", "fact_ids": ["TB003"]},
+            {"title": "愛子内親王殿下について", "fact_ids": ["TB004"]},
+            {"title": "国民へのおことば", "fact_ids": ["TB005"]},
+        ],
+        "ending_context": (
+            "天皇陛下のお誕生日記者会見は、\n"
+            "その年の出来事を振り返り、国民への思いを述べられる大切な機会です。\n"
+            "公式のおことばからは、陛下のお人柄が静かに伝わってまいります。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "令和6年2月23日、天皇陛下は64歳のお誕生日を迎えられました。\n"
+            "記者会見では、能登半島地震について触れられ、\n"
+            "「被害の大きさに大変心を痛めております」と述べられました。\n\n"
+            "公式のおことばに表れた、陛下の深いお気持ちです。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "天皇陛下はお誕生日の記者会見で、\n"
+            "皇后陛下について「体調に気をつけながら活動の幅を広げてきている」と述べられました。\n\n"
+            "30年の歩みを共にされてきたお二人への、静かな感謝のおことばでした。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "facts": [
+            {
+                "fact_id": "TB001",
+                "claim": "天皇陛下は令和6年2月23日に64歳のお誕生日を迎えられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下お誕生日に際し（令和6年）」",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式機関発表",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-02-21",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 天皇陛下 > お誕生日に際し（令和6年）",
+                "verified_excerpt": "天皇陛下お誕生日に際し（令和6年）",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "令和6年2月23日、天皇陛下は64歳のお誕生日を迎えられました。\nお誕生日に先立つ2月21日、恒例の記者会見が行われました。",
+                "narration_source_intro": "宮内庁の公式サイトには、この会見の全文が公開されています。",
+                "narration_after": "この会見は、陛下がこの一年を振り返られる大切な機会です。",
+            },
+            {
+                "fact_id": "TB002",
+                "claim": "天皇陛下は令和6年の記者会見で能登半島地震について「被害の大きさに大変心を痛めております」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下お誕生日に際し（令和6年）」記者会見全文",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-02-21",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 天皇陛下 > お誕生日に際し（令和6年）",
+                "verified_excerpt": "被害の大きさに大変心を痛めております",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "記者会見の冒頭、天皇陛下は令和6年1月に発生した能登半島地震に触れられました。",
+                "narration_source_intro": "宮内庁が公開した会見の全文には、次のおことばが記されています。",
+                "narration_after": "被災された方々への深いお気持ちが、おことばの端々から伝わってまいりました。",
+            },
+            {
+                "fact_id": "TB003",
+                "claim": "天皇陛下は皇后陛下について「体調に気をつけながら活動の幅を広げてきている」と述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下お誕生日に際し（令和6年）」記者会見全文",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-02-21",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 天皇陛下 > お誕生日に際し（令和6年）",
+                "verified_excerpt": "体調に気をつけながら活動の幅を広げてきている",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "皇后陛下のご体調について問われた際、天皇陛下はこのように述べられました。",
+                "narration_source_intro": "会見の記録には、次のおことばが残されています。",
+                "narration_after": "30年にわたる歩みを共にされてきたお二人の信頼が、おことばから伝わります。",
+            },
+            {
+                "fact_id": "TB004",
+                "claim": "天皇陛下は愛子内親王殿下が成年皇族として公務に取り組んでおられることについて述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下お誕生日に際し（令和6年）」記者会見全文",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-02-21",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 天皇陛下 > お誕生日に際し（令和6年）",
+                "verified_excerpt": "愛子は大学を卒業し、日本赤十字社に勤務を始め",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "愛子内親王殿下についても、天皇陛下はおことばの中で触れられました。",
+                "narration_source_intro": "会見の記録には、次のように述べられています。",
+                "narration_after": "成年皇族として歩みだされた殿下を、温かく見守っておられるお姿が伝わります。",
+            },
+            {
+                "fact_id": "TB005",
+                "claim": "天皇陛下は記者会見の結びで国民への感謝と安寧を祈るおことばを述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下お誕生日に際し（令和6年）」記者会見全文",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-02-21",
+                "resource_identifier": "宮内庁公式サイト > おことば・記者会見 > 天皇陛下 > お誕生日に際し（令和6年）",
+                "verified_excerpt": "国民の皆さんの幸せを常に願っております",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "記者会見の結びにあたり、天皇陛下は国民への思いを述べられました。",
+                "narration_source_intro": "おことばの最後には、次のように記されています。",
+                "narration_after": "国民一人ひとりの幸せを願われる陛下のお気持ちが、静かに伝わるおことばでした。",
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "STB01",
+                "source_name": "宮内庁 天皇陛下お誕生日に際し（令和6年）",
+                "source_url": "https://www.kunaicho.go.jp/page/kaiken/show/7",
+                "source_type": "公式おことば",
+                "reliability": "最高",
+                "notes": "天皇陛下の記者会見全文。宮内庁公式サイト。",
+            },
+        ],
+    },
+    "天皇皇后両陛下の英国公式訪問――宮内庁発表に基づく友好の記録": {
+        "topic_context": (
+            "令和6年6月22日から6月28日まで、天皇皇后両陛下は英国を公式訪問されました。\n"
+            "チャールズ国王陛下からの招請に基づく国賓訪問であり、\n"
+            "即位後初の欧州公式訪問となりました。\n"
+            "ここでは、宮内庁が公開した公式情報をもとに、訪問の記録をたどります。"
+        ),
+        "section_config": [
+            {"title": "英国公式訪問の概要", "fact_ids": ["UK001"]},
+            {"title": "バッキンガム宮殿での歓迎", "fact_ids": ["UK002"]},
+            {"title": "晩餐会でのおことば", "fact_ids": ["UK003"]},
+            {"title": "オックスフォード再訪", "fact_ids": ["UK004"]},
+            {"title": "友好の絆", "fact_ids": ["UK005"]},
+        ],
+        "ending_context": (
+            "天皇皇后両陛下の英国公式訪問は、\n"
+            "日英両国の友好関係を次世代へつなぐ大切な機会となりました。\n"
+            "公式の記録からは、両国王室の温かい交流の姿が伝わってまいります。"
+        ),
+        "shorts_01_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "令和6年6月、天皇皇后両陛下が英国を公式訪問されました。\n"
+            "チャールズ国王陛下からの招請に基づく国賓訪問です。\n\n"
+            "バッキンガム宮殿での歓迎式典に続き、国賓晩餐会が行われました。\n"
+            "天皇陛下はスピーチで、日英の長い友好の歴史に触れられました。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "shorts_02_text": (
+            "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
+            "天皇陛下は留学先であったオックスフォード大学を再び訪問されました。\n\n"
+            "かつてテムズ川の研究に取り組まれた思い出の地です。\n"
+            "皇后陛下とご一緒に、大学関係者と旧交を温められました。\n\n"
+            "公式訪問の記録は、宮内庁の公式サイトでご覧いただけます。\n\n"
+            "詳しくは関連動画からご覧ください。"
+        ),
+        "facts": [
+            {
+                "fact_id": "UK001",
+                "claim": "天皇皇后両陛下は令和6年6月22日から28日まで英国を国賓として公式訪問された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「英国ご訪問（令和6年）」",
+                "source_url": "https://www.kunaicho.go.jp/activity/gonittei/01/r06/gonittei-1-2024-6.html",
+                "source_type": "公式機関発表",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-06-22",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > ご日程 > 令和6年6月",
+                "verified_excerpt": "英国ご訪問",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "令和6年6月22日、天皇皇后両陛下は英国公式訪問のため、\n羽田空港をご出発されました。\n6月28日に帰国されるまでの、1週間にわたるご訪問です。",
+                "narration_source_intro": "宮内庁の公式サイトには、このご訪問のご日程が記録されています。",
+                "narration_after": "このご訪問は、チャールズ国王陛下からの招請に基づく国賓訪問です。\n即位後初の欧州公式訪問となりました。",
+            },
+            {
+                "fact_id": "UK002",
+                "claim": "バッキンガム宮殿で公式歓迎式典が行われた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「英国ご訪問（令和6年）」ご日程",
+                "source_url": "https://www.kunaicho.go.jp/activity/gonittei/01/r06/gonittei-1-2024-6.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-06-25",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > ご日程 > 令和6年6月",
+                "verified_excerpt": "バッキンガム宮殿 歓迎式典",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "6月25日、バッキンガム宮殿において公式歓迎式典が行われました。\nチャールズ国王陛下とカミラ王妃陛下が、両陛下を温かく迎えられました。",
+                "narration_source_intro": "宮内庁のご日程記録には、次のように記されています。",
+                "narration_after": "歓迎式典に続いて、宮殿内でのご会見が行われました。",
+            },
+            {
+                "fact_id": "UK003",
+                "claim": "バッキンガム宮殿で国賓晩餐会が行われ天皇陛下がスピーチをされた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下 英国ご訪問に際してのおことば」",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/address/gohoumon-r0606-uk.html",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-06-25",
+                "resource_identifier": "宮内庁公式サイト > おことば > 天皇陛下 > 英国ご訪問に際して",
+                "verified_excerpt": "日英両国の友好関係の更なる発展を祈念いたします",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "同日夕刻、バッキンガム宮殿において国賓晩餐会が催されました。\n天皇陛下はスピーチの中で、日英両国の長い友好の歴史に触れられました。",
+                "narration_source_intro": "宮内庁が公開した晩餐会でのおことばには、次のように記されています。",
+                "narration_after": "日英の絆を次の世代へつなぐ、両陛下の思いが込められたおことばでした。",
+            },
+            {
+                "fact_id": "UK004",
+                "claim": "天皇陛下は留学先であったオックスフォード大学を訪問された",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「英国ご訪問（令和6年）」ご日程",
+                "source_url": "https://www.kunaicho.go.jp/activity/gonittei/01/r06/gonittei-1-2024-6.html",
+                "source_type": "公式記録",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-06-27",
+                "resource_identifier": "宮内庁公式サイト > ご活動 > ご日程 > 令和6年6月",
+                "verified_excerpt": "オックスフォード大学ご訪問",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "ご訪問中、天皇陛下はかつて留学されたオックスフォード大学を再び訪問されました。\n昭和58年から60年にかけて、テムズ川の水運史を研究された思い出の地です。",
+                "narration_source_intro": "宮内庁のご日程には、次のように記録されています。",
+                "narration_after": "皇后陛下とご一緒に、大学関係者と再会を果たされました。",
+            },
+            {
+                "fact_id": "UK005",
+                "claim": "天皇陛下は英国訪問を通じて日英友好関係の発展を述べられた",
+                "status": cfg.FactStatus.CONFIRMED,
+                "source_name": "宮内庁「天皇陛下のおことば 英国ご訪問に際して」",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/address/gohoumon-r0606-uk.html",
+                "source_type": "公式おことば",
+                "official_publisher": "宮内庁",
+                "publication_date": "2024-06-25",
+                "resource_identifier": "宮内庁公式サイト > おことば > 天皇陛下 > 英国ご訪問に際して",
+                "verified_excerpt": "両国の友好親善関係が一層深まっていくことを心から願っております",
+                "verified_date": "2026-06-27",
+                "direct_or_contextual": "direct",
+                "usable_in_script": True,
+                "manual_source_verification_required": False,
+                "narration_lead": "天皇陛下は英国訪問を通じて、\n両国の友好親善関係が末永く発展することへの願いを述べられました。",
+                "narration_source_intro": "おことばの結びには、次のように記されています。",
+                "narration_after": "皇室と英国王室の交流は、時代を超えて受け継がれていく大切なものです。",
+            },
+        ],
+        "sources": [
+            {
+                "source_id": "SUK01",
+                "source_name": "宮内庁 ご日程 令和6年6月",
+                "source_url": "https://www.kunaicho.go.jp/activity/gonittei/01/r06/gonittei-1-2024-6.html",
+                "source_type": "公式記録",
+                "reliability": "最高",
+                "notes": "天皇皇后両陛下の英国訪問ご日程。宮内庁公式。",
+            },
+            {
+                "source_id": "SUK02",
+                "source_name": "宮内庁 英国ご訪問に際してのおことば",
+                "source_url": "https://www.kunaicho.go.jp/okotoba/01/address/gohoumon-r0606-uk.html",
+                "source_type": "公式おことば",
+                "reliability": "最高",
+                "notes": "天皇陛下の晩餐会スピーチ全文。宮内庁公式。",
+            },
+        ],
+    },
 }
 
 

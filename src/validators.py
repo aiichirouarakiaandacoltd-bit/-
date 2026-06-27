@@ -131,7 +131,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
 
     if rights_data is None:
         rights_data = {}
-    rights_overall = rights_data.get("overall_status", "REVIEW")
+    rights_overall = rights_data.get("overall_status", "OK")
     rights_has_review = rights_data.get("has_review", False)
     bgm_issues, bgm_warnings = _validate_bgm_config(bgm_config)
 
@@ -244,8 +244,8 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                         f"（推定{est_sec:.1f}秒、最低{min_shorts_sec}秒）"
                     )
 
-    if rights_has_review:
-        missing_items.append("素材の権利REVIEWが未解決")
+    if rights_data.get("has_ng"):
+        missing_items.append("権利不明素材を必須指定しています")
 
     posting_path = output_dir / "05_posting_package.md"
     if posting_path.exists():
@@ -287,6 +287,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     production_ready = (
         content_complete
         and len(bgm_issues) == 0
+        and len(bgm_warnings) == 0
         and len(unconfirmed_facts) == 0
         and len(manual_verify_facts) == 0
         and not credit_duplication
@@ -422,7 +423,7 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
             lines.append(f"  - {issue}")
     bgm_warnings = status.get("bgm_warnings", [])
     if bgm_warnings:
-        lines.append("- BGM警告（production_readyには影響しない）:")
+        lines.append("- BGM警告（荒木側確認完了までproduction_ready=Falseを維持）:")
         for w in bgm_warnings:
             lines.append(f"  - {w}")
     lines.append("")

@@ -1,390 +1,235 @@
-"""Material URL management and rights checking.
+"""Material instruction sheet and rights guidance for outsourcing packages.
 
-Generates material_urls.csv and rights_report.md for outsourcing packages.
-Ensures no URLs are fabricated and rights statuses are honestly assessed.
+Generates 04_materials_list.md as a scene-by-scene material instruction
+sheet that outsourcers can use to select and record materials.
+
+Claude Code does NOT:
+- Search or collect material URLs automatically
+- Judge copyright/licensing for individual materials
+- Select person photos or video clips
+- Download material files
+
+Instead, it generates clear instructions per scene so the outsourcer
+can select appropriate materials from approved sources.
 """
 
-import csv
 from pathlib import Path
 
 import config as cfg
 
 
-# ---------------------------------------------------------------------------
-# Rights-check categories
-# ---------------------------------------------------------------------------
+ALLOWED_SOURCES = [
+    "宮内庁公式ページ",
+    "宮内庁公式Instagram",
+    "宮内庁公式YouTube",
+    "外国王室・政府・自治体・公的機関の公式ページ",
+    "Wikimedia Commonsの個別ファイルページ（作者・ライセンス・クレジット条件を確認）",
+    "商用利用・YouTube収益化可能と確認済みのストック素材",
+    "自作テキストカード",
+    "単色背景",
+    "グラデーション背景",
+]
 
-RIGHTS_CATEGORIES = [
-    "人物写真（肖像権）",
-    "報道写真（プレス）",
-    "公式SNS素材",
-    "公式YouTube素材",
-    "一般風景",
-    "建造物外観",
-    "国旗",
-    "航空機",
-    "室内・内装",
-    "ストック素材",
-    "BGM・音楽",
-    "引用・テキスト",
-    "クレジット表記",
+PROHIBITED_SOURCES = [
+    "皇族・王族のAI生成画像",
+    "実在人物の顔、服装、表情、年齢を変更した合成画像",
+    "出典不明画像",
+    "まとめサイトや個人転載ページの画像",
+    "利用条件不明の報道写真",
+    "テレビ番組やニュース映像の無断転載",
+    "商用利用不可または収益化不可のストック素材",
 ]
 
 
-# ---------------------------------------------------------------------------
-# Default material generation
-# ---------------------------------------------------------------------------
+def _build_scene_materials(topic, research_data):
+    """Build scene-by-scene material instruction rows from research data."""
+    scenes = []
+    section_config = research_data.get("section_config", [])
+    facts_by_id = {f["fact_id"]: f for f in research_data.get("facts", [])
+                   if f.get("usable_in_script")}
 
-def _generate_default_materials(topic, research_data):
-    """Generate default material entries based on topic and research data."""
-    materials = []
-    sources = research_data.get("sources", [])
-
-    materials.append({
+    scenes.append({
         "material_id": "MAT-001",
-        "scene": "導入・タイトル",
-        "person_or_subject": topic,
-        "source_name": "テロップ・テキストカード",
-        "source_url": "",
-        "source_type": "自作",
-        "rights_status": "OK",
-        "usage_note": "タイトルテキストのみで構成",
-        "image_or_video": "image",
-        "credit_required": False,
-        "alternative": "",
+        "scene": "オープニング（0:00〜）",
+        "script_content": f"テーマ「{topic}」の導入",
+        "required_material": "タイトルテキストカード、チャンネルロゴ",
+        "source_suggestion": "自作テキストカード／単色背景",
+        "prohibited": "皇族のAI生成画像",
+        "self_made_alternative": "テーマ名と「日本が誇る皇室物語」ロゴをテキストカードで構成",
+        "outsourcer_url": "",
     })
 
-    materials.append({
-        "material_id": "MAT-002",
-        "scene": "背景イメージ",
-        "person_or_subject": "和紙背景イメージ",
-        "source_name": "ストック素材サイト",
-        "source_url": "",
-        "source_type": "ストック素材",
-        "rights_status": "REVIEW",
-        "usage_note": "商用利用可能なストック素材を使用。ライセンス確認必須",
-        "image_or_video": "image",
-        "credit_required": False,
-        "alternative": "単色背景・グラデーション",
-    })
+    for ch_idx, section in enumerate(section_config):
+        title = section.get("title", "")
+        fact_ids = section.get("fact_ids", [])
+        content_summary = []
+        for fid in fact_ids:
+            fact = facts_by_id.get(fid)
+            if fact:
+                claim = fact.get("claim", "")
+                if claim:
+                    content_summary.append(claim)
 
-    for i, src in enumerate(sources[:5]):
-        materials.append({
-            "material_id": f"MAT-{i+3:03d}",
-            "scene": "解説パート",
-            "person_or_subject": src.get("source_name", ""),
-            "source_name": src.get("source_name", ""),
-            "source_url": src.get("source_url", ""),
-            "source_type": src.get("source_type", "要確認"),
-            "rights_status": "REVIEW",
-            "usage_note": "出典として参照。画像使用には別途確認が必要",
-            "image_or_video": "image",
-            "credit_required": True,
-            "alternative": "テロップで情報を表示",
+        scenes.append({
+            "material_id": f"MAT-{ch_idx + 2:03d}",
+            "scene": f"第{ch_idx + 1}章「{title}」",
+            "script_content": "／".join(content_summary) if content_summary else title,
+            "required_material": "テーマに合った背景画像またはテキストカード",
+            "source_suggestion": "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード",
+            "prohibited": "AI生成画像／出典不明画像／報道写真の無断使用",
+            "self_made_alternative": "公式情報をテロップで引用表示。背景は単色またはグラデーション",
+            "outsourcer_url": "",
         })
 
-    materials.append({
-        "material_id": f"MAT-{len(materials)+1:03d}",
+    if not section_config:
+        scenes.append({
+            "material_id": "MAT-002",
+            "scene": "本編",
+            "script_content": "テーマに関する解説",
+            "required_material": "テーマに合った背景画像またはテキストカード",
+            "source_suggestion": "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード",
+            "prohibited": "AI生成画像／出典不明画像／報道写真の無断使用",
+            "self_made_alternative": "公式情報をテロップで引用表示。背景は単色またはグラデーション",
+            "outsourcer_url": "",
+        })
+
+    next_id = len(scenes) + 1
+    scenes.append({
+        "material_id": f"MAT-{next_id:03d}",
         "scene": "エンディング",
-        "person_or_subject": "エンディングカード",
-        "source_name": "自作",
-        "source_url": "",
-        "source_type": "自作",
-        "rights_status": "OK",
-        "usage_note": "チャンネル名・登録誘導テキスト",
-        "image_or_video": "image",
-        "credit_required": False,
-        "alternative": "",
+        "script_content": "チャンネル登録誘導・次回予告",
+        "required_material": "エンドカード、チャンネルロゴ",
+        "source_suggestion": "自作テキストカード",
+        "prohibited": "なし",
+        "self_made_alternative": "チャンネル名・登録誘導テキストを自作",
+        "outsourcer_url": "",
     })
 
-    return materials
+    return scenes
 
 
-def _default_aiko_materials():
-    """Return default material rows for the 愛子/敬宮 name-origin topic."""
-    return [
-        {
-            "material_id": "MAT-001",
-            "scene": "導入・タイトル",
-            "person_or_subject": "タイトルテキストカード",
-            "source_name": "自作テロップ",
-            "source_url": "",
-            "source_type": "自作",
-            "rights_status": "OK",
-            "usage_note": "テーマ名と「日本が誇る皇室物語」ロゴを配置",
-            "image_or_video": "image",
-            "credit_required": False,
-            "alternative": "",
-        },
-        {
-            "material_id": "MAT-002",
-            "scene": "宮内庁公式情報の紹介",
-            "person_or_subject": "宮内庁公式情報テキストカード",
-            "source_name": "自作テロップ（宮内庁公式サイト情報を引用表示）",
-            "source_url": "",
-            "source_type": "自作",
-            "rights_status": "OK",
-            "usage_note": "宮内庁公式サイトの記者会見原文をテロップとして表示。画像は使用しない",
-            "image_or_video": "image",
-            "credit_required": False,
-            "alternative": "",
-        },
-        {
-            "material_id": "MAT-003",
-            "scene": "『孟子』の教え解説",
-            "person_or_subject": "孟子原文テキストカード",
-            "source_name": "自作テロップ（古典原文を引用表示）",
-            "source_url": "",
-            "source_type": "自作",
-            "rights_status": "OK",
-            "usage_note": "著作権切れの古典原文をテロップとして自作表示。出典を明記",
-            "image_or_video": "image",
-            "credit_required": False,
-            "alternative": "",
-        },
-        {
-            "material_id": "MAT-004",
-            "scene": "背景イメージ",
-            "person_or_subject": "和紙風・単色背景",
-            "source_name": "自作素材（単色背景・グラデーション）",
-            "source_url": "",
-            "source_type": "自作",
-            "rights_status": "OK",
-            "usage_note": "単色背景またはグラデーションを自作。和紙風テクスチャを使用する場合は商用利用可のストック素材を別途確認",
-            "image_or_video": "image",
-            "credit_required": False,
-            "alternative": "",
-        },
-        {
-            "material_id": "MAT-005",
-            "scene": "エンディング",
-            "person_or_subject": "チャンネルロゴ・エンドカード",
-            "source_name": "自作素材",
-            "source_url": "",
-            "source_type": "自作",
-            "rights_status": "OK",
-            "usage_note": "チャンネル名・登録誘導テキスト",
-            "image_or_video": "image",
-            "credit_required": False,
-            "alternative": "",
-        },
+def generate_materials_md(topic, research_data, output_dir):
+    """Write 04_materials_list.md as a scene-based material instruction sheet."""
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    scenes = _build_scene_materials(topic, research_data)
+
+    lines = [
+        "# 素材指示書",
+        "",
+        f"チャンネル: {cfg.CHANNEL_NAME}",
+        f"テーマ: {topic}",
+        "",
+        "---",
+        "",
+        "## 使用可能な素材元",
+        "",
+    ]
+    for src in ALLOWED_SOURCES:
+        lines.append(f"- {src}")
+
+    lines += [
+        "",
+        "## 使用禁止素材",
+        "",
+    ]
+    for src in PROHIBITED_SOURCES:
+        lines.append(f"- {src}")
+
+    lines += [
+        "",
+        "## Wikimedia Commonsを使用する場合",
+        "",
+        "画像の直リンクではなく、個別ファイルページのURLを使用してください。",
+        "個別ファイルページで以下を確認してください。",
+        "",
+        "- 作者・権利者",
+        "- ライセンス（CC BY-SA等）",
+        "- クレジット条件",
+        "- ファイルの出典",
+        "",
+        "---",
+        "",
+        "## 場面別素材指示",
+        "",
     ]
 
+    for scene in scenes:
+        lines.append(f"### {scene['material_id']}: {scene['scene']}")
+        lines.append("")
+        lines.append(f"- **台本内容**: {scene['script_content']}")
+        lines.append(f"- **必要な素材**: {scene['required_material']}")
+        lines.append(f"- **推奨素材元**: {scene['source_suggestion']}")
+        lines.append(f"- **使用禁止**: {scene['prohibited']}")
+        lines.append(f"- **自作代替**: {scene['self_made_alternative']}")
+        lines.append(f"- **使用URL**: {scene['outsourcer_url'] or '（外注者が編集時に記入）'}")
+        lines.append("")
 
-# ---------------------------------------------------------------------------
-# CSV generation
-# ---------------------------------------------------------------------------
+    lines += [
+        "---",
+        "",
+        "## 外注者の素材使用記録",
+        "",
+        "編集時に実際に使用した素材を以下の形式で記録してください。",
+        "",
+        "| 使用箇所 | 素材内容 | 素材元 | 使用URL |",
+        "| ---- | ---- | --- | ----- |",
+        "| （例）第1章 背景 | 宮内庁公式ページの写真 | 宮内庁公式 | https://... |",
+        "| （例）オープニング | タイトルテキストカード | 自作 | 自作・URL不要 |",
+        "",
+        "自作テキストカード、単色背景、グラデーション背景は「自作・URL不要」と記録してください。",
+        "",
+    ]
 
-MATERIAL_CSV_FIELDNAMES = [
-    "material_id",
-    "scene",
-    "person_or_subject",
-    "source_name",
-    "source_url",
-    "source_type",
-    "rights_status",
-    "usage_note",
-    "image_or_video",
-    "credit_required",
-    "alternative",
-]
+    md_path = output_dir / "04_materials_list.md"
+    md_path.write_text("\n".join(lines), encoding="utf-8")
+
+    return scenes
 
 
 def generate_material_urls_csv(topic, research_data, output_dir):
-    """Write ``material_urls.csv`` listing candidate materials and rights info.
+    """Generate scene-based material instructions.
 
-    Parameters
-    ----------
-    topic : str
-        The video topic / title.
-    research_data : dict
-        Research data that may contain material hints.
-    output_dir : str | Path
-        Directory to write the CSV into.
-
-    Returns
-    -------
-    list[dict]
-        The material rows written to the CSV.
+    Returns scene data for rights report generation.
+    This function name is kept for backward compatibility with main.py.
     """
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    return generate_materials_md(topic, research_data, output_dir)
 
-    if "愛子" in topic and "敬宮" in topic:
-        materials = _default_aiko_materials()
-    else:
-        materials = _generate_default_materials(topic, research_data)
-
-    # Merge in any materials provided via research_data
-    extra = research_data.get("materials", [])
-    for item in extra:
-        row = {}
-        for field in MATERIAL_CSV_FIELDNAMES:
-            row[field] = item.get(field, "")
-        # Never fabricate URLs
-        if row.get("source_url") and not _is_plausible_url(row["source_url"]):
-            row["source_url"] = ""
-            row["usage_note"] = (row.get("usage_note", "") +
-                                 " URL未確認のため空欄に修正").strip()
-        # Default rights_status
-        if row.get("rights_status") not in ("OK", "REVIEW", "NG"):
-            row["rights_status"] = "REVIEW"
-        materials.append(row)
-
-    csv_path = output_dir / "material_urls.csv"
-    with csv_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=MATERIAL_CSV_FIELDNAMES)
-        writer.writeheader()
-        for mat in materials:
-            writer.writerow({k: mat.get(k, "") for k in MATERIAL_CSV_FIELDNAMES})
-
-    return materials
-
-
-def _is_plausible_url(url):
-    """Basic check that a URL looks like a real HTTP(S) URL."""
-    if not isinstance(url, str):
-        return False
-    return url.startswith("http://") or url.startswith("https://")
-
-
-# ---------------------------------------------------------------------------
-# Rights report
-# ---------------------------------------------------------------------------
 
 def generate_rights_report(materials_data, ng_results, output_dir):
-    """Write ``rights_report.md`` with per-item rights verdicts.
+    """Write rights_report.md — simplified guidance for outsourcers.
 
-    Parameters
-    ----------
-    materials_data : list[dict]
-        Material rows (from ``generate_material_urls_csv``).
-    ng_results : dict
-        NG check results (from ``ng_check.check_ng_expressions``).
-    output_dir : str | Path
-        Directory to write the report into.
-
-    Returns
-    -------
-    dict
-        Summary with overall_status and per-item verdicts.
+    Since material URLs are filled in by outsourcers at edit time,
+    the rights report provides guidance rather than per-URL judgments.
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    verdicts = []
-    has_ng = False
-    has_review = False
-
-    for mat in materials_data:
-        status = mat.get("rights_status", "REVIEW").upper()
-        source_type = mat.get("source_type", "")
-        material_id = mat.get("material_id", "")
-        person_or_subject = mat.get("person_or_subject", "")
-
-        verdict = {
-            "material_id": material_id,
-            "person_or_subject": person_or_subject,
-            "source_type": source_type,
-            "rights_status": status,
-            "notes": [],
-        }
-
-        # Person photos need explicit permission beyond attribution
-        if "人物" in source_type or "肖像" in source_type:
-            verdict["notes"].append(
-                "人物写真は肖像権の確認が必要。報道写真はクレジットだけでは不十分、"
-                "使用許諾の取得が必要"
-            )
-            if status != "NG":
-                verdict["rights_status"] = "REVIEW"
-
-        # Press photos
-        if "プレス" in source_type or "報道" in source_type:
-            verdict["notes"].append(
-                "報道写真は撮影者・通信社の使用許諾が必要。"
-                "URLの記載だけでは使用権を主張できない"
-            )
-            if status == "OK":
-                verdict["rights_status"] = "REVIEW"
-
-        # General scenery / buildings -> needs イメージ label
-        if source_type in ("一般風景", "建造物外観", "ストック素材"):
-            verdict["notes"].append("使用時は「イメージ」ラベルを表示すること")
-
-        # Don't mislabel official record photos as イメージ
-        if source_type == "公式機関":
-            verdict["notes"].append(
-                "公式記録写真を「イメージ」と表示しないこと。"
-                "出典を正確に記載"
-            )
-
-        if verdict["rights_status"] == "NG":
-            has_ng = True
-            verdict["notes"].append("NG素材のため指示書に含めないこと")
-        elif verdict["rights_status"] == "REVIEW":
-            has_review = True
-            alt = mat.get("alternative", "")
-            if alt:
-                verdict["notes"].append(f"代替案: {alt}")
-
-        verdicts.append(verdict)
-
-    # Build report markdown
     lines = [
-        "# 権利確認レポート",
+        "# 権利確認ガイド",
         "",
         f"チャンネル: {cfg.CHANNEL_NAME}",
         f"チャンネル方針: {cfg.CHANNEL_PROMISE}",
         "",
-        "## 確認カテゴリ",
-        "",
-    ]
-    for cat in RIGHTS_CATEGORIES:
-        lines.append(f"- {cat}")
-
-    lines += ["", "## 素材別判定", ""]
-
-    for v in verdicts:
-        status_mark = {"OK": "OK", "REVIEW": "REVIEW", "NG": "NG"}.get(
-            v["rights_status"], "REVIEW"
-        )
-        lines.append(f"### {v['material_id']}: {v['person_or_subject']}")
-        lines.append("")
-        lines.append(f"- 素材種別: {v['source_type']}")
-        lines.append(f"- 判定: **{status_mark}**")
-        for note in v["notes"]:
-            lines.append(f"- {note}")
-        lines.append("")
-
-    # Summary
-    if has_ng:
-        overall = "NG"
-    elif has_review:
-        overall = "REVIEW"
-    else:
-        overall = "OK"
-
-    lines += [
         "## 総合判定",
         "",
-        f"**{overall}**",
+        "**OK**（素材指示書の条件に従って外注者が選定）",
         "",
-    ]
-    if has_ng:
-        lines.append("NG素材が含まれています。該当素材を指示書から除外してください。")
-        lines.append("")
-    if has_review:
-        lines.append("REVIEW素材があります。代替案の検討または権利確認を行ってください。")
-        lines.append("")
-
-    lines += [
+        "## 素材選定の原則",
+        "",
+        "- 使用可能な素材元のみから選定すること",
+        "- 使用禁止素材を絶対に使用しないこと",
+        "- Wikimedia Commonsは個別ファイルページでライセンスを確認すること",
+        "- 権利不明の素材は使用しないこと",
+        "- 自作テキストカード・単色背景で代替可能な場面は自作を優先すること",
+        "",
         "## 注意事項",
         "",
+        "- 皇族・王族のAI生成画像は一切使用禁止",
+        "- 報道写真は利用条件が不明な場合は使用禁止",
         "- URLを記載しただけでは使用許諾を主張できません",
-        "- 報道写真はクレジット表記だけでなく、明示的な使用許諾が必要です",
-        "- 一般的な風景・建造物の素材には「イメージ」ラベルを付けてください",
-        "- 公式記録写真を「イメージ」と誤表示しないでください",
+        "- 公式記録写真を「イメージ」と誤表示しないこと",
         "",
     ]
 
@@ -392,8 +237,7 @@ def generate_rights_report(materials_data, ng_results, output_dir):
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
     return {
-        "overall_status": overall,
-        "verdicts": verdicts,
-        "has_ng": has_ng,
-        "has_review": has_review,
+        "overall_status": "OK",
+        "has_ng": False,
+        "has_review": False,
     }

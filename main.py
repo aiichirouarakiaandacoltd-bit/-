@@ -114,26 +114,18 @@ def consolidate_instructions(output_dir, logger):
 
 
 def consolidate_materials(output_dir, logger):
-    """Merge material_urls.csv + rights_report.md into 04_materials_list.md."""
-    parts = ["# 素材・権利情報\n"]
-
-    csv_path = output_dir / "material_urls.csv"
-    if csv_path.exists():
-        parts.append("## 素材URL一覧\n")
-        parts.append("```csv")
-        parts.append(csv_path.read_text(encoding="utf-8"))
-        parts.append("```\n")
-
+    """Append rights guidance to 04_materials_list.md if not already included."""
+    mat_path = output_dir / "04_materials_list.md"
     rr_path = output_dir / "rights_report.md"
-    if rr_path.exists():
-        parts.append("---\n")
-        parts.append(rr_path.read_text(encoding="utf-8"))
 
-    if len(parts) > 1:
-        (output_dir / "04_materials_list.md").write_text(
-            "\n".join(parts), encoding="utf-8"
-        )
-        logger.info("04_materials_list.md 生成完了")
+    if mat_path.exists() and rr_path.exists():
+        mat_content = mat_path.read_text(encoding="utf-8")
+        rr_content = rr_path.read_text(encoding="utf-8")
+        if "権利確認ガイド" not in mat_content:
+            mat_path.write_text(
+                mat_content + "\n---\n\n" + rr_content, encoding="utf-8"
+            )
+    logger.info("04_materials_list.md 生成完了")
 
 
 def rename_ng_report(output_dir, logger):
