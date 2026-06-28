@@ -28,7 +28,10 @@
     "fallback_allowed": false
   },
   "bgm": {
-    "volume_ratio": 0.20,
+    "volume_ratio": 0.06,
+    "gain_db": -25.0,
+    "fade_in_seconds": 1.0,
+    "fade_out_seconds": 1.5,
     "ducking_enabled": true,
     "ducking_ratio": 0.10
   },

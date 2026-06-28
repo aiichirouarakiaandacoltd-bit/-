@@ -4,12 +4,14 @@
 YouTube Shorts 完全自動生成
 
 使用方法:
-  python main.py --mode production    # 本番: チャンネルから自動取得→Shorts自動生成
-  python main.py                      # テストモード
+  python main.py --auto --mode production    # 完全自動: 企画発掘→選手選定→動画生成
+  python main.py --mode production           # 本番: チャンネルから自動取得→Shorts自動生成
+  python main.py                             # テストモード
   python main.py --topic "河村勇輝のノールックパス" --mode production
   python main.py --player "河村勇輝" --mode production
   python main.py --video path/to/video.mp4 --mode production  # 手動指定（任意）
   python main.py --test-mode
+  python main.py --auto --dry-run            # 自動選定のみ（動画生成なし）
 """
 
 import argparse
@@ -39,6 +41,21 @@ from lib.video import (
 from lib.quality import run_quality_check, save_quality_report, check_zero_kb
 from lib.metadata import save_metadata_files, generate_trend_notes
 from lib.auto_fetch import run_auto_fetch_pipeline
+from lib.bgm_rotation import (
+    get_next_bgm, validate_bgm_file, validate_all_bgm,
+    mark_completed, is_production_bgm, load_state as load_bgm_state,
+    BGM_TRACKS, STATE_PATH as BGM_STATE_PATH,
+)
+from lib.youtube_research import get_research_client
+from lib.topic_scoring import rank_candidates
+from lib.topic_discovery import (
+    run_auto_topic_selection, load_topic_history, save_topic_history,
+)
+from lib.competitor_analysis import analyze_batch, generate_new_concept
+from lib.clip_detection import (
+    find_source_candidates, generate_editing_timeline, save_source_candidates,
+)
+from lib.publishing import generate_publishing_package
 
 
 def setup_logging(log_path):
@@ -69,6 +86,10 @@ def parse_args():
         help="実行モード",
     )
     parser.add_argument("--test-mode", action="store_true", help="テストモードで実行")
+    parser.add_argument("--auto", action="store_true",
+                        help="完全自動モード: 企画発掘→選手選定→動画生成")
+    parser.add_argument("--dry-run", action="store_true",
+                        help="自動選定のみ実行（動画生成なし）")
     return parser.parse_args()
 
 
@@ -156,7 +177,7 @@ def generate_rights_files(output_dir, mode, auto_fetch_result=None):
                 "source_url": "",
                 "source_name": "ザ・ダンク自動生成",
                 "permission_type": "owned",
-                "rights_status": "OK",
+                "rights_status": "system_generated_review_required",
                 "player_names": [],
                 "game_date": "",
                 "league": "",
@@ -259,11 +280,9 @@ def adjust_script_for_duration(script, narration_text, duration, settings, attem
         sections = script["sections"]
         for section in reversed(sections):
             text = section["text"]
-            sentences = [s for s in text.replace("。", "。\n").split("\n") if s.strip()]
+            sentences = [s.strip() for s in text.split("。") if s.strip()]
             if len(sentences) > 1:
-                section["text"] = "。".join(sentences[:-1])
-                if not section["text"].endswith("。"):
-                    section["text"] += "。"
+                section["text"] = "。".join(sentences[:-1]) + "。"
                 break
 
     elif duration < min_dur:
@@ -278,13 +297,15 @@ def adjust_script_for_duration(script, narration_text, duration, settings, attem
 
 
 def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
-                          auto_fetch_result, review_screenshots_exist):
+                          auto_fetch_result, review_screenshots_exist,
+                          pipeline_error=False):
     """
-    publishable判定
+    publishable判定（4段階分離・各判定独立）
 
-    全条件を満たした場合のみ technical_publishable = True。
-    embedded_footage_rights が UNKNOWN の場合は publishable = False。
-    荒木側が確認済みに変更した場合のみ最終publishable = True。
+    technical_publishable: 動画ファイルが技術仕様を満たしているか
+    production_ready: 本番公開候補として必要な制作要素が揃い、システム検証が終わっているか
+    completed: 動画生成工程がエラーなく最後まで終了したか（production_readyに従属しない）
+    final_release_approved: 荒木愛一朗による最終確認（常にFalse、手動変更のみ）
     """
     conditions = {}
     conditions["production_mode"] = mode == "production"
@@ -293,6 +314,7 @@ def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
     conditions["speed_095"] = tts_info.get("speed") == 0.95 if tts_info else False
     conditions["no_test_audio"] = tts_info.get("fallback_used") is False if tts_info else False
     conditions["bgm_exists"] = bgm_path is not None and os.path.exists(bgm_path) if bgm_path else False
+    conditions["production_bgm_used"] = is_production_bgm(bgm_path) if bgm_path else False
 
     bgm_license_ok = False
     if bgm_license_path and os.path.exists(bgm_license_path):
@@ -313,20 +335,37 @@ def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
     conditions["zero_kb_none"] = quality.get("zero_kb_ok", False) if quality else False
 
     rights = auto_fetch_result.get("rights", {}) if auto_fetch_result else {}
+    rights_status = rights.get("rights_status", "UNKNOWN")
     conditions["metadata_risk_not_ng"] = rights.get("metadata_risk_status", "UNKNOWN") != "NG"
     conditions["watermark_not_ng"] = rights.get("watermark_status", "UNKNOWN") != "NG"
     conditions["audio_removed"] = rights.get("audio_removed", False) if auto_fetch_result else True
     conditions["review_screenshots_exist"] = review_screenshots_exist
 
-    technical_publishable = all(conditions.values())
+    tech_conditions = {k: v for k, v in conditions.items()
+                       if k in ("duration_ok", "resolution_ok", "codec_ok",
+                                "decode_pass", "zero_kb_none", "subtitle_burned")}
+    technical_publishable = all(tech_conditions.values())
+
+    prod_keys = ("production_mode", "voicevox_used", "speaker_aoyama", "speed_095",
+                 "no_test_audio", "bgm_exists", "production_bgm_used", "bgm_license_exists",
+                 "duration_ok", "resolution_ok", "codec_ok", "subtitle_burned",
+                 "decode_pass", "zero_kb_none", "review_screenshots_exist")
+    prod_conditions = {k: conditions[k] for k in prod_keys if k in conditions}
+    user_approved = rights_status == "user_approved_for_production_review"
+    production_ready = all(prod_conditions.values()) and technical_publishable
+
+    completed = not pipeline_error
 
     embedded_rights = rights.get("embedded_footage_rights", "UNKNOWN")
-    manual_review_required = embedded_rights == "UNKNOWN" or rights.get("manual_review_required", True)
+    manual_review_required = (
+        embedded_rights == "UNKNOWN"
+        and not user_approved
+    ) or rights.get("manual_review_required", False if user_approved else True)
 
-    if manual_review_required:
+    if manual_review_required and not user_approved:
         publishable = False
     else:
-        publishable = technical_publishable
+        publishable = technical_publishable and all(conditions.values())
 
     failed = [k for k, v in conditions.items() if not v]
 
@@ -343,6 +382,8 @@ def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
         publish_blockers.append("テスト音声が使用されました（fallback_used=true）")
     if not conditions.get("bgm_exists"):
         publish_blockers.append("BGMファイルが存在しません")
+    if not conditions.get("production_bgm_used"):
+        publish_blockers.append("本番BGM6曲が使用されていません（テストトーン不可）")
     if not conditions.get("bgm_license_exists"):
         publish_blockers.append("BGMライセンス情報がありません")
     if not conditions.get("duration_ok"):
@@ -363,13 +404,17 @@ def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
         publish_blockers.append("元動画の音声が除去されていません")
     if not conditions.get("review_screenshots_exist"):
         publish_blockers.append("確認用スクリーンショットがありません")
-    if manual_review_required:
+    if manual_review_required and not user_approved:
         publish_blockers.append("荒木による目視確認が未完了です（embedded_footage_rights=UNKNOWN）")
 
     return {
         "technical_publishable": technical_publishable,
+        "production_ready": production_ready,
+        "completed": completed,
+        "final_release_approved": False,
         "manual_review_required": manual_review_required,
         "publishable": publishable,
+        "rights_status": rights_status,
         "embedded_footage_rights": embedded_rights,
         "conditions": conditions,
         "failed_conditions": failed,
@@ -377,16 +422,125 @@ def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
     }
 
 
+def run_auto_discovery(mode, logger=None):
+    """完全自動企画発掘パイプライン"""
+    research_client = get_research_client()
+    research_result = research_client.run_full_research()
+
+    candidates = research_result.get("candidates", [])
+    if logger:
+        logger.info(f"自動発掘: {research_result['total_candidates']}件の候補動画を取得"
+                     f" (API: {research_result.get('api_available', False)},"
+                     f" fixture: {research_result.get('fixture', False)})")
+
+    scored = rank_candidates(candidates)
+    if logger:
+        for i, c in enumerate(scored[:5]):
+            logger.info(f"  TOP{i+1}: {c.get('title', '')[:40]} "
+                         f"(score={c.get('overall_score', 0):.4f})")
+
+    history = load_topic_history()
+    selection = run_auto_topic_selection(scored, history)
+
+    if logger:
+        logger.info(f"自動選定: 選手={selection['selected_player']}, "
+                     f"プレー={selection['selected_play']}, "
+                     f"タイトル={selection['selected_title']}")
+
+    top_videos = scored[:5] if scored else []
+    analyses = analyze_batch(top_videos, limit=3)
+    concept = None
+    if analyses:
+        concept = generate_new_concept(
+            analyses[0], selection["selected_player"], selection["selected_play"]
+        )
+        if logger:
+            logger.info(f"参考動画の本質: {concept.get('applied_principle', '')}")
+
+    from lib.topic_discovery import PRIORITY_5_PLAYERS, PRIORITY_4_PLAYERS
+    all_players = PRIORITY_5_PLAYERS + PRIORITY_4_PLAYERS
+    keywords_en = []
+    for p in all_players:
+        if p["name"] == selection["selected_player"]:
+            keywords_en = p.get("keywords_en", [])
+            break
+
+    source_candidates = find_source_candidates(
+        selection["selected_player"], selection["selected_play"], keywords_en
+    )
+
+    return {
+        "research": research_result,
+        "scored_candidates": scored,
+        "selection": selection,
+        "analyses": analyses,
+        "concept": concept,
+        "source_candidates": source_candidates,
+        "history": history,
+    }
+
+
+def _generate_job_id(player, topic):
+    import re
+    safe = re.sub(r'[^a-zA-Z0-9　-鿿]', '_', f"{player}_{topic}")[:60]
+    ts = datetime.now().strftime("%Y%m%d%H%M%S")
+    return f"{safe}_{ts}"
+
+
 def run_pipeline(args):
     mode = determine_mode(args)
     settings = load_settings()
+    pipeline_error = False
 
     auto_fetch_result = None
+    auto_discovery_result = None
     input_video = None
+
+    if getattr(args, 'auto', False):
+        pre_log_dir = os.path.join(BASE_DIR, "outputs",
+                                   "production" if mode == "production" else "test")
+        os.makedirs(pre_log_dir, exist_ok=True)
+        pre_log = os.path.join(pre_log_dir, "auto_discovery.log")
+        pre_logger = setup_logging(pre_log)
+        pre_logger.info("=== 完全自動企画発掘パイプライン開始 ===")
+
+        auto_discovery_result = run_auto_discovery(mode, pre_logger)
+        selection = auto_discovery_result["selection"]
+        pre_logger.info(f"選定完了: {selection['selected_player']} / "
+                         f"{selection['selected_play']} / {selection['selected_title']}")
+
+        if getattr(args, 'dry_run', False):
+            print("\n=== 自動選定結果（dry-run） ===")
+            print(f"  選手: {selection['selected_player']}")
+            print(f"  プレー: {selection['selected_play']}")
+            print(f"  テーマ: {selection['selected_topic']}")
+            print(f"  タイトル: {selection['selected_title']}")
+            print(f"  タイトル候補: {selection.get('title_candidates', [])}")
+            print(f"  候補動画数: {auto_discovery_result['research']['total_candidates']}")
+            if auto_discovery_result.get("concept"):
+                print(f"  適用原則: {auto_discovery_result['concept'].get('applied_principle', '')}")
+            print(f"  選定理由: {selection.get('selection_reason', '')}")
+            dry_run_path = os.path.join(pre_log_dir, "dry_run_result.json")
+            with open(dry_run_path, "w", encoding="utf-8") as f:
+                json.dump({
+                    "selection": selection,
+                    "research_summary": {
+                        "total_candidates": auto_discovery_result["research"]["total_candidates"],
+                        "api_available": auto_discovery_result["research"].get("api_available", False),
+                    },
+                    "concept": auto_discovery_result.get("concept"),
+                    "source_candidates": auto_discovery_result.get("source_candidates"),
+                    "top_scored": [
+                        {"title": c.get("title", ""), "score": c.get("overall_score", 0)}
+                        for c in auto_discovery_result.get("scored_candidates", [])[:5]
+                    ],
+                }, f, ensure_ascii=False, indent=2)
+            print(f"\n  結果保存先: {dry_run_path}")
+            return True
 
     if args.video and os.path.exists(args.video):
         input_video = args.video
-    elif settings.get("channel", {}).get("auto_fetch", False):
+    elif not getattr(args, 'auto', False) and settings.get("channel", {}).get("auto_fetch", False):
         ts = datetime.now().strftime("%Y%m%d_%H%M%S")
         mode_label = "production" if mode == "production" else "test"
         fetch_work_dir = os.path.join(BASE_DIR, "outputs", mode_label, f"{ts}_auto_fetch_work")
@@ -408,11 +562,18 @@ def run_pipeline(args):
                 print("ザ・ダンクチャンネルの動画がメタデータ一次リスク判定を通過しませんでした。")
                 return False
 
-    if auto_fetch_result:
+    if auto_discovery_result:
+        selection = auto_discovery_result["selection"]
+        player = selection["selected_player"]
+        topic = selection["selected_topic"]
+    elif auto_fetch_result:
         player = auto_fetch_result["player"]
         topic = auto_fetch_result["topic"]
     else:
         player, topic = determine_topic_and_player(args)
+
+    job_id = _generate_job_id(player, topic)
+    source_urls = []
 
     output_dir = create_output_dir(mode, player, topic)
     log_path = os.path.join(output_dir, "execution.log")
@@ -553,23 +714,28 @@ def run_pipeline(args):
 
     logger.info("--- BGM ---")
     bgm_path = None
-    bgm_candidates_paths = [
-        os.path.join(BASE_DIR, "inputs", "bgm.wav"),
-        os.path.join(BASE_DIR, "inputs", "bgm.mp3"),
-    ]
-    for bc in bgm_candidates_paths:
-        if os.path.exists(bc):
-            bgm_path = bc
-            logger.info(f"BGM検出: {bc}")
-            break
+    bgm_rotation_index = -1
+    bgm_gain_db = -25.0
 
-    if not bgm_path and mode == "test":
+    if mode == "production":
+        bgm_validation = validate_all_bgm()
+        for bv in bgm_validation:
+            logger.info(f"  BGM_{bv['index']+1:02d}: {bv['name']} - {'OK' if bv['valid'] else bv['detail']}")
+
+        bgm_path, bgm_rotation_index = get_next_bgm(mode)
+        if bgm_path:
+            ok, detail = validate_bgm_file(bgm_path)
+            if ok:
+                logger.info(f"本番BGM選択: BGM_{bgm_rotation_index+1:02d} = {os.path.basename(bgm_path)}")
+            else:
+                logger.error(f"本番BGM検証失敗: BGM_{bgm_rotation_index+1:02d} = {detail}")
+                bgm_path = None
+        if not bgm_path:
+            logger.error("本番BGMが利用できません。production_ready=falseになります。")
+    elif mode == "test":
         bgm_path = os.path.join(output_dir, "test_bgm.wav")
         generate_bgm_tone(bgm_path, duration=70.0)
         logger.info("テスト用BGMトーン生成完了")
-
-    if not bgm_path and mode == "production":
-        logger.warning("BGMが見つかりません。inputs/bgm.wav を配置してください。")
 
     logger.info("--- 動画合成 ---")
     if mode == "test":
@@ -589,6 +755,38 @@ def run_pipeline(args):
     generate_research_files(script, output_dir)
     save_metadata_files(script, output_dir, credits_text)
     generate_trend_notes(os.path.join(output_dir, "trend_notes.txt"))
+
+    if auto_discovery_result:
+        logger.info("--- 自動発掘メタデータ保存 ---")
+        selection = auto_discovery_result["selection"]
+        save_source_candidates(auto_discovery_result["source_candidates"], output_dir)
+
+        editing_tl = generate_editing_timeline([], target_duration=55.0, script=script)
+        with open(os.path.join(output_dir, "editing_timeline.json"), "w", encoding="utf-8") as f:
+            json.dump(editing_tl, f, ensure_ascii=False, indent=2)
+        logger.info(f"編集タイムライン生成: {editing_tl['segment_count']}セグメント")
+
+        pub_pkg = generate_publishing_package(
+            player, selection["selected_play"], topic,
+            selection["selected_title"], output_dir,
+        )
+        logger.info(f"投稿パッケージ生成: タイトル={pub_pkg['title']}")
+
+        with open(os.path.join(output_dir, "auto_discovery_report.json"), "w", encoding="utf-8") as f:
+            json.dump({
+                "selection": selection,
+                "research_summary": {
+                    "total_candidates": auto_discovery_result["research"]["total_candidates"],
+                    "api_available": auto_discovery_result["research"].get("api_available", False),
+                    "fixture": auto_discovery_result["research"].get("fixture", False),
+                },
+                "concept": auto_discovery_result.get("concept"),
+                "analyses_count": len(auto_discovery_result.get("analyses", [])),
+                "top_scored": [
+                    {"title": c.get("title", ""), "score": c.get("overall_score", 0)}
+                    for c in auto_discovery_result.get("scored_candidates", [])[:5]
+                ],
+            }, f, ensure_ascii=False, indent=2)
 
     logger.info("--- ログflush ---")
     for handler in logger.handlers[:]:
@@ -648,8 +846,64 @@ def run_pipeline(args):
     bgm_license_path = os.path.join(output_dir, "bgm_license.json")
     pub = determine_publishable(
         mode, quality, tts_info, bgm_path, bgm_license_path,
-        auto_fetch_result, review_ss_exist,
+        auto_fetch_result, review_ss_exist, pipeline_error=pipeline_error,
     )
+
+    if mode == "production" and pub["completed"] and bgm_rotation_index >= 0 and bgm_path:
+        advanced = mark_completed(job_id, bgm_rotation_index, bgm_path,
+                                  timestamp=datetime.now().isoformat())
+        if advanced:
+            logger.info(f"BGM循環: 完了 job={job_id}, index={bgm_rotation_index} → 次回index={load_bgm_state()['next_bgm_index']}")
+        else:
+            logger.info(f"BGM循環: 重複job_idのため順番据え置き job={job_id}")
+
+    if auto_discovery_result and pub["completed"]:
+        history = auto_discovery_result.get("history", load_topic_history())
+        sel = auto_discovery_result["selection"]
+        history["history"].append({
+            "job_id": job_id,
+            "selected_player": sel["selected_player"],
+            "selected_play": sel["selected_play"],
+            "selected_topic": sel["selected_topic"],
+            "selected_title": sel["selected_title"],
+            "completed_at": datetime.now().isoformat(),
+        })
+        save_topic_history(history)
+        logger.info(f"トピック履歴更新: {len(history['history'])}件")
+
+    production_metadata = {
+        "job_id": job_id,
+        "player_name": player,
+        "topic": topic,
+        "production_video_sequence": load_bgm_state()["last_completed_production_sequence"],
+        "bgm_rotation_index": bgm_rotation_index,
+        "bgm_name": os.path.basename(bgm_path) if bgm_path else None,
+        "bgm_absolute_path": os.path.abspath(bgm_path) if bgm_path else None,
+        "bgm_start_time": 0.0 if bgm_path else None,
+        "bgm_end_time": quality.get("duration", 0) if bgm_path else None,
+        "bgm_gain_db": settings["bgm"].get("gain_db", -25.0),
+        "bgm_looped": False,
+        "voice_name": tts_info.get("speaker") if tts_info else None,
+        "speaker_id": tts_info.get("style_id") if tts_info else None,
+        "voice_speed": tts_info.get("speed") if tts_info else None,
+        "voicevox_connected": tts_info.get("engine") == "VOICEVOX" if tts_info else False,
+        "source_urls": source_urls,
+        "rights_status": pub["rights_status"],
+        "technical_publishable": pub["technical_publishable"],
+        "production_ready": pub["production_ready"],
+        "completed": pub["completed"],
+        "final_release_approved": pub["final_release_approved"],
+        "output_mp4_absolute_path": os.path.abspath(video_path),
+        "file_size_bytes": os.path.getsize(video_path) if os.path.exists(video_path) else 0,
+        "duration_seconds": quality.get("duration", 0),
+        "video_codec": "h264",
+        "audio_codec": "aac",
+        "resolution": f"{settings['video']['width']}x{settings['video']['height']}",
+        "fps": settings["video"]["fps"],
+        "created_at": datetime.now().isoformat(),
+    }
+    with open(os.path.join(output_dir, "production_metadata.json"), "w", encoding="utf-8") as f:
+        json.dump(production_metadata, f, ensure_ascii=False, indent=2)
 
     pub_path = os.path.join(output_dir, "publishable.json")
     with open(pub_path, "w", encoding="utf-8") as f:
@@ -728,8 +982,12 @@ def _save_status(output_dir, status, message, mode, player, topic,
     }
     if pub:
         data["technical_publishable"] = pub.get("technical_publishable", False)
+        data["production_ready"] = pub.get("production_ready", False)
+        data["completed"] = pub.get("completed", False)
+        data["final_release_approved"] = pub.get("final_release_approved", False)
         data["manual_review_required"] = pub.get("manual_review_required", True)
         data["publishable"] = pub.get("publishable", False)
+        data["rights_status"] = pub.get("rights_status", "UNKNOWN")
         data["publish_blockers"] = pub.get("publish_blockers", [])
 
     with open(os.path.join(output_dir, "status.json"), "w", encoding="utf-8") as f:
@@ -747,6 +1005,10 @@ def _save_status(output_dir, status, message, mode, player, topic,
         if pub:
             f.write(f"\n## publishable判定\n\n")
             f.write(f"- technical_publishable: {pub.get('technical_publishable', False)}\n")
+            f.write(f"- production_ready: {pub.get('production_ready', False)}\n")
+            f.write(f"- completed: {pub.get('completed', False)}\n")
+            f.write(f"- final_release_approved: {pub.get('final_release_approved', False)}\n")
+            f.write(f"- rights_status: {pub.get('rights_status', 'UNKNOWN')}\n")
             f.write(f"- manual_review_required: {pub.get('manual_review_required', True)}\n")
             f.write(f"- publishable: {pub.get('publishable', False)}\n")
             f.write(f"- embedded_footage_rights: {pub.get('embedded_footage_rights', 'UNKNOWN')}\n")
@@ -789,6 +1051,10 @@ def _print_summary(output_dir, final_path, quality, script, mode, tts_info,
     if pub:
         print(f"\n  publishable判定:")
         print(f"    technical_publishable: {pub['technical_publishable']}")
+        print(f"    production_ready: {pub.get('production_ready', False)}")
+        print(f"    completed: {pub.get('completed', False)}")
+        print(f"    final_release_approved: {pub.get('final_release_approved', False)}")
+        print(f"    rights_status: {pub.get('rights_status', 'UNKNOWN')}")
         print(f"    manual_review_required: {pub['manual_review_required']}")
         print(f"    publishable: {pub['publishable']}")
         if pub.get("failed_conditions"):

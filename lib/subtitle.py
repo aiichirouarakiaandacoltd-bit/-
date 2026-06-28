@@ -58,7 +58,7 @@ def _split_subtitle(text, max_chars=20):
         return [text]
 
     chunks = []
-    delimiters = ["。", "、", "。", "，", ".", ","]
+    delimiters = ["。", "、", "，", ".", ","]
     remaining = text
 
     while len(remaining) > max_chars:

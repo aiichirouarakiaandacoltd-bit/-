@@ -256,14 +256,21 @@ def create_video_from_frames(frame_specs, narration_path, subtitle_ass, output_p
 
     audio_final = narration_aac
     if bgm_path and os.path.exists(bgm_path):
-        bgm_vol = settings["bgm"]["volume_ratio"]
+        bgm_gain_db = settings["bgm"].get("gain_db", -25.0)
+        fade_in = settings["bgm"].get("fade_in_seconds", 1.0)
+        fade_out = settings["bgm"].get("fade_out_seconds", 1.5)
+        nar_dur = _get_duration_ffprobe(narration_aac) or 55.0
+        fade_out_start = max(0, nar_dur - fade_out)
         mixed_audio = os.path.join(temp_dir, "mixed_audio.aac")
         subprocess.run([
             "ffmpeg", "-y",
             "-i", narration_aac, "-i", bgm_path,
             "-filter_complex",
             f"[0:a]aformat=sample_rates=44100:channel_layouts=mono[a0];"
-            f"[1:a]aformat=sample_rates=44100:channel_layouts=mono,volume={bgm_vol}[a1];"
+            f"[1:a]aformat=sample_rates=44100:channel_layouts=mono,"
+            f"volume={bgm_gain_db}dB,"
+            f"afade=t=in:st=0:d={fade_in},"
+            f"afade=t=out:st={fade_out_start}:d={fade_out}[a1];"
             f"[a0][a1]amix=inputs=2:duration=shortest[out]",
             "-map", "[out]",
             "-c:a", "aac", "-b:a", "128k",

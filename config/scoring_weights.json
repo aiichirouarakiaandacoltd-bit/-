@@ -1,0 +1,10 @@
+{
+  "trend_score": 0.15,
+  "velocity_score": 0.20,
+  "small_channel_breakout_score": 0.10,
+  "shorts_fit_score": 0.15,
+  "explanation_value_score": 0.15,
+  "repeatability_score": 0.10,
+  "source_availability_score": 0.05,
+  "rights_risk_score": 0.10
+}
