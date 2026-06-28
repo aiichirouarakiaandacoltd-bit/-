@@ -222,6 +222,7 @@ def main():
         from src.bgm_config import load_bgm_config, generate_bgm_and_credits, generate_bgm_plan
         from src.validators import (
             validate_package, write_status_json, generate_package_summary,
+            validate_bgm_file,
         )
 
         logger.info("[1/9] 出典調査・ファクトチェック...")
@@ -238,6 +239,10 @@ def main():
 
         logger.info("[3/9] BGM設定読み込み・編集指示書・サムネイル指示書作成...")
         bgm_config = load_bgm_config()
+        bgm_file_result = validate_bgm_file()
+        if bgm_file_result["valid"]:
+            bgm_config["local_file_verified"] = True
+            bgm_config["bgm_file_duration_seconds"] = bgm_file_result["duration_seconds"]
         generate_video_instructions(theme, research_data, output_dir, bgm_config=bgm_config)
         generate_thumbnail_instructions(theme, research_data, output_dir)
         consolidate_instructions(output_dir, logger)

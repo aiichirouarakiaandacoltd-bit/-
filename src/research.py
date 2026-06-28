@@ -979,6 +979,68 @@ _BUILTIN_TOPICS: dict[str, dict] = {
         "thumbnail_text_a": {"upper": "なぜ日赤へ？", "lower": "愛子さまのご決意"},
         "thumbnail_text_b": {"upper": "困難な方の力に", "lower": "日赤を選ばれた理由"},
         "hashtags": "#愛子さま #日本赤十字社 #皇室 #宮内庁",
+        "title_directions": [
+            {
+                "title": "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み",
+                "category": "選択理由型",
+                "direction": "選択理由型（なぜ日赤を選んだのか）",
+                "intent": "視聴者が最も知りたい「なぜ」に正面から答える正統派タイトル",
+                "risk": "低",
+                "angle": "就職先選択の理由",
+                "click_reason": "なぜ日赤を選ばれたのかという疑問への回答",
+                "target_emotion": "知的関心",
+                "search_keyword": "愛子さま 日本赤十字社",
+                "recommended_rank": 1,
+            },
+            {
+                "title": "「困難を抱えている方の力に」――愛子内親王殿下が宮内庁文書回答で述べられたおことば",
+                "category": "公式のおことば型",
+                "direction": "公式のおことば型（文書回答の引用）",
+                "intent": "公式のおことばを引用し、信頼性と感動を両立",
+                "risk": "低",
+                "angle": "宮内庁文書回答のおことば",
+                "click_reason": "殿下ご自身のおことばへの関心",
+                "target_emotion": "感動・共感",
+                "search_keyword": "愛子さま おことば",
+                "recommended_rank": 2,
+            },
+            {
+                "title": "愛子内親王殿下の日本赤十字社でのお仕事――青少年・ボランティア課の記録",
+                "category": "仕事内容型",
+                "direction": "仕事内容型（具体的な業務内容）",
+                "intent": "具体的な仕事内容を示し、知られていない一面を伝える",
+                "risk": "低",
+                "angle": "日赤での具体的な業務",
+                "click_reason": "殿下がどんなお仕事をされているかへの興味",
+                "target_emotion": "発見・驚き",
+                "search_keyword": "愛子さま 仕事",
+                "recommended_rank": 3,
+            },
+            {
+                "title": "【公式記録でたどる】愛子内親王殿下――日赤職員としての一年",
+                "category": "職員としての歩み型",
+                "direction": "職員としての歩み型（時系列の記録）",
+                "intent": "時系列で歩みを追い、ドキュメンタリー的な展開を期待させる",
+                "risk": "低",
+                "angle": "入社から現在までの時系列",
+                "click_reason": "成長と歩みを追う丁寧な構成への期待",
+                "target_emotion": "見守る温かさ",
+                "search_keyword": "愛子さま 日赤 一年",
+                "recommended_rank": 4,
+            },
+            {
+                "title": "愛子内親王殿下が日本赤十字社で積み重ねた記録――成年皇族としての新たな歩み",
+                "category": "ストーリー型",
+                "direction": "ストーリー型（物語としての歩み）",
+                "intent": "成年皇族としての新たな章を物語として伝える",
+                "risk": "低",
+                "angle": "成年皇族としての物語",
+                "click_reason": "新たな歩みへの期待と応援",
+                "target_emotion": "応援・感動",
+                "search_keyword": "愛子さま 成年皇族",
+                "recommended_rank": 5,
+            },
+        ],
         "material_hints": {
             "opening": {
                 "required_material": "愛子内親王殿下の公式記録写真、日本赤十字社本社または赤十字を示す公式素材、タイトルテキストカード、チャンネルロゴ",
@@ -1064,7 +1126,7 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
                 "verified_excerpt": "日本赤十字社",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "direct",
+                "direct_or_contextual": "contextual",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": "",
@@ -1133,7 +1195,7 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
                 "verified_excerpt": "全国赤十字大会",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "direct",
+                "direct_or_contextual": "contextual",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
@@ -1160,7 +1222,7 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
                 "verified_excerpt": "世界災害・救急医学会（WADEM）",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "direct",
+                "direct_or_contextual": "contextual",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
@@ -1206,7 +1268,7 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "日本赤十字社公式サイト > 広報 > ニュース",
                 "verified_excerpt": "赤十字パビリオン",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "direct",
+                "direct_or_contextual": "contextual",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
@@ -1323,6 +1385,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         thumbnail_text_b = builtin.get("thumbnail_text_b")
         material_hints = builtin.get("material_hints", {})
         hashtags = builtin.get("hashtags", "")
+        title_directions = builtin.get("title_directions")
     else:
         facts = []
         sources = []
@@ -1335,6 +1398,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         thumbnail_text_b = None
         material_hints = {}
         hashtags = ""
+        title_directions = None
 
     # Classify facts by status
     confirmed = [f for f in facts if f["status"] == cfg.FactStatus.CONFIRMED]
@@ -1365,6 +1429,7 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "thumbnail_text_b": thumbnail_text_b,
         "material_hints": material_hints,
         "hashtags": hashtags,
+        "title_directions": title_directions,
         "notes": (
             "組み込み知識ベースから取得。"
             "ソースURLがNoneの項目は、正確なURLを手動で確認してください。"

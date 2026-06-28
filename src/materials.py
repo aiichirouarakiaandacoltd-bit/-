@@ -61,7 +61,7 @@ def _collect_candidate_urls(research_data, scene_key):
             if url and url not in seen:
                 seen.add(url)
                 urls.append({"url": url, "description": f"{publisher}公式 - {name}",
-                             "rights_status": "usable" if publisher else "review"})
+                             "rights_status": "review"})
         return urls
 
     section_config = research_data.get("section_config", [])
@@ -81,7 +81,7 @@ def _collect_candidate_urls(research_data, scene_key):
                     if url and url not in seen:
                         seen.add(url)
                         urls.append({"url": url, "description": f"{publisher}公式 - {name}",
-                                     "rights_status": "usable" if publisher else "review"})
+                                     "rights_status": "review"})
     return urls
 
 
@@ -227,22 +227,18 @@ def generate_materials_md(topic, research_data, output_dir):
             for cu in candidate_urls:
                 rs = cu.get("rights_status", "review")
                 lines.append(f"  - [{rs}] {cu.get('description', '')}: {cu.get('url', '')}")
-        lines.append(f"- **使用URL**: {scene['outsourcer_url'] or '（外注者が編集時に記入）'}")
+        if scene.get('outsourcer_url'):
+            lines.append(f"- **使用URL**: {scene['outsourcer_url']}")
         lines.append("")
 
     lines += [
         "---",
         "",
-        "## 外注者の素材使用記録",
+        "## 素材選定の注意事項",
         "",
-        "編集時に実際に使用した素材を以下の形式で記録してください。",
-        "",
-        "| 使用箇所 | 素材内容 | 素材元 | 使用URL |",
-        "| ---- | ---- | --- | ----- |",
-        "| （例）第1章 背景 | 宮内庁公式ページの写真 | 宮内庁公式 | https://... |",
-        "| （例）オープニング | タイトルテキストカード | 自作 | 自作・URL不要 |",
-        "",
-        "自作テキストカード、単色背景、グラデーション背景は「自作・URL不要」と記録してください。",
+        "- 公式ページに画像が掲載されていても、YouTube動画での自由な使用が許可されているとは限りません",
+        "- 公式ページの画像を使用する場合は、必ず個別に権利確認を行ってください",
+        "- 権利が不明な場合は、自作テキストカード・単色背景で代替してください",
         "",
     ]
 

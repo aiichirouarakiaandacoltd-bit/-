@@ -122,14 +122,6 @@ def _build_long_script_text(topic, research_data):
                     lines.append(narration_after)
                     lines.append("")
 
-                # Source context for facts with short narration
-                narr_len = len((narration_lead or "") + (narration_after or ""))
-                if narr_len < 120:
-                    pub = fact.get("official_publisher", "")
-                    stype = fact.get("source_type", "")
-                    if pub and stype:
-                        lines.append(f"この{stype}は、{pub}によって公式に公開されています。")
-                        lines.append("")
 
         # --- Summary / Recap ---
         lines.append("【まとめ】")
@@ -141,7 +133,6 @@ def _build_long_script_text(topic, research_data):
         body_min = estimate_reading_minutes(body_chars)
         target_min = cfg.NARRATION_TARGET_MIN_MINUTES
 
-        # Add recap section if body is under target duration
         if body_min < target_min and len(section_config) > 1:
             lines.append(f"ここまで、{_num_kanji(len(section_config))}つの章に分けて、")
             lines.append(f"「{topic}」についてお伝えしてまいりました。")
@@ -151,17 +142,16 @@ def _build_long_script_text(topic, research_data):
                 s_fids = section.get("fact_ids", [])
                 first_fact = facts_by_id.get(s_fids[0]) if s_fids else None
                 if first_fact:
-                    ex = first_fact.get("verified_excerpt", "")
                     claim = first_fact.get("claim", "")
-                    src_name = first_fact.get("source_name", "")
-                    lines.append(f"{_num_kanji(idx + 1)}つ目の「{s_title}」では、")
-                    lines.append(f"{claim}ことを確認いたしました。")
-                    if ex and src_name and ex not in claim and ex not in src_name:
-                        lines.append(f"{src_name}には「{ex}」と記されています。")
+                    if idx == 0:
+                        lines.append(f"まず「{s_title}」では、{claim}ことをお伝えしました。")
+                    elif idx == len(section_config) - 1:
+                        lines.append(f"そして「{s_title}」では、{claim}ことをたどりました。")
+                    else:
+                        lines.append(f"続く「{s_title}」では、{claim}ことをご紹介しました。")
                     lines.append("")
-            lines.append("これらの事実は、すべて公式の記録に基づいてお伝えいたしました。")
-            lines.append("公式の記録を丁寧にたどることで、確かな事実に基づいた理解を深めていただければ幸いです。")
-            lines.append("記録に残された事実をお届けすることが、このチャンネルの約束です。")
+            lines.append("いずれも、宮内庁をはじめとする公式機関の記録に基づいた事実です。")
+            lines.append("確かな記録に基づく情報をお届けすることが、このチャンネルの約束です。")
             lines.append("")
 
         if ending_context:

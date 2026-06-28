@@ -45,6 +45,12 @@ INNER_FEELINGS_PATTERNS = [
     ".*は激怒している",
     "密かに喜んでいた",
     "本心は.*だった",
+    "きっと.*でしょう",
+    "〜に違いありません",
+    "に違いありません",
+    "強い思いがあったのでしょう",
+    "思いを抱いておられた",
+    "お気持ちがあったに",
 ]
 
 IMPERIAL_HONORIFIC_RULES = [
@@ -422,24 +428,59 @@ def check_ng_expressions(script_text, title_candidates, description,
             "detail": "Shorts台本が1本以下のため重複チェック不要。",
         })
 
+    # 10b. Title duplication check
+    if title_candidates and len(title_candidates) >= 2:
+        from difflib import SequenceMatcher as _SM
+        title_dup_found = False
+        for i in range(len(title_candidates)):
+            for j in range(i + 1, len(title_candidates)):
+                t1, t2 = title_candidates[i], title_candidates[j]
+                if t1 == t2:
+                    title_dup_found = True
+                    findings.append({
+                        "item": f"タイトル案{i+1}と案{j+1}が完全一致",
+                        "location": "titles",
+                        "category": "タイトル重複",
+                        "verdict": "FAIL",
+                        "detail": f"タイトル案{i+1}「{t1}」と案{j+1}「{t2}」が完全に同一です。",
+                    })
+                elif _SM(None, t1, t2).ratio() > 0.8:
+                    title_dup_found = True
+                    ratio = _SM(None, t1, t2).ratio()
+                    findings.append({
+                        "item": f"タイトル案{i+1}と案{j+1}が類似（{ratio:.0%}）",
+                        "location": "titles",
+                        "category": "タイトル重複",
+                        "verdict": "REVIEW",
+                        "detail": f"タイトル案{i+1}「{t1}」と案{j+1}「{t2}」の類似度が{ratio:.0%}です。",
+                    })
+        if not title_dup_found:
+            findings.append({
+                "item": "タイトル重複チェック",
+                "location": "titles",
+                "category": "タイトル重複",
+                "verdict": "PASS",
+                "detail": "タイトル5案に重複・類似はありません。",
+            })
+
     # 11. Excessive repetition check
     if script_text:
         phrase_counts = {}
+        skip_prefixes = ("【", "テーマ:", "チャンネル:", "対象視聴者:", "ナレーション:", "目標尺:", "#",
+                         "「日本が誇る皇室物語」をご視聴")
         for line in script_text.split("\n"):
             stripped = line.strip()
-            if len(stripped) >= 8:
-                for other_line in script_text.split("\n"):
-                    if other_line.strip() == stripped and stripped:
-                        phrase_counts[stripped] = phrase_counts.get(stripped, 0) + 1
-        repeated = {k: v for k, v in phrase_counts.items() if v >= 4 and not k.startswith("【") and k != "=" * 60}
+            if len(stripped) >= 8 and stripped and not any(stripped.startswith(p) for p in skip_prefixes) and stripped != "=" * 60:
+                phrase_counts[stripped] = phrase_counts.get(stripped, 0) + 1
+        repeated = {k: v for k, v in phrase_counts.items() if v >= 3}
         if repeated:
             for phrase, count in list(repeated.items())[:3]:
                 findings.append({
                     "item": f"反復: {phrase[:30]}",
                     "location": "script",
                     "category": "同一表現過剰反復",
-                    "verdict": "REVIEW",
-                    "detail": f"「{phrase[:40]}」が{count}回繰り返されています。",
+                    "verdict": "FAIL",
+                    "detail": f"「{phrase[:40]}」が{count}回繰り返されています。3回以上の同一表現は禁止です。",
                 })
         else:
             findings.append({

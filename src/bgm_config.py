@@ -139,7 +139,7 @@ def generate_bgm_and_credits(bgm_config, output_dir):
     if url:
         lines.append(f"- 取得・確認URL: {url}")
     else:
-        lines.append("- 取得・確認URL: **未設定（荒木側で設定が必要）**")
+        lines.append("- 取得・確認URL: 契約音源のため公開URLなし")
 
     lines.append(f"- ライセンス: {bgm_config.get('license_status', '要確認')}")
     lines.append(f"- 商用利用: {'可' if bgm_config.get('commercial_use') else '要確認'}")
@@ -153,7 +153,7 @@ def generate_bgm_and_credits(bgm_config, output_dir):
         lines.append("- クレジット表記: 必須")
 
     contract_ev = bgm_config.get("contract_evidence_verified", False)
-    lines.append(f"- 契約証跡確認: {'確認済' if contract_ev else '未確認（荒木側で確認が必要）'}")
+    lines.append(f"- 契約証跡確認: {'確認済' if contract_ev else '未確認（公開前に最終確認推奨）'}")
     content_id = bgm_config.get("content_id_status", "unconfirmed")
     lines.append(f"- Content ID状態: {content_id}")
     local_v = bgm_config.get("local_file_verified", False)
@@ -169,7 +169,7 @@ def generate_bgm_and_credits(bgm_config, output_dir):
 
     missing = bgm_config.get("missing_items", [])
     if missing:
-        lines.append("## 荒木側で確認が必要な項目")
+        lines.append("## 確認事項（公開前チェック）")
         lines.append("")
         for item in missing:
             lines.append(f"- {item}")
@@ -239,7 +239,7 @@ def generate_bgm_plan(bgm_config, output_dir):
     if url:
         lines.append(f"- URL: {url}")
     else:
-        lines.append("- URL: **未設定（荒木側で設定が必要）**")
+        lines.append("- URL: 契約音源のため公開URLなし。ローカルファイルを使用")
     lines.append(f"- ライセンス: {bgm_config.get('license_status', '要確認')}")
     license_url = bgm_config.get("license_url")
     if license_url:

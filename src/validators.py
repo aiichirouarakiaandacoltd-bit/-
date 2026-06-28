@@ -117,7 +117,7 @@ def _validate_bgm_config(bgm_config):
             issues.append("クレジット表記が未設定")
         if has_evidence:
             if not bgm_config.get("contract_evidence_verified"):
-                warnings.append("契約証跡の実確認が未完了（荒木側で確認必要）")
+                warnings.append("契約証跡の実確認が未完了（公開前に最終確認推奨）")
             if not bgm_config.get("download_or_reference_url"):
                 warnings.append("BGM参照URLが未設定（公開URLがない契約ファイルのため警告のみ）")
         else:
@@ -129,12 +129,12 @@ def _validate_bgm_config(bgm_config):
 
     if bgm_config.get("content_id_status", "unconfirmed") == "unconfirmed":
         if is_contracted and has_evidence:
-            warnings.append("Content ID状態が未確認（荒木側で確認必要）")
+            warnings.append("Content ID状態が未確認（公開前に最終確認推奨）")
         else:
             issues.append("Content ID状態が未確認")
     if not bgm_config.get("local_file_verified"):
         if is_contracted and has_evidence:
-            warnings.append("BGMローカルファイルの検証が未完了（荒木側で確認必要）")
+            warnings.append("BGMローカルファイルの検証が未完了（公開前に最終確認推奨）")
         else:
             issues.append("BGMローカルファイルの検証が未完了")
     return issues, warnings
@@ -462,7 +462,7 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append("## BGM設定状況")
     if status.get("bgm_contracted"):
         lines.append("- ライセンス: contracted（契約済み）")
-    lines.append(f"- URL設定: {'済' if status.get('bgm_url_configured') else '未設定（荒木側で設定必要）'}")
+    lines.append(f"- URL設定: {'済' if status.get('bgm_url_configured') else '契約音源のため公開URLなし'}")
     lines.append(f"- BGM検証: {status.get('bgm_validation', '未実施')}")
     bgm_issues = status.get("bgm_issues", [])
     if bgm_issues:
@@ -470,7 +470,7 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
             lines.append(f"  - {issue}")
     bgm_warnings = status.get("bgm_warnings", [])
     if bgm_warnings:
-        lines.append("- BGM警告（荒木側で確認が必要）:")
+        lines.append("- BGM警告（公開前に確認推奨）:")
         for w in bgm_warnings:
             lines.append(f"  - {w}")
     lines.append(f"- BGMファイル検証: {'合格' if status.get('bgm_file_valid') else '未合格'}")
@@ -486,12 +486,11 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
         lines.append("- 出典の事実確認が必要です")
         lines.append("")
 
-    lines.append("## 荒木側で確認すべき項目")
+    lines.append("## 公開前チェック項目")
     lines.append("")
     lines.append("- 出典の最終確認")
     lines.append("- 外注者へ渡す前の内容確認")
     lines.append("- 素材URLの権利確認")
-    lines.append("- BGM正式URLの設定（未設定の場合）")
     lines.append("")
 
     lines.append(f"生成日時: {status.get('created_at', '')}")

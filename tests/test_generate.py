@@ -510,3 +510,204 @@ class TestProductionRedCross:
         ]
         for f in required:
             assert (pkg / f).exists(), f"{f} missing"
+
+    def test_bgm_local_file_verified_consistent(self):
+        """06_bgm_and_credits.md should say 検証済 when bgm_file_valid=true."""
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        bgm_md = (pkg / "06_bgm_and_credits.md").read_text(encoding="utf-8")
+        if meta.get("bgm_file_valid"):
+            assert "検証済" in bgm_md, "BGM file valid but 06 says 未検証"
+
+    def test_no_araki_text_in_outputs(self):
+        """No output file should contain '荒木側' text."""
+        pkg = find_latest_package()
+        for f in pkg.iterdir():
+            if f.is_file() and f.suffix in (".md", ".json"):
+                content = f.read_text(encoding="utf-8")
+                assert "荒木側" not in content, f"{f.name} still contains '荒木側'"
+
+    def test_rights_status_not_usable_for_official(self):
+        """Official page URLs should be 'review', not 'usable'."""
+        from src.materials import _collect_candidate_urls
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            urls = _collect_candidate_urls(data, "opening")
+            for u in urls:
+                assert u["rights_status"] != "usable", f"Official URL should not be 'usable': {u}"
+
+    def test_no_outsourcer_delegation_text(self):
+        """04_materials_list.md should not contain outsourcer delegation."""
+        pkg = find_latest_package()
+        content = (pkg / "04_materials_list.md").read_text(encoding="utf-8")
+        assert "外注者が編集時に記入" not in content
+        assert "外注者の素材使用記録" not in content
+
+    def test_script_no_excessive_repetition(self):
+        """Long script should not have any narration phrase repeated 3+ times."""
+        pkg = find_latest_package()
+        script = (pkg / "02_narration_script.md").read_text(encoding="utf-8")
+        skip_prefixes = ("【", "#", "テーマ:", "チャンネル:", "対象視聴者:",
+                         "ナレーション:", "目標尺:", "「日本が誇る皇室物語」をご視聴")
+        phrase_counts = {}
+        for line in script.split("\n"):
+            s = line.strip()
+            if len(s) >= 8 and s != "=" * 60 \
+                    and not any(s.startswith(p) for p in skip_prefixes):
+                phrase_counts[s] = phrase_counts.get(s, 0) + 1
+        repeated = {k: v for k, v in phrase_counts.items() if v >= 3}
+        assert not repeated, f"Phrases repeated 3+ times: {repeated}"
+
+    def test_title_5_not_duplicate_of_title_1(self):
+        """Title candidate 5 must differ from title candidate 1."""
+        from src.posting import _generate_title_candidates
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            titles = _generate_title_candidates(topic, data)
+            assert titles[0]["title"] != titles[4]["title"], "Title 1 and 5 are identical"
+
+    def test_all_5_titles_unique(self):
+        """All 5 title candidates must be unique."""
+        from src.posting import _generate_title_candidates
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            titles = _generate_title_candidates(topic, data)
+            title_texts = [t["title"] for t in titles]
+            assert len(set(title_texts)) == 5, f"Duplicate titles: {title_texts}"
+
+    def test_titles_have_extended_fields(self):
+        """Title candidates should have angle, click_reason, etc."""
+        from src.posting import _generate_title_candidates
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            titles = _generate_title_candidates(topic, data)
+            for t in titles:
+                assert t.get("angle"), f"Missing angle: {t['title']}"
+                assert t.get("click_reason"), f"Missing click_reason: {t['title']}"
+                assert t.get("target_emotion"), f"Missing target_emotion: {t['title']}"
+
+    def test_ng_repetition_threshold_3(self):
+        """Repetition of 3+ should be FAIL, not REVIEW."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        line = "この事実は公式の記録に残されています。"
+        script = "\n".join([line] * 3 + ["出典あり。"])
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            rep = [f for f in result["findings"] if f["category"] == "同一表現過剰反復" and f["verdict"] == "FAIL"]
+            assert len(rep) >= 1, "3x repetition should produce FAIL"
+
+    def test_ng_title_duplication_check(self):
+        """Identical titles should produce FAIL finding."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        titles = ["同じタイトル", "別のタイトル", "同じタイトル"]
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions("テスト台本。出典あり。", titles, "", d)
+            dup = [f for f in result["findings"] if f["category"] == "タイトル重複" and f["verdict"] == "FAIL"]
+            assert len(dup) >= 1, "Duplicate titles should produce FAIL"
+
+    def test_ng_inner_feelings_extended(self):
+        """Extended inner feelings patterns should be detected."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = "殿下には強い思いがあったのでしょう。出典あり。"
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, [], "", d)
+            inner = [f for f in result["findings"] if f["category"] == "内心描写"]
+            assert len(inner) >= 1, "Extended inner feelings not detected"
+
+    def test_fact_contextual_verification(self):
+        """Facts with short excerpts should be 'contextual', not 'direct'."""
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            for fact in data["facts"]:
+                if fact["fact_id"] in ("JR004", "JR005", "JR007", "JR008"):
+                    assert fact.get("direct_or_contextual") == "contextual", \
+                        f"{fact['fact_id']} should be contextual"
+
+    def test_confirmed_facts_at_least_2(self):
+        """Red Cross topic must have at least 2 confirmed usable facts."""
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            usable_confirmed = [f for f in data["facts"]
+                                if f.get("status") == "confirmed" and f.get("usable_in_script")
+                                and f.get("verified_excerpt")]
+            assert len(usable_confirmed) >= 2
+
+    def test_no_source_context_auto_append(self):
+        """Script should not auto-append 'この{type}は{pub}によって公式に公開されています'."""
+        from src.script_writer import _build_long_script_text
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            text = _build_long_script_text(topic, data)
+            count = text.count("によって公式に公開されています")
+            assert count == 0, f"Auto source context appeared {count} times"
+
+    def test_recap_not_mechanical(self):
+        """Recap should not repeat '確認いたしました' per section."""
+        from src.script_writer import _build_long_script_text
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            text = _build_long_script_text(topic, data)
+            count = text.count("確認いたしました")
+            assert count <= 1, f"Mechanical recap: '確認いたしました' appears {count} times"
+
+    def test_rights_report_no_auto_usable(self):
+        """Rights report with official URLs should not have overall_status 'OK'."""
+        from src.materials import generate_rights_report
+        import tempfile
+        materials_data = [
+            {"scene": "テスト", "candidate_urls": [
+                {"url": "https://www.kunaicho.go.jp/", "description": "宮内庁公式", "rights_status": "review"}
+            ]}
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            result = generate_rights_report(materials_data, {}, d)
+            assert result["overall_status"] == "review"
+
+    def test_production_no_ng_fail(self):
+        """Production package must have zero FAIL in NG check."""
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta.get("ng_check_status") != "fail", "NG check has FAIL items"
+
+    def test_long_script_min_7_minutes(self):
+        """Long script should be at least 7 minutes."""
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta.get("script_estimated_minutes", 0) >= 7.0, \
+            f"Long script too short: {meta.get('script_estimated_minutes')}min"
+
+    def test_shorts_min_45_seconds(self):
+        """Both Shorts should be at least 45 seconds."""
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta.get("shorts_01_estimated_seconds", 0) >= 45.0, \
+            f"Shorts 01 too short: {meta.get('shorts_01_estimated_seconds')}s"
+        assert meta.get("shorts_02_estimated_seconds", 0) >= 45.0, \
+            f"Shorts 02 too short: {meta.get('shorts_02_estimated_seconds')}s"
