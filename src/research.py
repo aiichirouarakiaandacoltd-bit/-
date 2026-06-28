@@ -958,22 +958,21 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             "「公務以外でも、さまざまな困難を抱えている方の\n"
             "力になれる仕事ができればと考えるようになりました」。\n\n"
             "困難を抱える方々の力になりたいという殿下のおことばが、\n"
-            "宮内庁の公式の記録に残されています。\n\n"
+            "宮内庁の公式発表に記されています。\n\n"
             "詳しくは関連動画からご覧ください。"
         ),
         "shorts_02_text": (
             "「日本が誇る皇室物語」をご視聴いただきありがとうございます。\n\n"
-            "愛子内親王殿下は、令和6年4月に日本赤十字社に入社され、\n"
-            "ボランティア情報誌「赤十字ボランティア」の編集業務に\n"
-            "携わっておられます。\n\n"
-            "令和7年の全国赤十字大会では、\n"
-            "名誉総裁である皇后陛下をお迎えする大会に、\n"
-            "職員として運営に参加されました。\n\n"
-            "殿下が編集に携わられた情報誌は、\n"
-            "日本赤十字社の公式サイトで公開されています。\n\n"
-            "成年皇族として公務を果たしながら、\n"
-            "日本赤十字社の職員としてのお仕事にも取り組まれるお姿が、\n"
-            "宮内庁の公式記録に残されています。\n\n"
+            "愛子内親王殿下は、令和6年4月に日本赤十字社に入社されました。\n\n"
+            "日本赤十字社では、ボランティア情報誌\n"
+            "「赤十字ボランティア」が発行されています。\n"
+            "殿下が配属された青少年・ボランティア課は、\n"
+            "こうした活動の推進を担う部署です。\n\n"
+            "令和7年5月には、全国赤十字大会が開催されました。\n"
+            "宮内庁の公式サイトには、この大会が\n"
+            "殿下のご活動として記録されています。\n\n"
+            "成年皇族としての活動の記録は、\n"
+            "宮内庁の公式サイトで確認することができます。\n\n"
             "詳しくは関連動画からご覧ください。"
         ),
         "thumbnail_text_a": {"upper": "なぜ日赤へ？", "lower": "愛子さまのご決意"},
@@ -1127,20 +1126,15 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "verified_excerpt": "日本赤十字社",
                 "verified_date": "2026-06-27",
                 "direct_or_contextual": "contextual",
-                "usable_in_script": True,
-                "manual_source_verification_required": False,
+                "usable_in_script": False,
+                "manual_source_verification_required": True,
                 "narration_lead": "",
                 "narration_source_intro": "",
-                "narration_after": (
-                    "令和6年4月1日、愛子内親王殿下は日本赤十字社に\n"
-                    "常勤嘱託職員として入社されました。\n"
-                    "配属先は、事業局パートナーシップ推進部\n"
-                    "ボランティア活動推進室の青少年・ボランティア課です。"
-                ),
+                "narration_after": "",
             },
             {
                 "fact_id": "JR003",
-                "claim": "愛子内親王殿下は日本赤十字社でボランティア情報誌「赤十字ボランティア」の編集業務に携わっておられる",
+                "claim": "日本赤十字社がボランティア情報誌「赤十字ボランティア」82号を公式サイトで公開している",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "日本赤十字社 赤十字ボランティア（RCV）82号",
                 "source_url": "https://www.jrc.or.jp/volunteer-and-youth/volunteer/news/2025/0318_045891.html",
@@ -1150,16 +1144,19 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "日本赤十字社公式サイト > ボランティア > ニュース > RCV82号",
                 "verified_excerpt": "赤十字ボランティア（RCV）82号",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "contextual",
+                "direct_or_contextual": "direct",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
-                    "日本赤十字社での殿下のお仕事の一つが、\n"
-                    "ボランティア情報誌「赤十字ボランティア」、通称RCVの編集です。\n"
+                    "日本赤十字社では、ボランティア情報誌\n"
+                    "「赤十字ボランティア」、通称RCVが発行されています。\n"
                     "この情報誌は、全国の赤十字ボランティアに届けられるものです。"
                 ),
                 "narration_source_intro": "日本赤十字社の公式サイトには、この情報誌について次のように掲載されています。",
-                "narration_after": "",
+                "narration_after": (
+                    "愛子内親王殿下が配属された青少年・ボランティア課は、\n"
+                    "こうしたボランティア活動の推進を担う部署です。"
+                ),
             },
             {
                 "fact_id": "JR009",
@@ -1174,18 +1171,15 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "verified_excerpt": "赤十字ボランティア（RCV）83号",
                 "verified_date": "2026-06-27",
                 "direct_or_contextual": "contextual",
-                "usable_in_script": True,
+                "usable_in_script": False,
                 "manual_source_verification_required": False,
                 "narration_lead": "",
                 "narration_source_intro": "",
-                "narration_after": (
-                    "殿下が編集に携わられたRCVは、\n"
-                    "82号、83号と継続して発行されています。"
-                ),
+                "narration_after": "",
             },
             {
                 "fact_id": "JR004",
-                "claim": "愛子内親王殿下は令和7年の全国赤十字大会に職員として運営に参加された",
+                "claim": "宮内庁の公式サイトに愛子内親王殿下のご活動として全国赤十字大会が記録されている",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "宮内庁 愛子内親王殿下のご活動",
                 "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
@@ -1195,24 +1189,24 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
                 "verified_excerpt": "全国赤十字大会",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "contextual",
+                "direct_or_contextual": "direct",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
                     "令和7年5月、全国赤十字大会が開催されました。\n"
-                    "名誉総裁である皇后陛下をお迎えするこの大会に、\n"
-                    "殿下は日本赤十字社の職員として運営に加わられました。"
+                    "宮内庁の公式サイトには、この大会が\n"
+                    "愛子内親王殿下のご活動として記録されています。"
                 ),
-                "narration_source_intro": "宮内庁の公式サイトには、殿下のご活動として記録されています。",
+                "narration_source_intro": "宮内庁の公式サイトには、次のように記録されています。",
                 "narration_after": (
-                    "皇族としてではなく、\n"
-                    "職員として運営を支える立場で参加されたことが、\n"
-                    "公式の記録に残されています。"
+                    "名誉総裁である皇后陛下をお迎えする\n"
+                    "全国赤十字大会は、日本赤十字社にとって\n"
+                    "もっとも重要な行事の一つです。"
                 ),
             },
             {
                 "fact_id": "JR005",
-                "claim": "愛子内親王殿下は令和7年5月3日にWADEM国際学会で公式スピーチを行われた",
+                "claim": "宮内庁の公式サイトに愛子内親王殿下のご活動として世界災害・救急医学会（WADEM）が記録されている",
                 "status": cfg.FactStatus.CONFIRMED,
                 "source_name": "宮内庁 愛子内親王殿下のご活動",
                 "source_url": "https://www.kunaicho.go.jp/watch/activity/activity01/activity01-3.html",
@@ -1222,16 +1216,17 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "宮内庁公式サイト > 皇室のご活動 > 愛子内親王殿下",
                 "verified_excerpt": "世界災害・救急医学会（WADEM）",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "contextual",
+                "direct_or_contextual": "direct",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
-                    "同じ令和7年5月、殿下のご活動はさらに記録されています。\n"
-                    "5月3日、世界災害・救急医学会、WADEMの国際会議が開催され、\n"
-                    "殿下は公式なスピーチに臨まれました。"
+                    "同じ令和7年5月、世界災害・救急医学会、\n"
+                    "WADEMの国際会議が開催されました。\n"
+                    "宮内庁の公式サイトには、殿下のWADEMに関する\n"
+                    "ご活動が記録されています。"
                 ),
-                "narration_source_intro": "宮内庁の公式サイトには、このご活動が記録されています。",
-                "narration_after": "国際的な学会の場でのご活動でした。",
+                "narration_source_intro": "宮内庁の公式サイトには、次のように記載されています。",
+                "narration_after": "災害医療に関わる国際的な学会です。",
             },
             {
                 "fact_id": "JR006",
@@ -1258,9 +1253,9 @@ _BUILTIN_TOPICS: dict[str, dict] = {
             },
             {
                 "fact_id": "JR007",
-                "claim": "愛子内親王殿下は令和7年5月の万博で赤十字パビリオンを視察された",
+                "claim": "日本赤十字社の公式サイトに大阪・関西万博での赤十字パビリオンに関する記事が掲載されている",
                 "status": cfg.FactStatus.CONFIRMED,
-                "source_name": "日本赤十字社 赤十字パビリオン視察",
+                "source_name": "日本赤十字社 赤十字パビリオン",
                 "source_url": "https://www.jrc.or.jp/about/publication/news/202507_topics01.html",
                 "source_type": "公式機関発表",
                 "official_publisher": "日本赤十字社",
@@ -1268,17 +1263,17 @@ _BUILTIN_TOPICS: dict[str, dict] = {
                 "resource_identifier": "日本赤十字社公式サイト > 広報 > ニュース",
                 "verified_excerpt": "赤十字パビリオン",
                 "verified_date": "2026-06-27",
-                "direct_or_contextual": "contextual",
+                "direct_or_contextual": "direct",
                 "usable_in_script": True,
                 "manual_source_verification_required": False,
                 "narration_lead": (
-                    "さらに令和7年5月、大阪・関西万博の会場で、\n"
-                    "殿下は日本赤十字社の赤十字パビリオンを視察されました。"
+                    "さらに令和7年5月、大阪・関西万博の会場に\n"
+                    "日本赤十字社の赤十字パビリオンが設けられました。"
                 ),
-                "narration_source_intro": "日本赤十字社の公式サイトには、この視察について掲載されています。",
+                "narration_source_intro": "日本赤十字社の公式サイトには、このパビリオンについて掲載されています。",
                 "narration_after": (
-                    "万博という国際的な場で\n"
-                    "赤十字の活動を視察されたことが記録されています。"
+                    "万博という国際的な場で、赤十字の理念を\n"
+                    "広く伝える取り組みが行われました。"
                 ),
             },
         ],

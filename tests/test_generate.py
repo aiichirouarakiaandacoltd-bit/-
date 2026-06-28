@@ -629,17 +629,21 @@ class TestProductionRedCross:
             inner = [f for f in result["findings"] if f["category"] == "内心描写"]
             assert len(inner) >= 1, "Extended inner feelings not detected"
 
-    def test_fact_contextual_verification(self):
-        """Facts with short excerpts should be 'contextual', not 'direct'."""
+    def test_fact_verification_integrity(self):
+        """Usable facts must have claims matching their excerpts; contextual facts must not be usable."""
         from src.research import research_topic
         import tempfile
         topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
         with tempfile.TemporaryDirectory() as d:
             data = research_topic(topic, d)
             for fact in data["facts"]:
-                if fact["fact_id"] in ("JR004", "JR005", "JR007", "JR008"):
-                    assert fact.get("direct_or_contextual") == "contextual", \
-                        f"{fact['fact_id']} should be contextual"
+                if fact.get("direct_or_contextual") == "contextual":
+                    assert not fact.get("usable_in_script"), \
+                        f"{fact['fact_id']}: contextual fact must not be usable_in_script"
+                if fact.get("usable_in_script") and fact.get("direct_or_contextual") == "direct":
+                    excerpt = fact.get("verified_excerpt", "")
+                    assert len(excerpt) >= 5, \
+                        f"{fact['fact_id']}: direct usable fact has too-short excerpt"
 
     def test_confirmed_facts_at_least_2(self):
         """Red Cross topic must have at least 2 confirmed usable facts."""
@@ -711,3 +715,66 @@ class TestProductionRedCross:
             f"Shorts 01 too short: {meta.get('shorts_01_estimated_seconds')}s"
         assert meta.get("shorts_02_estimated_seconds", 0) >= 45.0, \
             f"Shorts 02 too short: {meta.get('shorts_02_estimated_seconds')}s"
+
+
+class TestFactVerificationQuality:
+    """Regression tests: verified_excerpt must actually prove the claim."""
+
+    def _get_all_builtin_facts(self):
+        from src.research import _BUILTIN_TOPICS
+        facts = []
+        for topic_data in _BUILTIN_TOPICS.values():
+            for f in topic_data.get("facts", []):
+                facts.append(f)
+        return facts
+
+    def test_usable_fact_excerpt_not_too_short(self):
+        """confirmed+usable fact must not have an extremely short or org-name-only excerpt."""
+        import config as cfg
+        for f in self._get_all_builtin_facts():
+            if f.get("status") == cfg.FactStatus.CONFIRMED and f.get("usable_in_script"):
+                excerpt = f.get("verified_excerpt", "")
+                assert len(excerpt) >= 5, (
+                    f"{f['fact_id']}: usable fact has too-short excerpt ({len(excerpt)} chars): '{excerpt}'"
+                )
+
+    def test_direct_fact_excerpt_covers_claim_core(self):
+        """direct-verified fact with specific employment/role details must have substantive excerpt."""
+        import config as cfg
+        detail_markers = ["入社", "配属", "常勤", "嘱託", "編集業務に携わ"]
+        for f in self._get_all_builtin_facts():
+            if (f.get("status") == cfg.FactStatus.CONFIRMED
+                    and f.get("usable_in_script")
+                    and f.get("direct_or_contextual") == "direct"):
+                claim = f.get("claim", "")
+                excerpt = f.get("verified_excerpt", "")
+                has_detail = any(m in claim for m in detail_markers)
+                if has_detail:
+                    assert len(excerpt) >= 10, (
+                        f"{f['fact_id']}: direct fact with employment/role detail has too-short excerpt: '{excerpt}'"
+                    )
+
+    def test_contextual_fact_not_auto_usable(self):
+        """contextual facts must not be confirmed+usable=true."""
+        import config as cfg
+        for f in self._get_all_builtin_facts():
+            if f.get("direct_or_contextual") == "contextual":
+                is_usable = f.get("usable_in_script", False)
+                assert not is_usable, (
+                    f"{f['fact_id']}: contextual fact should not be usable_in_script=True"
+                )
+
+    def test_org_name_only_excerpt_not_proves_detailed_claim(self):
+        """An excerpt that is just an organization name must not prove a claim with specific details."""
+        import config as cfg
+        org_only_names = {"日本赤十字社", "宮内庁", "赤十字社"}
+        detail_markers = ["入社", "配属", "就職", "常勤", "嘱託", "参加", "スピーチ", "視察"]
+        for f in self._get_all_builtin_facts():
+            if f.get("status") == cfg.FactStatus.CONFIRMED and f.get("usable_in_script"):
+                excerpt = f.get("verified_excerpt", "").strip()
+                claim = f.get("claim", "")
+                if excerpt in org_only_names:
+                    has_detail = any(m in claim for m in detail_markers)
+                    assert not has_detail, (
+                        f"{f['fact_id']}: org-name-only excerpt '{excerpt}' cannot prove detailed claim: '{claim}'"
+                    )
