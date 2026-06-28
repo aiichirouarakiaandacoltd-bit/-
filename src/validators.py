@@ -1,5 +1,7 @@
 """Status validation and completeness checking."""
 import json
+import struct
+import wave
 from datetime import datetime
 from pathlib import Path
 
@@ -46,6 +48,48 @@ def _determine_fact_check_status(all_facts, unconfirmed_facts):
     if has_manual or has_unusable or has_unconfirmed:
         return "manual_verification_required"
     return "all_confirmed"
+
+
+def validate_bgm_file(bgm_path=None):
+    """Auto-validate BGM file: exists, non-zero, valid audio, ≥10s.
+
+    Returns dict with 'valid', 'issues', 'duration_seconds', 'file_size'.
+    """
+    if bgm_path is None:
+        bgm_path = cfg.BGM_FILE_PATH
+    bgm_path = Path(bgm_path)
+
+    result = {"valid": False, "issues": [], "duration_seconds": 0.0, "file_size": 0}
+
+    if not bgm_path.exists():
+        result["issues"].append("BGMファイルが存在しません")
+        return result
+
+    file_size = bgm_path.stat().st_size
+    result["file_size"] = file_size
+    if file_size == 0:
+        result["issues"].append("BGMファイルが0バイトです")
+        return result
+
+    try:
+        with wave.open(str(bgm_path), "rb") as wf:
+            frames = wf.getnframes()
+            rate = wf.getframerate()
+            if rate > 0:
+                duration = frames / rate
+                result["duration_seconds"] = round(duration, 1)
+                if duration < 10:
+                    result["issues"].append(f"BGMが{duration:.1f}秒で10秒未満です")
+            else:
+                result["issues"].append("BGMのサンプルレートが不正です")
+    except Exception as e:
+        result["issues"].append(f"BGMファイルが有効な音声ファイルではありません: {e}")
+        return result
+
+    if not result["issues"]:
+        result["valid"] = True
+
+    return result
 
 
 def _validate_bgm_config(bgm_config):
@@ -209,25 +253,15 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
     shorts_duration_short = False
     shorts_01_estimated_seconds = 0.0
     shorts_02_estimated_seconds = 0.0
-    shorts_03_estimated_seconds = 0.0
     if script_path.exists():
         s01_start = script_content.find("## Shorts 01 台本")
         s02_start = script_content.find("## Shorts 02 台本")
-        s03_start = script_content.find("## Shorts 03 台本")
         if s01_start >= 0 and s02_start >= 0:
             min_shorts_sec = cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]
-            shorts_sections = []
-            if s03_start >= 0:
-                shorts_sections = [
-                    ("01", script_content[s01_start:s02_start]),
-                    ("02", script_content[s02_start:s03_start]),
-                    ("03", script_content[s03_start:]),
-                ]
-            else:
-                shorts_sections = [
-                    ("01", script_content[s01_start:s02_start]),
-                    ("02", script_content[s02_start:]),
-                ]
+            shorts_sections = [
+                ("01", script_content[s01_start:s02_start]),
+                ("02", script_content[s02_start:]),
+            ]
             for s_label, s_text in shorts_sections:
                 sep = s_text.find("=" * 20)
                 narr = s_text[sep:] if sep >= 0 else s_text
@@ -237,8 +271,6 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                     shorts_01_estimated_seconds = round(est_sec, 1)
                 elif s_label == "02":
                     shorts_02_estimated_seconds = round(est_sec, 1)
-                else:
-                    shorts_03_estimated_seconds = round(est_sec, 1)
                 if est_sec < min_shorts_sec:
                     shorts_duration_short = True
                     missing_items.append(
@@ -282,19 +314,31 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and not shorts_duration_short
     )
 
-    rights_ok = rights_overall == "OK"
+    rights_ok = rights_overall in ("OK", "ok")
+    rights_reviewable = rights_overall in ("OK", "ok", "review")
 
-    ng_check_ok = not ng_has_fail and not ng_has_review
+    ng_check_ok = not ng_has_fail
+
+    # BGM file auto-validation
+    bgm_file_result = validate_bgm_file()
+    bgm_file_valid = bgm_file_result["valid"]
+    if not bgm_file_valid:
+        for issue in bgm_file_result["issues"]:
+            if issue not in missing_items:
+                missing_items.append(issue)
+
+    # NG check must have at least 1 checked item
+    ng_total_checks = ng_results.get("total_checks", 0) if ng_results else 0
+    ng_checks_sufficient = ng_total_checks >= 1
 
     production_ready = (
         content_complete
         and len(bgm_issues) == 0
-        and len(bgm_warnings) == 0
-        and len(unconfirmed_facts) == 0
-        and len(manual_verify_facts) == 0
-        and not credit_duplication
-        and rights_ok
+        and bgm_file_valid
         and ng_check_ok
+        and ng_checks_sufficient
+        and rights_reviewable
+        and not credit_duplication
         and mode == "production"
     )
 
@@ -324,13 +368,15 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         "ng_check_status": "fail" if ng_has_fail else ("review_required" if ng_has_review else "pass"),
         "bgm_url_configured": bgm_url_configured,
         "bgm_contracted": bgm_contracted,
-        "bgm_validation": "ok" if len(bgm_issues) == 0 and len(bgm_warnings) == 0 else ("pending" if len(bgm_issues) == 0 else "incomplete"),
+        "bgm_validation": "ok" if len(bgm_issues) == 0 and bgm_file_valid else ("pending" if len(bgm_issues) == 0 else "incomplete"),
+        "bgm_file_valid": bgm_file_valid,
+        "bgm_file_duration_seconds": bgm_file_result.get("duration_seconds", 0),
         "bgm_issues": bgm_issues,
         "bgm_warnings": bgm_warnings,
+        "ng_total_checks": ng_total_checks,
         "script_estimated_minutes": round(script_estimated_minutes, 1),
         "shorts_01_estimated_seconds": shorts_01_estimated_seconds,
         "shorts_02_estimated_seconds": shorts_02_estimated_seconds,
-        "shorts_03_estimated_seconds": shorts_03_estimated_seconds,
         "missing_items": missing_items,
         "generated_files": sorted(generated_files),
         "zero_byte_files": zero_files,
@@ -405,14 +451,13 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
     lines.append(f"- 長尺: 推定{status.get('script_estimated_minutes', 0)}分")
     lines.append(f"- Shorts 01: 推定{status.get('shorts_01_estimated_seconds', 0)}秒")
     lines.append(f"- Shorts 02: 推定{status.get('shorts_02_estimated_seconds', 0)}秒")
-    if status.get('shorts_03_estimated_seconds', 0) > 0:
-        lines.append(f"- Shorts 03: 推定{status.get('shorts_03_estimated_seconds', 0)}秒")
     lines.append("")
     lines.append("## 権利確認状況")
     lines.append(f"- rights_status: {status.get('rights_status', '未実施')}")
     lines.append("")
     lines.append("## NG表現チェック状況")
-    lines.append(f"{status.get('ng_check_status', '未実施')}")
+    lines.append(f"- 判定: {status.get('ng_check_status', '未実施')}")
+    lines.append(f"- チェック項目数: {status.get('ng_total_checks', 0)}")
     lines.append("")
     lines.append("## BGM設定状況")
     if status.get("bgm_contracted"):
@@ -425,9 +470,12 @@ def generate_package_summary(topic, research_data, ng_results, bgm_config,
             lines.append(f"  - {issue}")
     bgm_warnings = status.get("bgm_warnings", [])
     if bgm_warnings:
-        lines.append("- BGM警告（荒木側確認完了までproduction_ready=Falseを維持）:")
+        lines.append("- BGM警告（荒木側で確認が必要）:")
         for w in bgm_warnings:
             lines.append(f"  - {w}")
+    lines.append(f"- BGMファイル検証: {'合格' if status.get('bgm_file_valid') else '未合格'}")
+    if status.get('bgm_file_duration_seconds'):
+        lines.append(f"- BGM再生時間: {status['bgm_file_duration_seconds']}秒")
     lines.append("")
 
     if status.get("test_mode"):

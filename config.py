@@ -41,6 +41,7 @@ BGM_SETTINGS = {
     "content_id_status": "unconfirmed",
 }
 
+BGM_FILE_PATH = PROJECT_ROOT / "assets" / "bgm" / "UNL1337.wav"
 BGM_CONFIG_PATH = PROJECT_ROOT / "bgm_config.json"
 
 VOICEVOX_SETTINGS = {

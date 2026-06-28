@@ -1319,7 +1319,6 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         ending_context = builtin.get("ending_context", "")
         shorts_01_text = builtin.get("shorts_01_text", "")
         shorts_02_text = builtin.get("shorts_02_text", "")
-        shorts_03_text = builtin.get("shorts_03_text", "")
         thumbnail_text_a = builtin.get("thumbnail_text_a")
         thumbnail_text_b = builtin.get("thumbnail_text_b")
         material_hints = builtin.get("material_hints", {})
@@ -1332,7 +1331,6 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         ending_context = ""
         shorts_01_text = ""
         shorts_02_text = ""
-        shorts_03_text = ""
         thumbnail_text_a = None
         thumbnail_text_b = None
         material_hints = {}
@@ -1357,7 +1355,6 @@ def research_topic(topic: str, output_dir: str | Path) -> dict:
         "ending_context": ending_context,
         "shorts_01_text": shorts_01_text,
         "shorts_02_text": shorts_02_text,
-        "shorts_03_text": shorts_03_text,
         "facts": facts,
         "confirmed": confirmed,
         "partial": partial,

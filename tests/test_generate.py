@@ -349,3 +349,164 @@ class TestHonorificsExpanded:
             findings = [f for f in result["findings"]
                         if f["category"] == "敬称・敬語" and "悠仁" in f["item"]]
             assert len(findings) >= 1
+
+
+class TestShortsExactlyTwo:
+    def test_generate_shorts_returns_two(self):
+        """generate_shorts_scripts returns exactly 2 paths."""
+        from src.script_writer import generate_shorts_scripts
+        import config as cfg
+        import tempfile
+        research_data = {
+            "facts": [{"claim": "テスト事実", "status": cfg.FactStatus.CONFIRMED,
+                        "usable_in_script": True, "verified_excerpt": "テスト"}],
+        }
+        with tempfile.TemporaryDirectory() as d:
+            result = generate_shorts_scripts("テスト", research_data, d)
+            assert len(result) == 2, f"Expected 2 shorts, got {len(result)}"
+            assert result[0].name == "shorts_01_script.txt"
+            assert result[1].name == "shorts_02_script.txt"
+
+    def test_no_shorts_03_in_metadata(self):
+        """metadata.json must not contain shorts_03_estimated_seconds."""
+        from src.validators import validate_package
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            d = Path(d)
+            for f in ["01_research_report.md", "02_narration_script.md",
+                       "03_editing_instructions.md", "04_materials_list.md",
+                       "05_posting_package.md", "06_bgm_and_credits.md",
+                       "07_ng_check_report.md", "08_bgm_plan.md",
+                       "09_package_summary.md"]:
+                (d / f).write_text("test 出典", encoding="utf-8")
+            (d / "metadata.json").write_text("{}", encoding="utf-8")
+            bgm = {"file_name": "UNL1337.wav", "provider": "箕輪レコーズ",
+                    "license_status": "contracted", "contract_evidence": "テスト",
+                    "credit_text": "楽曲提供：箕輪レコーズ"}
+            status = validate_package(d, {"facts": []}, {"findings": []}, bgm, "T")
+            assert "shorts_03_estimated_seconds" not in status
+
+
+class TestNGCheckTotalChecks:
+    def test_total_checks_at_least_one(self):
+        """NG check must have total_checks >= 1 even with clean input."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        script = "愛子内親王殿下は日本赤十字社にご入社されました。出典あり。"
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions(script, ["テストタイトル"], "テスト概要", d)
+            assert result["total_checks"] >= 1, f"total_checks is {result['total_checks']}"
+            assert result["pass_count"] >= 1, "Should have PASS findings"
+
+    def test_zero_checks_prohibited(self):
+        """Even empty input should produce at least basic checks."""
+        from src.ng_check import check_ng_expressions
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            result = check_ng_expressions("テスト台本", [], "", d)
+            assert result["total_checks"] >= 1
+
+
+class TestBGMFileValidation:
+    def test_bgm_file_exists_and_valid(self):
+        """BGM file at assets/bgm/UNL1337.wav should pass validation."""
+        from src.validators import validate_bgm_file
+        result = validate_bgm_file()
+        assert result["valid"] is True, f"BGM validation failed: {result['issues']}"
+        assert result["duration_seconds"] >= 10
+        assert result["file_size"] > 0
+
+    def test_bgm_file_missing(self):
+        """Non-existent BGM file should fail validation."""
+        from src.validators import validate_bgm_file
+        result = validate_bgm_file("/nonexistent/file.wav")
+        assert result["valid"] is False
+        assert len(result["issues"]) >= 1
+
+
+class TestMaterialCandidateURLs:
+    def test_jrc_topic_has_candidate_urls(self):
+        """Red Cross topic materials should include candidate URLs."""
+        from src.materials import _build_scene_materials
+        from src.research import research_topic
+        import tempfile
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        with tempfile.TemporaryDirectory() as d:
+            data = research_topic(topic, d)
+            scenes = _build_scene_materials(topic, data)
+            has_urls = False
+            for scene in scenes:
+                if scene.get("candidate_urls"):
+                    has_urls = True
+                    break
+            assert has_urls, "Red Cross topic should have candidate URLs per scene"
+
+
+class TestRightsStatus:
+    def test_rights_status_values(self):
+        """Rights report should return valid status values."""
+        from src.materials import generate_rights_report
+        import tempfile
+        materials_data = [
+            {"scene": "テスト", "candidate_urls": [
+                {"url": "https://example.com", "description": "テスト", "rights_status": "usable"}
+            ]}
+        ]
+        with tempfile.TemporaryDirectory() as d:
+            result = generate_rights_report(materials_data, {}, d)
+            assert result["overall_status"] in ("OK", "review", "blocked", "incomplete")
+
+
+class TestTitleDirections:
+    def test_five_distinct_directions(self):
+        """Title candidates should have 5 distinct direction values."""
+        from src.posting import _generate_title_candidates
+        titles = _generate_title_candidates("テストテーマ", {"facts": []})
+        assert len(titles) == 5
+        directions = [t.get("direction", "") for t in titles]
+        assert len(set(directions)) == 5, f"Directions not unique: {directions}"
+
+
+class TestProductionRedCross:
+    @pytest.fixture(autouse=True, scope="class")
+    def _run_jrc_production(self):
+        topic = "愛子内親王殿下はなぜ日本赤十字社を選んだのか――公式の記録にみるご決意と歩み"
+        result = run_main("generate", "--production", "--theme", topic)
+        assert result.returncode == 0, f"JRC production failed:\n{result.stderr}"
+
+    def test_production_ready_true(self):
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta["production_ready"] is True, f"Not production_ready. Missing: {meta.get('missing_items', [])}"
+
+    def test_no_shorts_03(self):
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert "shorts_03_estimated_seconds" not in meta
+
+    def test_ng_checks_sufficient(self):
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta.get("ng_total_checks", 0) >= 1
+
+    def test_bgm_file_valid(self):
+        pkg = find_latest_package()
+        meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
+        assert meta.get("bgm_file_valid") is True
+
+    def test_no_zero_byte_files(self):
+        pkg = find_latest_package()
+        zero = [f.name for f in pkg.iterdir() if f.is_file() and f.stat().st_size == 0]
+        assert zero == []
+
+    def test_all_required_files_exist(self):
+        pkg = find_latest_package()
+        required = [
+            "01_research_report.md", "02_narration_script.md",
+            "03_editing_instructions.md", "04_materials_list.md",
+            "05_posting_package.md", "06_bgm_and_credits.md",
+            "07_ng_check_report.md", "08_bgm_plan.md",
+            "09_package_summary.md", "metadata.json", "execution.log",
+        ]
+        for f in required:
+            assert (pkg / f).exists(), f"{f} missing"

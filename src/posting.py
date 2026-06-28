@@ -20,6 +20,7 @@ def generate_posting_package(topic, research_data, bgm_config, output_dir):
     titles = _generate_title_candidates(topic, research_data)
     for i, t in enumerate(titles, 1):
         lines.append(f"### 案{i}: {t['title']}")
+        lines.append(f"- 方向性: {t.get('direction', t['category'])}")
         lines.append(f"- 種別: {t['category']}")
         lines.append(f"- 狙い: {t['intent']}")
         lines.append(f"- リスク: {t['risk']}")
@@ -57,15 +58,58 @@ def _generate_title_candidates(topic, research_data):
         if f.get("usable_in_script"):
             key_facts.append(f.get("claim", ""))
 
-    base = topic.replace("――", " ").replace("「", "").replace("」", "")
     short_topic = topic.split("――")[0] if "――" in topic else topic
+    subtitle = topic.split("――")[1] if "――" in topic else ""
+
+    first_excerpt = ""
+    if key_facts:
+        first_claim = key_facts[0]
+        if len(first_claim) > 30:
+            first_excerpt = first_claim[:28] + "…"
+        else:
+            first_excerpt = first_claim
 
     titles = [
-        {"title": topic, "category": "本命", "intent": "企画テーマそのまま", "risk": "低", "priority": 1},
-        {"title": f"知っていますか？{short_topic}", "category": "本命", "intent": "問いかけで関心を引く", "risk": "低", "priority": 2},
-        {"title": f"{short_topic}｜公式資料から読み解く", "category": "本命", "intent": "信頼性を訴求", "risk": "低", "priority": 3},
-        {"title": f"【解説】{short_topic}", "category": "安全", "intent": "情報整理として訴求", "risk": "低", "priority": 4},
-        {"title": f"{short_topic}を丁寧に解説します", "category": "安全", "intent": "安心感を与える", "risk": "低", "priority": 5},
+        {
+            "title": topic,
+            "category": "正攻法",
+            "intent": "企画テーマそのまま。検索にも強い正統派タイトル",
+            "risk": "低",
+            "priority": 1,
+            "direction": "正攻法（テーマ直球）",
+        },
+        {
+            "title": f"知っていますか？{short_topic}",
+            "category": "問いかけ型",
+            "intent": "視聴者に問いかけ、知的好奇心で再生を促す",
+            "risk": "低",
+            "priority": 2,
+            "direction": "問いかけ型（知的好奇心）",
+        },
+        {
+            "title": f"{short_topic}｜公式資料から読み解く",
+            "category": "信頼性訴求型",
+            "intent": "公式資料ベースであることを明示し、信頼性で差別化",
+            "risk": "低",
+            "priority": 3,
+            "direction": "信頼性訴求型（出典明示）",
+        },
+        {
+            "title": f"【丁寧に解説】{short_topic}",
+            "category": "安心感型",
+            "intent": "シニア視聴者に「分かりやすそう」と思わせる",
+            "risk": "低",
+            "priority": 4,
+            "direction": "安心感型（シニア向け）",
+        },
+        {
+            "title": f"{short_topic}――記録が語る真実" if not subtitle else f"{short_topic}――{subtitle}",
+            "category": "ストーリー型",
+            "intent": "物語性・ドキュメンタリー感を演出し興味を引く",
+            "risk": "低",
+            "priority": 5,
+            "direction": "ストーリー型（物語性）",
+        },
     ]
     return titles
 

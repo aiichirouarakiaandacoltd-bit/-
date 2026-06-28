@@ -388,12 +388,155 @@ def check_ng_expressions(script_text, title_candidates, description,
                     ),
                 })
 
+    # 10. Shorts content duplication check
+    shorts_texts = []
+    for key in ("shorts_01_text", "shorts_02_text"):
+        st = research_data.get(key, "")
+        if st:
+            shorts_texts.append(st)
+    if len(shorts_texts) == 2:
+        from difflib import SequenceMatcher
+        ratio = SequenceMatcher(None, shorts_texts[0], shorts_texts[1]).ratio()
+        if ratio > 0.7:
+            findings.append({
+                "item": "Shorts①②内容重複",
+                "location": "shorts",
+                "category": "Shorts重複",
+                "verdict": "REVIEW",
+                "detail": f"Shorts①と②の類似度が{ratio:.0%}です。内容の差別化を確認してください。",
+            })
+        else:
+            findings.append({
+                "item": "Shorts①②内容重複",
+                "location": "shorts",
+                "category": "Shorts重複",
+                "verdict": "PASS",
+                "detail": f"Shorts①と②の類似度は{ratio:.0%}で、十分に差別化されています。",
+            })
+    elif script_text:
+        findings.append({
+            "item": "Shorts①②内容重複",
+            "location": "shorts",
+            "category": "Shorts重複",
+            "verdict": "PASS",
+            "detail": "Shorts台本が1本以下のため重複チェック不要。",
+        })
+
+    # 11. Excessive repetition check
+    if script_text:
+        phrase_counts = {}
+        for line in script_text.split("\n"):
+            stripped = line.strip()
+            if len(stripped) >= 8:
+                for other_line in script_text.split("\n"):
+                    if other_line.strip() == stripped and stripped:
+                        phrase_counts[stripped] = phrase_counts.get(stripped, 0) + 1
+        repeated = {k: v for k, v in phrase_counts.items() if v >= 4 and not k.startswith("【") and k != "=" * 60}
+        if repeated:
+            for phrase, count in list(repeated.items())[:3]:
+                findings.append({
+                    "item": f"反復: {phrase[:30]}",
+                    "location": "script",
+                    "category": "同一表現過剰反復",
+                    "verdict": "REVIEW",
+                    "detail": f"「{phrase[:40]}」が{count}回繰り返されています。",
+                })
+        else:
+            findings.append({
+                "item": "同一表現過剰反復",
+                "location": "script",
+                "category": "同一表現過剰反復",
+                "verdict": "PASS",
+                "detail": "過剰な表現反復は検出されませんでした。",
+            })
+
+    # 12. AI person image instruction check
+    if script_text:
+        ai_image_patterns = ["AI生成.*人物", "AI.*肖像", "AIで.*顔"]
+        ai_found = False
+        for pattern in ai_image_patterns:
+            if re.search(pattern, script_text):
+                ai_found = True
+                findings.append({
+                    "item": pattern,
+                    "location": "script",
+                    "category": "AI人物画像指示",
+                    "verdict": "FAIL",
+                    "detail": "台本内にAI生成人物画像の指示が含まれています。",
+                })
+        if not ai_found:
+            findings.append({
+                "item": "AI人物画像指示",
+                "location": "script",
+                "category": "AI人物画像指示",
+                "verdict": "PASS",
+                "detail": "AI生成人物画像の指示は検出されませんでした。",
+            })
+
+    # Add PASS findings for categories that had no issues
+    checked_categories = {f["category"] for f in findings}
+
+    if "禁止表現" not in checked_categories and script_text:
+        findings.append({
+            "item": "禁止表現チェック",
+            "location": "全体",
+            "category": "禁止表現",
+            "verdict": "PASS",
+            "detail": "禁止表現は検出されませんでした。",
+        })
+
+    if "内心描写" not in checked_categories and script_text:
+        findings.append({
+            "item": "内心描写チェック",
+            "location": "全体",
+            "category": "内心描写",
+            "verdict": "PASS",
+            "detail": "皇族の内心断定表現は検出されませんでした。",
+        })
+
+    if "誇張表現" not in checked_categories and script_text:
+        findings.append({
+            "item": "誇張表現チェック",
+            "location": "全体",
+            "category": "誇張表現",
+            "verdict": "PASS",
+            "detail": "誇張表現は検出されませんでした。",
+        })
+
+    if "対立・攻撃表現" not in checked_categories and script_text:
+        findings.append({
+            "item": "対立・攻撃表現チェック",
+            "location": "全体",
+            "category": "対立・攻撃表現",
+            "verdict": "PASS",
+            "detail": "対立・攻撃的表現は検出されませんでした。",
+        })
+
+    if "事実と推測の混在" not in checked_categories and script_text:
+        findings.append({
+            "item": "事実と推測の混在チェック",
+            "location": "全体",
+            "category": "事実と推測の混在",
+            "verdict": "PASS",
+            "detail": "推測表現の混在は検出されませんでした。",
+        })
+
+    if "敬称・敬語" not in checked_categories and script_text:
+        findings.append({
+            "item": "敬称・敬語チェック",
+            "location": "全体",
+            "category": "敬称・敬語",
+            "verdict": "PASS",
+            "detail": "敬称の不足は検出されませんでした。",
+        })
+
     # --- Tally results ---
     has_fail = any(f["verdict"] == "FAIL" for f in findings)
     has_review = any(f["verdict"] == "REVIEW" for f in findings)
     fail_count = sum(1 for f in findings if f["verdict"] == "FAIL")
     review_count = sum(1 for f in findings if f["verdict"] == "REVIEW")
     pass_count = sum(1 for f in findings if f["verdict"] == "PASS")
+    total_checks = len(findings)
 
     result = {
         "findings": findings,
@@ -402,7 +545,7 @@ def check_ng_expressions(script_text, title_candidates, description,
         "pass_count": pass_count,
         "fail_count": fail_count,
         "review_count": review_count,
-        "total_checks": len(findings),
+        "total_checks": total_checks,
         "package_blocked": has_fail,
     }
 

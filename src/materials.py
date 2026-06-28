@@ -41,6 +41,50 @@ PROHIBITED_SOURCES = [
 ]
 
 
+def _collect_candidate_urls(research_data, scene_key):
+    """Collect candidate URLs from research data facts for a given scene."""
+    urls = []
+    facts = research_data.get("facts", [])
+    material_hints = research_data.get("material_hints", {})
+    hint = material_hints.get(scene_key, {})
+
+    candidate_urls = hint.get("candidate_urls", [])
+    if candidate_urls:
+        return candidate_urls
+
+    if scene_key == "opening":
+        seen = set()
+        for f in facts[:2]:
+            url = f.get("source_url")
+            name = f.get("source_name", "")
+            publisher = f.get("official_publisher", "")
+            if url and url not in seen:
+                seen.add(url)
+                urls.append({"url": url, "description": f"{publisher}公式 - {name}",
+                             "rights_status": "usable" if publisher else "review"})
+        return urls
+
+    section_config = research_data.get("section_config", [])
+    facts_by_id = {f["fact_id"]: f for f in facts if f.get("usable_in_script")}
+
+    if scene_key.startswith("ch"):
+        ch_idx = int(scene_key[2:]) - 1
+        if ch_idx < len(section_config):
+            fact_ids = section_config[ch_idx].get("fact_ids", [])
+            seen = set()
+            for fid in fact_ids:
+                fact = facts_by_id.get(fid)
+                if fact:
+                    url = fact.get("source_url")
+                    name = fact.get("source_name", "")
+                    publisher = fact.get("official_publisher", "")
+                    if url and url not in seen:
+                        seen.add(url)
+                        urls.append({"url": url, "description": f"{publisher}公式 - {name}",
+                                     "rights_status": "usable" if publisher else "review"})
+    return urls
+
+
 def _build_scene_materials(topic, research_data):
     """Build scene-by-scene material instruction rows from research data."""
     scenes = []
@@ -51,6 +95,8 @@ def _build_scene_materials(topic, research_data):
     material_hints = research_data.get("material_hints", {})
     opening_hint = material_hints.get("opening", {})
 
+    opening_urls = _collect_candidate_urls(research_data, "opening")
+
     scenes.append({
         "material_id": "MAT-001",
         "scene": "オープニング（0:00〜）",
@@ -59,6 +105,7 @@ def _build_scene_materials(topic, research_data):
         "source_suggestion": opening_hint.get("source_suggestion", "自作テキストカード／単色背景"),
         "prohibited": "皇族のAI生成画像",
         "self_made_alternative": opening_hint.get("self_made_alternative", "テーマ名と「日本が誇る皇室物語」ロゴをテキストカードで構成"),
+        "candidate_urls": opening_urls,
         "outsourcer_url": "",
     })
 
@@ -75,6 +122,7 @@ def _build_scene_materials(topic, research_data):
 
         ch_key = f"ch{ch_idx + 1}"
         hint = material_hints.get(ch_key, {})
+        ch_urls = _collect_candidate_urls(research_data, ch_key)
 
         scenes.append({
             "material_id": f"MAT-{ch_idx + 2:03d}",
@@ -84,10 +132,12 @@ def _build_scene_materials(topic, research_data):
             "source_suggestion": hint.get("source_suggestion", "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード"),
             "prohibited": hint.get("prohibited", "AI生成画像／出典不明画像／報道写真の無断使用"),
             "self_made_alternative": hint.get("self_made_alternative", "公式情報をテロップで引用表示。背景は単色またはグラデーション"),
+            "candidate_urls": ch_urls,
             "outsourcer_url": "",
         })
 
     if not section_config:
+        main_urls = _collect_candidate_urls(research_data, "ch1")
         scenes.append({
             "material_id": "MAT-002",
             "scene": "本編",
@@ -96,6 +146,7 @@ def _build_scene_materials(topic, research_data):
             "source_suggestion": "宮内庁公式ページ／公的機関の公式ページ／自作テキストカード",
             "prohibited": "AI生成画像／出典不明画像／報道写真の無断使用",
             "self_made_alternative": "公式情報をテロップで引用表示。背景は単色またはグラデーション",
+            "candidate_urls": main_urls,
             "outsourcer_url": "",
         })
 
@@ -108,6 +159,7 @@ def _build_scene_materials(topic, research_data):
         "source_suggestion": "自作テキストカード",
         "prohibited": "なし",
         "self_made_alternative": "チャンネル名・登録誘導テキストを自作",
+        "candidate_urls": [],
         "outsourcer_url": "",
     })
 
@@ -169,6 +221,12 @@ def generate_materials_md(topic, research_data, output_dir):
         lines.append(f"- **推奨素材元**: {scene['source_suggestion']}")
         lines.append(f"- **使用禁止**: {scene['prohibited']}")
         lines.append(f"- **自作代替**: {scene['self_made_alternative']}")
+        candidate_urls = scene.get("candidate_urls", [])
+        if candidate_urls:
+            lines.append(f"- **候補URL**:")
+            for cu in candidate_urls:
+                rs = cu.get("rights_status", "review")
+                lines.append(f"  - [{rs}] {cu.get('description', '')}: {cu.get('url', '')}")
         lines.append(f"- **使用URL**: {scene['outsourcer_url'] or '（外注者が編集時に記入）'}")
         lines.append("")
 
@@ -204,13 +262,54 @@ def generate_material_urls_csv(topic, research_data, output_dir):
 
 
 def generate_rights_report(materials_data, ng_results, output_dir):
-    """Write rights_report.md — simplified guidance for outsourcers.
+    """Write rights_report.md with per-material rights status.
 
-    Since material URLs are filled in by outsourcers at edit time,
-    the rights report provides guidance rather than per-URL judgments.
+    Evaluates each scene's candidate URLs and assigns:
+    - usable: public official source, clearly available
+    - review: needs human confirmation of license
+    - blocked: prohibited source type
+    - incomplete: no candidate URL provided
     """
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    scene_statuses = []
+    has_ng = False
+    has_review = False
+    has_incomplete = False
+
+    scenes = materials_data if isinstance(materials_data, list) else []
+    for scene in scenes:
+        candidate_urls = scene.get("candidate_urls", [])
+        scene_name = scene.get("scene", scene.get("material_id", ""))
+
+        if not candidate_urls:
+            scene_statuses.append({"scene": scene_name, "status": "incomplete",
+                                   "detail": "候補URLなし（自作代替で対応可能）"})
+            has_incomplete = True
+            continue
+
+        scene_status = "usable"
+        for cu in candidate_urls:
+            rs = cu.get("rights_status", "review")
+            if rs == "blocked":
+                has_ng = True
+                scene_status = "blocked"
+            elif rs == "review" and scene_status != "blocked":
+                has_review = True
+                scene_status = "review"
+
+        scene_statuses.append({"scene": scene_name, "status": scene_status,
+                               "detail": f"{len(candidate_urls)}件の候補URL"})
+
+    if has_ng:
+        overall = "blocked"
+    elif has_review:
+        overall = "review"
+    elif has_incomplete and not any(s["status"] == "usable" for s in scene_statuses):
+        overall = "incomplete"
+    else:
+        overall = "OK"
 
     lines = [
         "# 権利確認ガイド",
@@ -220,7 +319,18 @@ def generate_rights_report(materials_data, ng_results, output_dir):
         "",
         "## 総合判定",
         "",
-        "**OK**（素材指示書の条件に従って外注者が選定）",
+        f"**{overall}**",
+        "",
+        "## 場面別権利状況",
+        "",
+    ]
+
+    for ss in scene_statuses:
+        status_label = {"usable": "使用可", "review": "要確認", "blocked": "使用不可",
+                        "incomplete": "候補なし"}.get(ss["status"], ss["status"])
+        lines.append(f"- [{status_label}] {ss['scene']}: {ss['detail']}")
+
+    lines += [
         "",
         "## 素材選定の原則",
         "",
@@ -243,7 +353,7 @@ def generate_rights_report(materials_data, ng_results, output_dir):
     report_path.write_text("\n".join(lines), encoding="utf-8")
 
     return {
-        "overall_status": "OK",
-        "has_ng": False,
-        "has_review": False,
+        "overall_status": overall,
+        "has_ng": has_ng,
+        "has_review": has_review,
     }
