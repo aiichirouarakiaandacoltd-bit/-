@@ -54,11 +54,18 @@ def run_quality_check(video_path, mode="production", tts_info=None):
     settings = load_settings()
     results = []
     overall_pass = True
+    individual = {
+        "resolution_ok": False,
+        "codec_ok": False,
+        "duration_ok": False,
+        "decode_ok": False,
+    }
 
     if not os.path.exists(video_path):
         return {
             "pass": False,
             "checks": [{"name": "ファイル存在", "pass": False, "detail": "ファイルが見つかりません"}],
+            **individual,
         }
 
     file_size = os.path.getsize(video_path)
@@ -73,7 +80,7 @@ def run_quality_check(video_path, mode="production", tts_info=None):
     probe = run_ffprobe(video_path)
     if "error" in probe:
         results.append({"name": "ffprobe", "pass": False, "detail": probe["error"]})
-        return {"pass": False, "checks": results}
+        return {"pass": False, "checks": results, **individual}
 
     video_stream = None
     audio_stream = None
@@ -89,15 +96,15 @@ def run_quality_check(video_path, mode="production", tts_info=None):
     else:
         w = int(video_stream.get("width", 0))
         h = int(video_stream.get("height", 0))
-        ok = w == settings["video"]["width"] and h == settings["video"]["height"]
-        results.append({"name": "解像度", "pass": ok, "detail": f"{w}x{h}"})
-        if not ok:
+        res_ok = w == settings["video"]["width"] and h == settings["video"]["height"]
+        results.append({"name": "解像度", "pass": res_ok, "detail": f"{w}x{h}"})
+        if not res_ok:
             overall_pass = False
 
         codec = video_stream.get("codec_name", "")
-        ok = codec == "h264"
-        results.append({"name": "映像コーデック", "pass": ok, "detail": codec})
-        if not ok:
+        codec_ok = codec == "h264"
+        results.append({"name": "映像コーデック", "pass": codec_ok, "detail": codec})
+        if not codec_ok:
             overall_pass = False
 
         pix_fmt = video_stream.get("pix_fmt", "")
@@ -117,6 +124,9 @@ def run_quality_check(video_path, mode="production", tts_info=None):
         if not ok:
             overall_pass = False
 
+        individual["resolution_ok"] = res_ok
+        individual["codec_ok"] = codec_ok
+
     if not audio_stream:
         results.append({"name": "音声ストリーム", "pass": False, "detail": "音声ストリームなし"})
         overall_pass = False
@@ -130,27 +140,18 @@ def run_quality_check(video_path, mode="production", tts_info=None):
     duration = float(probe.get("format", {}).get("duration", 0))
     min_dur = settings["video"]["min_duration"]
     max_dur = settings["video"]["max_duration"]
-    ok = min_dur <= duration <= max_dur
-    results.append({"name": "再生時間", "pass": ok, "detail": f"{duration:.2f}秒 (規定: {min_dur}-{max_dur}秒)"})
-    if not ok:
+    dur_ok = min_dur <= duration <= max_dur
+    results.append({"name": "再生時間", "pass": dur_ok, "detail": f"{duration:.2f}秒 (規定: {min_dur}-{max_dur}秒)"})
+    if not dur_ok:
         overall_pass = False
+    individual["duration_ok"] = dur_ok
 
     decode = run_decode_check(video_path)
-    results.append({"name": "decode検査", "pass": decode["ok"], "detail": decode["errors"] if decode["errors"] else "OK"})
-    if not decode["ok"]:
+    dec_ok = decode["ok"]
+    results.append({"name": "decode検査", "pass": dec_ok, "detail": decode["errors"] if decode["errors"] else "OK"})
+    if not dec_ok:
         overall_pass = False
-
-    output_dir = os.path.dirname(video_path)
-    zero_files = check_zero_kb(output_dir)
-    ok = len(zero_files) == 0
-    results.append({"name": "0KB検査", "pass": ok, "detail": f"{len(zero_files)}件" + (f": {zero_files}" if zero_files else "")})
-    if not ok:
-        overall_pass = False
-        for zf in zero_files:
-            try:
-                os.remove(zf)
-            except OSError:
-                pass
+    individual["decode_ok"] = dec_ok
 
     if mode == "production" and tts_info:
         ok = tts_info.get("engine") == "VOICEVOX"
@@ -173,7 +174,14 @@ def run_quality_check(video_path, mode="production", tts_info=None):
         if not ok_fb:
             overall_pass = False
 
-    return {"pass": overall_pass, "checks": results, "duration": duration, "probe": probe, "tts_info": tts_info}
+    return {
+        "pass": overall_pass,
+        "checks": results,
+        "duration": duration,
+        "probe": probe,
+        "tts_info": tts_info,
+        **individual,
+    }
 
 
 def save_quality_report(result, output_path, mode="test"):

@@ -42,15 +42,17 @@ from lib.auto_fetch import run_auto_fetch_pipeline
 
 
 def setup_logging(log_path):
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
-        handlers=[
-            logging.FileHandler(log_path, encoding="utf-8"),
-            logging.StreamHandler(sys.stdout),
-        ],
-    )
-    return logging.getLogger("the_dunk")
+    logger = logging.getLogger("the_dunk")
+    logger.setLevel(logging.INFO)
+    for h in logger.handlers[:]:
+        logger.removeHandler(h)
+    fh = logging.FileHandler(log_path, encoding="utf-8")
+    fh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    sh = logging.StreamHandler(sys.stdout)
+    sh.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    logger.addHandler(fh)
+    logger.addHandler(sh)
+    return logger
 
 
 def parse_args():
@@ -146,7 +148,7 @@ def generate_research_files(script, output_dir):
             f.write(f'"{fact["fact_id"]}","{fact["claim"]}","{fact["status"]}","{fact["source_organization"]}","{fact["source_url"]}","{fact["published_date"]}"\n')
 
 
-def generate_rights_files(output_dir, mode):
+def generate_rights_files(output_dir, mode, auto_fetch_result=None):
     materials = {
         "materials": [
             {
@@ -176,20 +178,40 @@ def generate_rights_files(output_dir, mode):
     with open(os.path.join(output_dir, "rights_report.md"), "w", encoding="utf-8") as f:
         f.write("# 権利レポート\n\n")
         f.write(f"生成日: {datetime.now().strftime('%Y-%m-%d %H:%M')}\n\n")
-        f.write("## 使用素材\n\n")
-        for m in materials["materials"]:
-            f.write(f"- {m['file_path']}: {m['permission_type']} ({m['rights_status']})\n")
-        f.write("\n## 判定\n\n")
-        f.write("- owned素材のみ使用\n")
-        f.write("- 第三者素材の無断使用なし\n")
-        f.write("- reference_only素材の混入なし\n")
+        if auto_fetch_result and auto_fetch_result.get("rights"):
+            r = auto_fetch_result["rights"]
+            f.write("## メタデータ一次リスク判定\n\n")
+            f.write(f"- channel_source_permission: {r.get('channel_source_permission', 'UNKNOWN')}\n")
+            f.write(f"- embedded_footage_rights: {r.get('embedded_footage_rights', 'UNKNOWN')}\n")
+            f.write(f"- metadata_risk_status: {r.get('metadata_risk_status', 'UNKNOWN')}\n")
+            f.write(f"- audio_risk_status: {r.get('audio_risk_status', 'UNKNOWN')}\n")
+            f.write(f"- watermark_status: {r.get('watermark_status', 'UNKNOWN')}\n")
+            f.write(f"- audio_removed: {r.get('audio_removed', False)}\n")
+            f.write(f"- manual_review_required: {r.get('manual_review_required', True)}\n")
+            f.write(f"- publishable: {r.get('publishable', False)}\n\n")
+            if r.get("risk_factors"):
+                f.write("## リスク要因\n\n")
+                for rf in r["risk_factors"]:
+                    f.write(f"- {rf}\n")
+            if r.get("notes"):
+                f.write("\n## 注意事項\n\n")
+                for n in r["notes"]:
+                    f.write(f"- {n}\n")
+            if r.get("youtube_studio_check_required"):
+                f.write("\n## YouTube Studioで確認が必要な項目\n\n")
+                for item in r["youtube_studio_check_required"]:
+                    f.write(f"- {item}\n")
+            if r.get("metadata_unavailable"):
+                f.write("\n## 取得できなかった情報\n\n")
+                for item in r["metadata_unavailable"]:
+                    f.write(f"- {item}\n")
+        else:
+            f.write("## 使用素材\n\n")
+            for m in materials["materials"]:
+                f.write(f"- {m['file_path']}: {m['permission_type']} ({m['rights_status']})\n")
 
-    bgm_license = {
-        "bgm": []
-    }
-    sfx_license = {
-        "sfx": []
-    }
+    bgm_license = {"bgm": []}
+    sfx_license = {"sfx": []}
 
     if mode == "test":
         bgm_license["bgm"].append({
@@ -255,6 +277,106 @@ def adjust_script_for_duration(script, narration_text, duration, settings, attem
     return script, new_narration, None
 
 
+def determine_publishable(mode, quality, tts_info, bgm_path, bgm_license_path,
+                          auto_fetch_result, review_screenshots_exist):
+    """
+    publishable判定
+
+    全条件を満たした場合のみ technical_publishable = True。
+    embedded_footage_rights が UNKNOWN の場合は publishable = False。
+    荒木側が確認済みに変更した場合のみ最終publishable = True。
+    """
+    conditions = {}
+    conditions["production_mode"] = mode == "production"
+    conditions["voicevox_used"] = tts_info.get("engine") == "VOICEVOX" if tts_info else False
+    conditions["speaker_aoyama"] = tts_info.get("speaker") == "青山龍星" if tts_info else False
+    conditions["speed_095"] = tts_info.get("speed") == 0.95 if tts_info else False
+    conditions["no_test_audio"] = tts_info.get("fallback_used") is False if tts_info else False
+    conditions["bgm_exists"] = bgm_path is not None and os.path.exists(bgm_path) if bgm_path else False
+
+    bgm_license_ok = False
+    if bgm_license_path and os.path.exists(bgm_license_path):
+        try:
+            with open(bgm_license_path, "r", encoding="utf-8") as f:
+                bl = json.load(f)
+            if bl.get("bgm") and len(bl["bgm"]) > 0:
+                bgm_license_ok = True
+        except Exception:
+            pass
+    conditions["bgm_license_exists"] = bgm_license_ok
+
+    conditions["duration_ok"] = quality.get("duration_ok", False) if quality else False
+    conditions["resolution_ok"] = quality.get("resolution_ok", False) if quality else False
+    conditions["codec_ok"] = quality.get("codec_ok", False) if quality else False
+    conditions["subtitle_burned"] = True
+    conditions["decode_pass"] = quality.get("decode_ok", False) if quality else False
+    conditions["zero_kb_none"] = quality.get("zero_kb_ok", False) if quality else False
+
+    rights = auto_fetch_result.get("rights", {}) if auto_fetch_result else {}
+    conditions["metadata_risk_not_ng"] = rights.get("metadata_risk_status", "UNKNOWN") != "NG"
+    conditions["watermark_not_ng"] = rights.get("watermark_status", "UNKNOWN") != "NG"
+    conditions["audio_removed"] = rights.get("audio_removed", False) if auto_fetch_result else True
+    conditions["review_screenshots_exist"] = review_screenshots_exist
+
+    technical_publishable = all(conditions.values())
+
+    embedded_rights = rights.get("embedded_footage_rights", "UNKNOWN")
+    manual_review_required = embedded_rights == "UNKNOWN" or rights.get("manual_review_required", True)
+
+    if manual_review_required:
+        publishable = False
+    else:
+        publishable = technical_publishable
+
+    failed = [k for k, v in conditions.items() if not v]
+
+    publish_blockers = []
+    if not conditions.get("production_mode"):
+        publish_blockers.append("テストモードで実行されました（本番モードが必要）")
+    if not conditions.get("voicevox_used"):
+        publish_blockers.append("VOICEVOX音声が使用されていません")
+    if not conditions.get("speaker_aoyama"):
+        publish_blockers.append("話者が青山龍星ではありません")
+    if not conditions.get("speed_095"):
+        publish_blockers.append("速度が0.95ではありません")
+    if not conditions.get("no_test_audio"):
+        publish_blockers.append("テスト音声が使用されました（fallback_used=true）")
+    if not conditions.get("bgm_exists"):
+        publish_blockers.append("BGMファイルが存在しません")
+    if not conditions.get("bgm_license_exists"):
+        publish_blockers.append("BGMライセンス情報がありません")
+    if not conditions.get("duration_ok"):
+        publish_blockers.append("再生時間が規定範囲外です")
+    if not conditions.get("resolution_ok"):
+        publish_blockers.append("解像度が1080x1920ではありません")
+    if not conditions.get("codec_ok"):
+        publish_blockers.append("映像コーデックがH.264ではありません")
+    if not conditions.get("decode_pass"):
+        publish_blockers.append("decode検査でエラーが検出されました")
+    if not conditions.get("zero_kb_none"):
+        publish_blockers.append("0KBファイルが検出されました")
+    if not conditions.get("metadata_risk_not_ng"):
+        publish_blockers.append("メタデータ一次リスク判定がNGです")
+    if not conditions.get("watermark_not_ng"):
+        publish_blockers.append("ウォーターマーク判定がNGです")
+    if not conditions.get("audio_removed"):
+        publish_blockers.append("元動画の音声が除去されていません")
+    if not conditions.get("review_screenshots_exist"):
+        publish_blockers.append("確認用スクリーンショットがありません")
+    if manual_review_required:
+        publish_blockers.append("荒木による目視確認が未完了です（embedded_footage_rights=UNKNOWN）")
+
+    return {
+        "technical_publishable": technical_publishable,
+        "manual_review_required": manual_review_required,
+        "publishable": publishable,
+        "embedded_footage_rights": embedded_rights,
+        "conditions": conditions,
+        "failed_conditions": failed,
+        "publish_blockers": publish_blockers,
+    }
+
+
 def run_pipeline(args):
     mode = determine_mode(args)
     settings = load_settings()
@@ -283,7 +405,7 @@ def run_pipeline(args):
             fetch_logger.error("自動取得失敗: 使用可能な動画が見つかりませんでした")
             if mode == "production":
                 print("\nエラー: 自動取得で使用可能な動画が見つかりませんでした。")
-                print("ザ・ダンクチャンネルの動画が権利判定を通過しませんでした。")
+                print("ザ・ダンクチャンネルの動画がメタデータ一次リスク判定を通過しませんでした。")
                 return False
 
     if auto_fetch_result:
@@ -304,7 +426,13 @@ def run_pipeline(args):
     if auto_fetch_result:
         logger.info(f"自動取得: 有効")
         logger.info(f"元動画: {auto_fetch_result.get('video_meta', {}).get('title', '不明')}")
-        logger.info(f"権利判定: {auto_fetch_result.get('rights', {}).get('rights_status', '不明')}")
+        r = auto_fetch_result.get("rights", {})
+        logger.info(f"channel_source_permission: {r.get('channel_source_permission', '不明')}")
+        logger.info(f"embedded_footage_rights: {r.get('embedded_footage_rights', '不明')}")
+        logger.info(f"metadata_risk_status: {r.get('metadata_risk_status', '不明')}")
+        logger.info(f"audio_removed: {r.get('audio_removed', False)}")
+        logger.info(f"watermark_status: {r.get('watermark_status', '不明')}")
+        logger.info(f"manual_review_required: {r.get('manual_review_required', True)}")
     if input_video:
         logger.info(f"入力動画: {input_video}")
 
@@ -423,13 +551,13 @@ def run_pipeline(args):
         frame_specs = generate_visual_frames(script, frames_dir, settings)
         logger.info(f"ビジュアルフレーム生成完了: {len(frame_specs)}フレーム")
 
-    logger.info("--- BGM生成 ---")
+    logger.info("--- BGM ---")
     bgm_path = None
-    bgm_candidates = [
+    bgm_candidates_paths = [
         os.path.join(BASE_DIR, "inputs", "bgm.wav"),
         os.path.join(BASE_DIR, "inputs", "bgm.mp3"),
     ]
-    for bc in bgm_candidates:
+    for bc in bgm_candidates_paths:
         if os.path.exists(bc):
             bgm_path = bc
             logger.info(f"BGM検出: {bc}")
@@ -444,7 +572,11 @@ def run_pipeline(args):
         logger.warning("BGMが見つかりません。inputs/bgm.wav を配置してください。")
 
     logger.info("--- 動画合成 ---")
-    video_path = os.path.join(output_dir, "final.mp4")
+    if mode == "test":
+        video_filename = "TEST_ONLY_final.mp4"
+    else:
+        video_filename = "final.mp4"
+    video_path = os.path.join(output_dir, video_filename)
     create_video_from_frames(frame_specs, narration_path, ass_path, video_path, settings, bgm_path)
     logger.info(f"動画生成完了: {video_path}")
 
@@ -453,70 +585,135 @@ def run_pipeline(args):
     generate_screenshots(video_path, ss_dir)
 
     logger.info("--- メタデータ生成 ---")
-    credits_text = generate_rights_files(output_dir, mode)
+    credits_text = generate_rights_files(output_dir, mode, auto_fetch_result)
     generate_research_files(script, output_dir)
     save_metadata_files(script, output_dir, credits_text)
     generate_trend_notes(os.path.join(output_dir, "trend_notes.txt"))
 
+    logger.info("--- ログflush ---")
+    for handler in logger.handlers[:]:
+        handler.flush()
+        handler.close()
+        logger.removeHandler(handler)
+
     logger.info("--- 品質検査 ---")
+    reattach_log = os.path.join(output_dir, "execution.log")
+    logger = setup_logging(reattach_log)
+
     quality = run_quality_check(video_path, mode, tts_info)
     qr_path = os.path.join(output_dir, "quality_report.json")
-    save_quality_report(quality, qr_path, mode)
 
     for check in quality["checks"]:
         status = "PASS" if check["pass"] else "FAIL"
         logger.info(f"  {status}: {check['name']} - {check['detail']}")
 
-    zero_files = check_zero_kb(output_dir)
-    if zero_files:
-        logger.warning(f"0KBファイル検出・削除: {zero_files}")
-        for zf in zero_files:
-            try:
-                os.remove(zf)
-            except OSError:
-                pass
+    logger.info("--- 0KB検査（全ログflush後） ---")
+    for handler in logger.handlers[:]:
+        handler.flush()
 
-    final_output = os.path.join(BASE_DIR, "output", "final.mp4")
-    os.makedirs(os.path.dirname(final_output), exist_ok=True)
-    shutil.copy2(video_path, final_output)
-    logger.info(f"最終動画コピー完了: {final_output}")
+    zero_files = check_zero_kb(output_dir)
+    zero_kb_ok = len(zero_files) == 0
+    quality["zero_kb_ok"] = zero_kb_ok
+    if zero_files:
+        logger.error(f"0KBファイル検出: {zero_files}")
+        quality["checks"].append({
+            "name": "0KB検査（最終）",
+            "pass": False,
+            "detail": f"{len(zero_files)}件: {zero_files}",
+        })
+        quality["pass"] = False
+        quarantine_dir = os.path.join(output_dir, "_quarantine_0kb")
+        os.makedirs(quarantine_dir, exist_ok=True)
+        for zf in zero_files:
+            zf_name = os.path.basename(zf)
+            try:
+                shutil.move(zf, os.path.join(quarantine_dir, zf_name))
+                logger.info(f"0KBファイル隔離: {zf} → {quarantine_dir}/{zf_name}")
+            except OSError as e:
+                logger.error(f"0KBファイル隔離失敗: {zf}: {e}")
+    else:
+        quality["checks"].append({
+            "name": "0KB検査（最終）",
+            "pass": True,
+            "detail": "0件",
+        })
+
+    save_quality_report(quality, qr_path, mode)
+
+    review_ss_exist = os.path.isdir(ss_dir) and len(os.listdir(ss_dir)) > 0
+    if auto_fetch_result and auto_fetch_result.get("review_frames_dir"):
+        rfd = auto_fetch_result["review_frames_dir"]
+        review_ss_exist = review_ss_exist and os.path.isdir(rfd) and len(os.listdir(rfd)) > 0
+
+    bgm_license_path = os.path.join(output_dir, "bgm_license.json")
+    pub = determine_publishable(
+        mode, quality, tts_info, bgm_path, bgm_license_path,
+        auto_fetch_result, review_ss_exist,
+    )
+
+    pub_path = os.path.join(output_dir, "publishable.json")
+    with open(pub_path, "w", encoding="utf-8") as f:
+        json.dump(pub, f, ensure_ascii=False, indent=2)
+
+    logger.info(f"--- publishable判定 ---")
+    logger.info(f"  technical_publishable: {pub['technical_publishable']}")
+    logger.info(f"  manual_review_required: {pub['manual_review_required']}")
+    logger.info(f"  publishable: {pub['publishable']}")
+    logger.info(f"  embedded_footage_rights: {pub['embedded_footage_rights']}")
+    if pub["failed_conditions"]:
+        logger.info(f"  不足条件: {pub['failed_conditions']}")
+    if pub.get("publish_blockers"):
+        for blocker in pub["publish_blockers"]:
+            logger.info(f"  投稿不可理由: {blocker}")
+
+    compat_output = os.path.join(BASE_DIR, "output", "final.mp4")
+    os.makedirs(os.path.dirname(compat_output), exist_ok=True)
+    if os.path.exists(video_path) and os.path.getsize(video_path) > 0:
+        shutil.copy2(video_path, compat_output)
+        logger.info(f"互換コピー作成: {compat_output} (正式保存先ではない)")
+    else:
+        logger.error(f"final.mp4が0KBまたは存在しないため互換コピーをスキップ: {video_path}")
+        quality["pass"] = False
 
     overall = "PASS" if quality["pass"] else "FAIL"
     if mode == "test" and not quality["pass"]:
-        dur = quality.get("duration", 0)
         non_dur_fails = [c for c in quality["checks"] if not c["pass"] and c["name"] not in ("再生時間", "TTS")]
         if not non_dur_fails:
             overall = "PASS (テストモード: 尺・TTS制約は許容)"
 
-    _save_status(output_dir, overall, "完了", mode, player, topic, quality, tts_info, auto_fetch_result)
+    _save_status(output_dir, overall, "完了", mode, player, topic, quality, tts_info, auto_fetch_result, pub)
 
     if auto_fetch_result:
         fetch_report = {
             "source_video": auto_fetch_result.get("video_meta", {}).get("title", ""),
             "source_url": auto_fetch_result.get("video_meta", {}).get("url", ""),
-            "rights_status": auto_fetch_result.get("rights", {}).get("rights_status", ""),
-            "permission_type": auto_fetch_result.get("rights", {}).get("permission_type", ""),
             "detected_player": auto_fetch_result.get("player", ""),
             "detected_topic": auto_fetch_result.get("topic", ""),
+            "rights": auto_fetch_result.get("rights", {}),
         }
         with open(os.path.join(output_dir, "auto_fetch_report.json"), "w", encoding="utf-8") as f:
             json.dump(fetch_report, f, ensure_ascii=False, indent=2)
 
     logger.info(f"\n{'='*50}")
     logger.info(f"最終結果: {overall}")
-    logger.info(f"出力: {final_output}")
+    logger.info(f"正式出力: {video_path}")
+    logger.info(f"互換コピー: {compat_output} (正式保存先ではない)")
     if auto_fetch_result:
         logger.info(f"自動取得元: {auto_fetch_result.get('video_meta', {}).get('title', '不明')}")
+    logger.info(f"technical_publishable: {pub['technical_publishable']}")
+    logger.info(f"manual_review_required: {pub['manual_review_required']}")
+    logger.info(f"publishable: {pub['publishable']}")
     if mode == "test":
         logger.info("注意: TEST ONLY - 投稿不可 - 技術検証用")
     logger.info(f"{'='*50}")
 
-    _print_summary(output_dir, final_output, quality, script, mode, tts_info, auto_fetch_result)
+    _print_summary(output_dir, video_path, quality, script, mode, tts_info, auto_fetch_result, pub)
 
     return True
 
 
-def _save_status(output_dir, status, message, mode, player, topic, quality=None, tts_info=None, auto_fetch_result=None):
+def _save_status(output_dir, status, message, mode, player, topic,
+                 quality=None, tts_info=None, auto_fetch_result=None, pub=None):
     data = {
         "status": status,
         "message": message,
@@ -529,6 +726,12 @@ def _save_status(output_dir, status, message, mode, player, topic, quality=None,
         "auto_fetch": bool(auto_fetch_result),
         "source_video": auto_fetch_result.get("video_meta", {}).get("title", "") if auto_fetch_result else None,
     }
+    if pub:
+        data["technical_publishable"] = pub.get("technical_publishable", False)
+        data["manual_review_required"] = pub.get("manual_review_required", True)
+        data["publishable"] = pub.get("publishable", False)
+        data["publish_blockers"] = pub.get("publish_blockers", [])
+
     with open(os.path.join(output_dir, "status.json"), "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
@@ -541,35 +744,66 @@ def _save_status(output_dir, status, message, mode, player, topic, quality=None,
         f.write(f"- 生成日時: {data['timestamp']}\n")
         if tts_info:
             f.write(f"- TTS: {tts_info.get('engine', '不明')}\n")
+        if pub:
+            f.write(f"\n## publishable判定\n\n")
+            f.write(f"- technical_publishable: {pub.get('technical_publishable', False)}\n")
+            f.write(f"- manual_review_required: {pub.get('manual_review_required', True)}\n")
+            f.write(f"- publishable: {pub.get('publishable', False)}\n")
+            f.write(f"- embedded_footage_rights: {pub.get('embedded_footage_rights', 'UNKNOWN')}\n")
+            if pub.get("failed_conditions"):
+                f.write(f"- 不足条件: {pub['failed_conditions']}\n")
+            if pub.get("publish_blockers"):
+                f.write(f"\n### 投稿不可の理由\n\n")
+                for b in pub["publish_blockers"]:
+                    f.write(f"- {b}\n")
         if quality:
             f.write(f"\n## 品質検査\n\n")
             for c in quality.get("checks", []):
-                mark = "✓" if c["pass"] else "✗"
-                f.write(f"- {mark} {c['name']}: {c['detail']}\n")
+                mark = "PASS" if c["pass"] else "FAIL"
+                f.write(f"- [{mark}] {c['name']}: {c['detail']}\n")
         if mode == "test":
             f.write(f"\n## 注意\n\nTEST ONLY - 投稿不可 - 技術検証用\n")
 
 
-def _print_summary(output_dir, final_path, quality, script, mode, tts_info, auto_fetch_result=None):
+def _print_summary(output_dir, final_path, quality, script, mode, tts_info,
+                   auto_fetch_result=None, pub=None):
     print("\n" + "=" * 60)
     print("  ザ・ダンク 動画制作完了レポート")
     print("=" * 60)
     if auto_fetch_result:
-        print(f"\n  自動取得: 有効")
-        print(f"  元動画: {auto_fetch_result.get('video_meta', {}).get('title', '不明')[:50]}")
-        print(f"  権利判定: {auto_fetch_result.get('rights', {}).get('rights_status', '不明')}")
+        r = auto_fetch_result.get("rights", {})
+        print(f"\n  元動画: {auto_fetch_result.get('video_meta', {}).get('title', '不明')[:50]}")
+        print(f"  元動画URL: {auto_fetch_result.get('video_meta', {}).get('url', '不明')}")
+        print(f"  channel_source_permission: {r.get('channel_source_permission', 'UNKNOWN')}")
+        print(f"  embedded_footage_rights: {r.get('embedded_footage_rights', 'UNKNOWN')}")
+        print(f"  metadata_risk_status: {r.get('metadata_risk_status', 'UNKNOWN')}")
+        print(f"  watermark_status: {r.get('watermark_status', 'UNKNOWN')}")
+        print(f"  audio_removed: {r.get('audio_removed', False)}")
     print(f"\n  選手: {script['player']}")
     print(f"  テーマ: {script['topic']}")
     print(f"  企画タイプ: {script.get('plan_type_label', '不明')}")
     print(f"  モード: {mode}")
     print(f"  TTS: {tts_info.get('engine', '不明')} ({tts_info.get('speaker', '')})")
-    print(f"  最終動画: {final_path}")
+    print(f"  正式出力: {final_path}")
     print(f"  再生時間: {quality.get('duration', 0):.2f}秒")
+    if pub:
+        print(f"\n  publishable判定:")
+        print(f"    technical_publishable: {pub['technical_publishable']}")
+        print(f"    manual_review_required: {pub['manual_review_required']}")
+        print(f"    publishable: {pub['publishable']}")
+        if pub.get("failed_conditions"):
+            print(f"    不足条件: {pub['failed_conditions']}")
+        if pub.get("publish_blockers"):
+            print(f"    投稿不可の理由:")
+            for b in pub["publish_blockers"]:
+                print(f"      - {b}")
     print(f"\n  品質検査:")
     for c in quality.get("checks", []):
         mark = "PASS" if c["pass"] else "FAIL"
         print(f"    [{mark}] {c['name']}: {c['detail']}")
     print(f"\n  出力フォルダ: {output_dir}")
+    if auto_fetch_result and auto_fetch_result.get("review_frames_dir"):
+        print(f"  確認用フレーム: {auto_fetch_result['review_frames_dir']}")
     if mode == "test":
         print("\n  *** TEST ONLY - 投稿不可 - 技術検証用 ***")
     print("=" * 60)

@@ -3,7 +3,7 @@
 
 yt-dlpを使用してザ・ダンクチャンネルの動画一覧を取得し、
 優先選手・プレータイプに基づいて候補を自動選定する。
-選定した動画を自動ダウンロードし、権利判定を行う。
+選定した動画を自動ダウンロードし、メタデータ一次リスク判定を行う。
 荒木側の手動作業は不要。
 """
 
@@ -69,15 +69,6 @@ EXCLUSION_KEYWORDS = [
     "b.league", "bリーグ", "b league",
     "fiba", "jba",
 ]
-
-AUTO_EXCLUDE_REASONS = {
-    "third_party_bgm": "第三者BGMが除去できない",
-    "broadcast_audio": "放送実況が除去できない",
-    "large_watermark": "透かしが大きい",
-    "unknown_rights": "素材権限を確認できない",
-    "high_repost_risk": "再編集しても転載性が高い",
-    "low_added_value": "付加価値を十分に追加できない",
-}
 
 
 def load_source_permissions():
@@ -415,179 +406,221 @@ def get_video_info(path):
         return None
 
 
-def judge_rights(video_path, video_meta, channel_url=None):
+def generate_review_frames(video_path, output_dir):
     """
-    自動権利判定（全項目）
+    透かし・ロゴ確認用フレームを自動生成する。
+    冒頭・中盤・終盤から複数フレームを抽出し、画面四隅が確認可能な
+    スクリーンショットを保存する。
 
-    判定項目:
-    - チャンネル所有権（ザ・ダンク = owned のみ許可）
-    - 第三者BGMの有無
-    - 放送実況の有無
-    - 他社ロゴ・透かしの有無
-    - 映像の再編集可否
-    - 元音声除去可否
-    - 使用区間の妥当性
-    - 付加価値追加可否
-    - 再利用コンテンツリスク
-    - 著作権申し立て情報（yt-dlpメタデータから取得可能な範囲）
+    高度なロゴ認識は行わない。荒木側が短時間で目視確認できる形で出力する。
+    """
+    os.makedirs(output_dir, exist_ok=True)
+    duration = get_video_duration(video_path)
+    if not duration or duration < 1:
+        return []
 
-    除外条件:
-    - 第三者BGMが除去できない
-    - 放送実況が除去できない
-    - 透かしが大きい
-    - 素材権限を確認できない
-    - 再編集しても転載性が高い
-    - 付加価値を十分に追加できない
+    timestamps = {
+        "review_frame_00_start.png": 0.5,
+        "review_frame_01_early.png": min(3.0, duration * 0.1),
+        "review_frame_02_quarter.png": duration * 0.25,
+        "review_frame_03_middle.png": duration * 0.5,
+        "review_frame_04_three_quarter.png": duration * 0.75,
+        "review_frame_05_late.png": max(0.5, duration - 3.0),
+        "review_frame_06_end.png": max(0.5, duration - 0.5),
+    }
+
+    generated = []
+    for filename, ts in timestamps.items():
+        out = os.path.join(output_dir, filename)
+        try:
+            subprocess.run([
+                "ffmpeg", "-y", "-ss", str(ts),
+                "-i", video_path,
+                "-frames:v", "1",
+                "-q:v", "2",
+                out
+            ], capture_output=True, timeout=10)
+            if os.path.exists(out) and os.path.getsize(out) > 0:
+                generated.append(out)
+        except Exception:
+            pass
+
+    logger.info(f"確認用フレーム生成: {len(generated)}枚 → {output_dir}")
+    return generated
+
+
+def metadata_risk_assessment(video_meta):
+    """
+    メタデータ一次リスク判定
+
+    タイトル・説明文・タグ等のキーワードから行うリスク判定。
+    権利OKの確定判定ではない。
+    """
+    result = {
+        "metadata_risk_status": "REVIEW",
+        "audio_risk_status": "REVIEW",
+        "risk_factors": [],
+        "metadata_available": {},
+        "metadata_unavailable": [
+            "YouTube Studio内の著作権申し立て（非公開情報）",
+            "Content ID照合結果",
+            "収益化制限状態",
+            "地域ブロック情報（詳細）",
+            "YouTube Studioの手動審査結果",
+        ],
+        "youtube_studio_check_required": [
+            "著作権申し立て履歴",
+            "Content ID一致情報",
+            "収益化制限の有無",
+            "地域ブロックの有無",
+            "コミュニティガイドライン違反の有無",
+        ],
+    }
+
+    if not video_meta:
+        result["metadata_risk_status"] = "UNKNOWN"
+        result["audio_risk_status"] = "UNKNOWN"
+        return result
+
+    title = video_meta.get("title", "")
+    desc = video_meta.get("description", "")
+    combined = f"{title} {desc}"
+    combined_lower = combined.lower()
+
+    result["metadata_available"] = {
+        "title": title,
+        "upload_date": video_meta.get("upload_date", ""),
+        "duration": video_meta.get("duration"),
+        "view_count": video_meta.get("view_count"),
+        "description_length": len(desc),
+    }
+
+    has_third_party_bgm = False
+    for marker in THIRD_PARTY_BGM_MARKERS:
+        if marker.lower() in combined_lower:
+            has_third_party_bgm = True
+            result["risk_factors"].append(f"第三者BGMキーワード検出: {marker}")
+            break
+
+    has_broadcast = False
+    for marker in BROADCAST_MARKERS:
+        if marker.lower() in combined_lower:
+            has_broadcast = True
+            result["risk_factors"].append(f"放送関連キーワード検出: {marker}")
+            break
+
+    has_watermark_keyword = False
+    for marker in WATERMARK_MARKERS:
+        if marker.lower() in combined_lower:
+            has_watermark_keyword = True
+            result["risk_factors"].append(f"他社ロゴ関連キーワード検出: {marker}")
+            break
+
+    has_exclusion = False
+    for kw in EXCLUSION_KEYWORDS:
+        if kw.lower() in combined_lower:
+            has_exclusion = True
+            result["risk_factors"].append(f"禁止ソースキーワード: {kw}")
+            break
+
+    if has_third_party_bgm or has_broadcast:
+        result["audio_risk_status"] = "NG"
+    else:
+        result["audio_risk_status"] = "LOW_RISK"
+
+    if has_exclusion:
+        result["metadata_risk_status"] = "NG"
+    elif has_third_party_bgm or has_broadcast or has_watermark_keyword:
+        result["metadata_risk_status"] = "HIGH_RISK"
+    elif not result["risk_factors"]:
+        result["metadata_risk_status"] = "LOW_RISK"
+
+    copyright_info = video_meta.get("license", "")
+    if copyright_info:
+        result["metadata_available"]["license"] = copyright_info
+    else:
+        result["metadata_unavailable"].append("ライセンス情報（メタデータに含まれず）")
+
+    return result
+
+
+def build_rights_report(video_meta, video_path, channel_url, audio_removed, review_frames_dir):
+    """
+    素材ごとの権利状態レポートを構築する。
+
+    channel_source_permission: チャンネル所有権
+    embedded_footage_rights: 動画内の第三者映像の権利（明確な根拠なし = UNKNOWN）
+    metadata_risk_status: メタデータ一次リスク判定
+    audio_risk_status: 音声リスク判定
+    watermark_status: 透かし状態（フレーム分析なし = UNKNOWN）
+    manual_review_required: 荒木側の確認が必要か
+    publishable: 最終投稿可否
     """
     permissions = load_source_permissions()
-    result = {
-        "permission_type": "review_required",
-        "rights_status": "REVIEW",
-        "issues": [],
-        "checks": {},
-        "exclusion_reasons": [],
-        "passed": False,
-        "audio_stripped": False,
-        "can_reedit": True,
-        "can_add_value": True,
-        "repost_risk": "low",
+
+    report = {
+        "channel_source_permission": "UNKNOWN",
+        "embedded_footage_rights": "UNKNOWN",
+        "metadata_risk_status": "UNKNOWN",
+        "audio_risk_status": "UNKNOWN",
+        "watermark_status": "UNKNOWN",
+        "audio_removed": audio_removed,
+        "manual_review_required": True,
+        "technical_publishable": False,
+        "publishable": False,
+        "risk_factors": [],
+        "metadata_available": {},
+        "metadata_unavailable": [],
+        "youtube_studio_check_required": [],
+        "review_frames_dir": review_frames_dir,
+        "review_frames_generated": False,
+        "notes": [],
     }
 
     if channel_url:
         ch_info = permissions.get("channels", {}).get(channel_url, {})
         ptype = ch_info.get("permission_type", "review_required")
         if ptype == "owned":
-            result["permission_type"] = "owned"
-            result["rights_status"] = "OK"
-            result["checks"]["channel_ownership"] = "OK: ザ・ダンク所有"
-        elif ptype in ("reference_only", "prohibited", "review_required"):
-            result["issues"].append(f"チャンネル権限: {ptype}")
-            result["permission_type"] = ptype
-            result["rights_status"] = "NG"
-            result["checks"]["channel_ownership"] = f"NG: {ptype}"
-            result["exclusion_reasons"].append("unknown_rights")
-            return result
-    else:
-        result["issues"].append("チャンネルURL未指定")
-        result["exclusion_reasons"].append("unknown_rights")
-        return result
-
-    if video_meta:
-        title = video_meta.get("title", "")
-        desc = video_meta.get("description", "")
-        combined = f"{title} {desc}"
-        combined_lower = combined.lower()
-
-        has_third_party_bgm = False
-        for marker in THIRD_PARTY_BGM_MARKERS:
-            if marker.lower() in combined_lower:
-                has_third_party_bgm = True
-                result["issues"].append(f"第三者BGM検出: {marker}")
-                break
-        result["checks"]["third_party_bgm"] = "NG: 検出" if has_third_party_bgm else "OK: 未検出"
-        if has_third_party_bgm:
-            result["exclusion_reasons"].append("third_party_bgm")
-
-        has_broadcast = False
-        for marker in BROADCAST_MARKERS:
-            if marker.lower() in combined_lower:
-                has_broadcast = True
-                result["issues"].append(f"放送関連キーワード検出: {marker}")
-                break
-        result["checks"]["broadcast_audio"] = "NG: 検出" if has_broadcast else "OK: 未検出"
-        if has_broadcast:
-            result["exclusion_reasons"].append("broadcast_audio")
-
-        has_watermark = False
-        for marker in WATERMARK_MARKERS:
-            if marker.lower() in combined_lower:
-                has_watermark = True
-                result["issues"].append(f"他社ロゴ/透かし関連: {marker}")
-                break
-        result["checks"]["watermark"] = "NG: 検出" if has_watermark else "OK: 未検出"
-        if has_watermark:
-            result["exclusion_reasons"].append("large_watermark")
-
-        has_exclusion = False
-        for kw in EXCLUSION_KEYWORDS:
-            if kw.lower() in combined_lower:
-                has_exclusion = True
-                result["issues"].append(f"禁止ソースキーワード: {kw}")
-                break
-        if has_exclusion:
-            result["exclusion_reasons"].append("unknown_rights")
-
-        duration = video_meta.get("duration")
-        if duration and duration < 10:
-            result["issues"].append("動画が短すぎる（10秒未満）")
-            result["can_add_value"] = False
-            result["exclusion_reasons"].append("low_added_value")
-        result["checks"]["duration_adequate"] = f"{'OK' if not duration or duration >= 10 else 'NG'}: {duration}秒"
-
-        result["checks"]["can_strip_audio"] = "OK: 元音声除去可能（FFmpegで除去）"
-        result["audio_stripped"] = True
-
-        if duration and duration < 15:
-            result["can_reedit"] = False
-            result["checks"]["can_reedit"] = "NG: 尺が短く再編集困難"
+            report["channel_source_permission"] = "owned"
         else:
-            result["checks"]["can_reedit"] = "OK: 再編集可能"
+            report["channel_source_permission"] = ptype
+            report["risk_factors"].append(f"チャンネル権限: {ptype}（自動取得禁止）")
+            report["metadata_risk_status"] = "NG"
+            return report
 
-        is_simple_repost = True
-        value_indicators = [
-            "解説", "分析", "技術", "比較", "戦術", "ランキング",
-            "まとめ", "ベスト", "理由", "なぜ", "秘密",
-        ]
-        for vi in value_indicators:
-            if vi in combined:
-                is_simple_repost = False
-                break
+    report["embedded_footage_rights"] = "UNKNOWN"
+    report["notes"].append(
+        "動画内の第三者映像について明確な権利根拠がないため UNKNOWN。"
+        "荒木側の確認が必要。"
+    )
 
-        if is_simple_repost and (not duration or duration < 30):
-            result["repost_risk"] = "high"
-            result["issues"].append("短尺かつ付加価値指標なし → 転載リスク高")
-            result["exclusion_reasons"].append("high_repost_risk")
-        elif is_simple_repost:
-            result["repost_risk"] = "medium"
-        else:
-            result["repost_risk"] = "low"
-        result["checks"]["repost_risk"] = f"{result['repost_risk']}"
+    meta_risk = metadata_risk_assessment(video_meta)
+    report["metadata_risk_status"] = meta_risk["metadata_risk_status"]
+    report["audio_risk_status"] = meta_risk["audio_risk_status"]
+    report["risk_factors"].extend(meta_risk["risk_factors"])
+    report["metadata_available"] = meta_risk["metadata_available"]
+    report["metadata_unavailable"] = meta_risk["metadata_unavailable"]
+    report["youtube_studio_check_required"] = meta_risk["youtube_studio_check_required"]
 
-        result["checks"]["added_value"] = (
-            "OK: VOICEVOX解説・字幕・エフェクト・BGMで付加価値追加可能"
-            if result["can_add_value"] else "NG: 付加価値追加困難"
-        )
+    report["watermark_status"] = "UNKNOWN"
+    report["notes"].append(
+        "透かし・ロゴの判定: メタデータキーワード検索のみ実施。"
+        "実映像フレーム分析は未実施のため UNKNOWN。"
+        "review_framesフォルダの確認用フレームで目視確認してください。"
+    )
 
-        copyright_info = video_meta.get("license", "")
-        copyright_claim = video_meta.get("copyright", "")
-        if copyright_info or copyright_claim:
-            result["checks"]["copyright_claim"] = f"情報あり: {copyright_info or copyright_claim}"
-            if "claim" in str(copyright_claim).lower():
-                result["issues"].append("著作権申し立て情報検出")
-        else:
-            result["checks"]["copyright_claim"] = "取得不可（yt-dlpメタデータに含まれず）"
+    if review_frames_dir and os.path.isdir(review_frames_dir):
+        frames = [f for f in os.listdir(review_frames_dir) if f.endswith(".png")]
+        report["review_frames_generated"] = len(frames) > 0
+        report["review_frames_count"] = len(frames)
 
-    info = get_video_info(video_path) if video_path and os.path.exists(video_path) else None
-    if info:
-        for stream in info.get("streams", []):
-            if stream.get("codec_type") == "audio":
-                audio_channels = stream.get("channels", 0)
-                if audio_channels > 2:
-                    result["issues"].append("マルチチャンネル音声検出（放送音声の可能性）")
-                    result["checks"]["audio_analysis"] = f"NG: {audio_channels}ch（放送音声の可能性）"
-                else:
-                    result["checks"]["audio_analysis"] = f"OK: {audio_channels}ch"
+    if audio_removed:
+        report["notes"].append("元音声はFFmpegで完全除去済み。ただし音声除去は映像自体の権利を解決しない。")
 
-    if result["permission_type"] == "owned" and not result["exclusion_reasons"]:
-        result["passed"] = True
-        result["rights_status"] = "OK"
-    else:
-        result["passed"] = False
-        if result["exclusion_reasons"]:
-            reasons = [AUTO_EXCLUDE_REASONS.get(r, r) for r in result["exclusion_reasons"]]
-            result["rights_status"] = f"NG: {', '.join(reasons)}"
+    report["manual_review_required"] = True
+    report["publishable"] = False
 
-    return result
+    return report
 
 
 def select_segments(video_path, narration_duration, num_segments=3):
@@ -680,16 +713,6 @@ def run_auto_fetch_pipeline(settings, output_dir):
     完全自動取得パイプライン
     荒木側の手動作業: なし
 
-    1. ザ・ダンクチャンネル動画一覧を自動取得
-    2. タイトル・投稿日・再生数・尺・説明文を取得
-    3. 選手名を正規化
-    4. 優先選手・プレー内容・再生実績から候補をスコアリング・選定
-    5. 候補動画を自動ダウンロード
-    6. 自動権利判定（第三者BGM・放送実況・透かし・転載リスク等）
-    7. 元音声を完全除去
-    8. 9:16 Shorts形式にリサイズ
-    9. テーマ・選手を自動推定
-
     Returns:
         dict or None
     """
@@ -734,41 +757,34 @@ def run_auto_fetch_pipeline(settings, output_dir):
         logger.info(f"  再生数: {candidate.get('view_count', '不明')}")
         logger.info(f"  尺: {candidate.get('duration', '不明')}秒")
 
-        logger.info("  権利判定（メタデータ）...")
-        rights = judge_rights(None, candidate, channel_url=channel_url)
-        if not rights["passed"]:
-            reasons = rights.get("exclusion_reasons", [])
-            reason_texts = [AUTO_EXCLUDE_REASONS.get(r, r) for r in reasons]
-            logger.warning(f"  権利判定NG: {', '.join(reason_texts)}")
-            skipped.append({"title": title, "reason": rights["rights_status"]})
+        logger.info("  メタデータ一次リスク判定...")
+        meta_risk = metadata_risk_assessment(candidate)
+        if meta_risk["metadata_risk_status"] == "NG":
+            logger.warning(f"  メタデータ一次リスク判定NG: {meta_risk['risk_factors']}")
+            skipped.append({"title": title, "reason": f"メタデータリスクNG: {', '.join(meta_risk['risk_factors'])}"})
             continue
 
         logger.info("  ダウンロード中...")
         downloaded = download_video(video_url, download_dir, video_id=video_id)
         if not downloaded:
-            logger.warning(f"  ダウンロード失敗")
+            logger.warning("  ダウンロード失敗")
             skipped.append({"title": title, "reason": "ダウンロード失敗"})
             continue
 
-        logger.info("  権利判定（ファイル検査）...")
-        rights = judge_rights(downloaded, candidate, channel_url=channel_url)
-        if not rights["passed"]:
-            logger.warning(f"  ファイル検査NG: {rights['rights_status']}")
-            skipped.append({"title": title, "reason": rights["rights_status"]})
-            try:
-                os.remove(downloaded)
-            except OSError:
-                pass
-            continue
+        logger.info("  確認用フレーム生成中...")
+        review_frames_dir = os.path.join(output_dir, "review_frames")
+        review_frames = generate_review_frames(downloaded, review_frames_dir)
 
         logger.info("  元音声除去中...")
         stripped_path = os.path.join(download_dir, f"{video_id}_noaudio.mp4")
         stripped = strip_audio(downloaded, stripped_path)
+        audio_removed = stripped is not None
         if not stripped:
             logger.warning("  音声除去失敗")
             stripped = downloaded
+            audio_removed = False
         else:
-            logger.info("  元音声除去完了（第三者BGM・放送実況含め全除去）")
+            logger.info("  元音声除去完了")
 
         logger.info("  9:16 Shorts形式リサイズ中...")
         shorts_path = os.path.join(download_dir, f"{video_id}_shorts.mp4")
@@ -787,19 +803,15 @@ def run_auto_fetch_pipeline(settings, output_dir):
 
         details = fetch_video_details(video_url)
 
-        rights_report = {
-            "rights_status": rights["rights_status"],
-            "permission_type": rights["permission_type"],
-            "checks": rights["checks"],
-            "issues": rights["issues"],
-            "exclusion_reasons": rights["exclusion_reasons"],
-            "audio_stripped": True,
-            "can_reedit": rights["can_reedit"],
-            "can_add_value": rights["can_add_value"],
-            "repost_risk": rights["repost_risk"],
-        }
+        rights_report = build_rights_report(
+            video_meta={**candidate, **(details or {})},
+            video_path=downloaded,
+            channel_url=channel_url,
+            audio_removed=audio_removed,
+            review_frames_dir=review_frames_dir,
+        )
 
-        with open(os.path.join(output_dir, "rights_judgment.json"), "w", encoding="utf-8") as f:
+        with open(os.path.join(output_dir, "rights_report.json"), "w", encoding="utf-8") as f:
             json.dump(rights_report, f, ensure_ascii=False, indent=2)
 
         with open(os.path.join(output_dir, "skipped_candidates.json"), "w", encoding="utf-8") as f:
@@ -810,7 +822,15 @@ def run_auto_fetch_pipeline(settings, output_dir):
         logger.info(f"  選定動画: {candidate.get('title', '')}")
         logger.info(f"  選手: {player}")
         logger.info(f"  テーマ: {topic}")
-        logger.info(f"  権利: {rights['rights_status']}")
+        logger.info(f"  channel_source_permission: {rights_report['channel_source_permission']}")
+        logger.info(f"  embedded_footage_rights: {rights_report['embedded_footage_rights']}")
+        logger.info(f"  metadata_risk_status: {rights_report['metadata_risk_status']}")
+        logger.info(f"  audio_risk_status: {rights_report['audio_risk_status']}")
+        logger.info(f"  watermark_status: {rights_report['watermark_status']}")
+        logger.info(f"  audio_removed: {rights_report['audio_removed']}")
+        logger.info(f"  manual_review_required: {rights_report['manual_review_required']}")
+        logger.info(f"  publishable: {rights_report['publishable']}")
+        logger.info(f"  確認用フレーム: {review_frames_dir}")
         logger.info(f"  スキップ: {len(skipped)}件")
         logger.info("=" * 50)
 
@@ -822,12 +842,13 @@ def run_auto_fetch_pipeline(settings, output_dir):
             "rights": rights_report,
             "original_path": downloaded,
             "skipped_candidates": skipped,
+            "review_frames_dir": review_frames_dir,
         }
 
     with open(os.path.join(output_dir, "skipped_candidates.json"), "w", encoding="utf-8") as f:
         json.dump(skipped, f, ensure_ascii=False, indent=2)
 
-    logger.error(f"全{len(candidates)}候補が除外されました")
+    logger.error(f"全{len(candidates)}候補がメタデータ一次リスク判定またはダウンロード失敗で除外")
     for s in skipped:
         logger.error(f"  除外: {s['title']} → {s['reason']}")
     return None

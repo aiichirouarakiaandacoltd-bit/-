@@ -67,7 +67,7 @@ def generate_visual_frames(script, output_dir, settings):
         draw.text((width // 2, 300), player_text, fill=(255, 215, 0), font=font_large, anchor="mm")
 
         text = section["text"]
-        lines = _wrap_text(text, 18)
+        lines = _wrap_text(text, 15)
         y_start = height // 2 - len(lines) * 30
         for j, line in enumerate(lines):
             draw.text((width // 2, y_start + j * 60), line, fill=(255, 255, 255), font=font_small, anchor="mm")
@@ -148,9 +148,13 @@ def _wrap_text(text, max_chars):
     current = ""
     for char in text:
         current += char
-        if len(current) >= max_chars and char in "。、,.!?！？ ":
-            lines.append(current.strip())
-            current = ""
+        if len(current) >= max_chars:
+            if char in "。、,.!?！？ ":
+                lines.append(current.strip())
+                current = ""
+            elif len(current) >= max_chars + 2:
+                lines.append(current.strip())
+                current = ""
     if current.strip():
         lines.append(current.strip())
     return lines if lines else [text]
