@@ -707,14 +707,69 @@ class TestProductionRedCross:
         assert meta.get("script_estimated_minutes", 0) >= 7.0, \
             f"Long script too short: {meta.get('script_estimated_minutes')}min"
 
-    def test_shorts_min_45_seconds(self):
-        """Both Shorts should be at least 45 seconds."""
+    def test_shorts_duration_range(self):
+        """Both Shorts must be 45.0-59.5 seconds."""
         pkg = find_latest_package()
         meta = json.loads((pkg / "metadata.json").read_text(encoding="utf-8"))
-        assert meta.get("shorts_01_estimated_seconds", 0) >= 45.0, \
-            f"Shorts 01 too short: {meta.get('shorts_01_estimated_seconds')}s"
-        assert meta.get("shorts_02_estimated_seconds", 0) >= 45.0, \
-            f"Shorts 02 too short: {meta.get('shorts_02_estimated_seconds')}s"
+        s01 = meta.get("shorts_01_estimated_seconds", 0)
+        s02 = meta.get("shorts_02_estimated_seconds", 0)
+        assert 45.0 <= s01 <= 59.5, \
+            f"Shorts 01 out of range: {s01}s (must be 45.0-59.5)"
+        assert 45.0 <= s02 <= 59.5, \
+            f"Shorts 02 out of range: {s02}s (must be 45.0-59.5)"
+
+
+class TestShortsDurationBoundary:
+    """Boundary value tests for Shorts duration validation."""
+
+    def _make_text_for_seconds(self, target_seconds, round_up=False):
+        """Generate text that estimates to approximately target_seconds."""
+        import math
+        import config as cfg
+        speed = cfg.VOICEVOX_SETTINGS.get("speed", 1.0)
+        chars_raw = target_seconds * 350 * speed / 60
+        chars_needed = math.ceil(chars_raw) if round_up else int(chars_raw)
+        return "あ" * chars_needed
+
+    def test_44_9_seconds_fail(self):
+        """44.9 seconds should be too short."""
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        text = self._make_text_for_seconds(44.9)
+        chars = count_narration_chars(text)
+        est_sec = estimate_reading_minutes(chars) * 60
+        assert est_sec < 45.0, f"44.9s text estimated as {est_sec:.1f}s, expected < 45.0"
+
+    def test_45_0_seconds_pass(self):
+        """45.0 seconds should pass."""
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        text = self._make_text_for_seconds(45.0)
+        chars = count_narration_chars(text)
+        est_sec = estimate_reading_minutes(chars) * 60
+        assert 45.0 <= est_sec <= 59.5, f"45.0s text estimated as {est_sec:.1f}s"
+
+    def test_59_5_seconds_pass(self):
+        """59.5 seconds should pass."""
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        text = self._make_text_for_seconds(59.5)
+        chars = count_narration_chars(text)
+        est_sec = estimate_reading_minutes(chars) * 60
+        assert 45.0 <= est_sec <= 59.5, f"59.5s text estimated as {est_sec:.1f}s"
+
+    def test_59_6_seconds_fail(self):
+        """59.6 seconds should exceed the limit."""
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        text = self._make_text_for_seconds(59.6, round_up=True)
+        chars = count_narration_chars(text)
+        est_sec = estimate_reading_minutes(chars) * 60
+        assert est_sec > 59.5, f"59.6s text estimated as {est_sec:.1f}s, expected > 59.5"
+
+    def test_60_0_seconds_fail(self):
+        """60.0 seconds should exceed the limit."""
+        from src.script_writer import count_narration_chars, estimate_reading_minutes
+        text = self._make_text_for_seconds(60.0, round_up=True)
+        chars = count_narration_chars(text)
+        est_sec = estimate_reading_minutes(chars) * 60
+        assert est_sec > 59.5, f"60.0s text estimated as {est_sec:.1f}s, expected > 59.5"
 
 
 class TestFactVerificationQuality:

@@ -251,6 +251,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                 )
 
     shorts_duration_short = False
+    shorts_duration_long = False
     shorts_01_estimated_seconds = 0.0
     shorts_02_estimated_seconds = 0.0
     if script_path.exists():
@@ -258,6 +259,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         s02_start = script_content.find("## Shorts 02 台本")
         if s01_start >= 0 and s02_start >= 0:
             min_shorts_sec = cfg.VIDEO_SPECS["shorts"]["duration_min_seconds"]
+            max_shorts_sec = cfg.VIDEO_SPECS["shorts"]["duration_max_seconds"]
             shorts_sections = [
                 ("01", script_content[s01_start:s02_start]),
                 ("02", script_content[s02_start:]),
@@ -276,6 +278,12 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
                     missing_items.append(
                         f"Shorts {s_label}が目標尺に未達"
                         f"（推定{est_sec:.1f}秒、最低{min_shorts_sec}秒）"
+                    )
+                if est_sec > max_shorts_sec:
+                    shorts_duration_long = True
+                    missing_items.append(
+                        f"Shorts {s_label}が目標尺を超過"
+                        f"（推定{est_sec:.1f}秒、最大{max_shorts_sec}秒）"
                     )
 
     if rights_data.get("has_ng"):
@@ -312,6 +320,7 @@ def validate_package(output_dir, research_data, ng_results, bgm_config, topic,
         and core_facts_confirmed
         and not script_duration_short
         and not shorts_duration_short
+        and not shorts_duration_long
     )
 
     rights_ok = rights_overall in ("OK", "ok")
