@@ -209,6 +209,50 @@ projects/<slug>/
 
 ---
 
+## 6-2. サブエージェントとスラッシュコマンド
+
+### 導入
+
+```bash
+python run_imperial_pipeline.py --install-agents
+```
+
+`agents/` と `commands/` の定義を、リポジトリ直下の `.claude/agents/` と
+`.claude/commands/` へ複製します。**正本は `imperial_pipeline/` 側**です。
+定義を変更したら、このコマンドを再実行してください。
+
+### サブエージェント（8種）
+
+| エージェント | 担当 |
+| --- | --- |
+| imperial-researcher | 工程1〜3。公式情報の収集、時系列整理、出典URL管理 |
+| imperial-fact-checker | 工程4。一次資料との突合、事実と解釈の分類、架空情報の検出 |
+| imperial-writer | 工程8・9。長尺構成と長尺台本 |
+| imperial-shorts-writer | 工程10。Shorts台本、長尺への誘導、縦型設計 |
+| imperial-safety-reviewer | 表現検証。内心断定、対立煽り、誇張、敬称漏れ、炎上リスク |
+| rights-reviewer | 工程5。素材の権利状態整理、代替素材提案 |
+| production-director | 工程6・7・11〜16。素材設計、図解、サムネイル指示、制作指示書 |
+| final-auditor | 工程17・第8章。全成果物の突合、合否判定、承認用サマリー |
+
+**writer が書いた台本は、fact-checker と safety-reviewer が別途検証します。**
+同一エージェントが自らの出力を無検証で合格にしない設計です。
+
+共通の前提は `agents/共通ルール.md`、工程ごとの合格基準は
+`agents/生成指針_工程別.md` にまとめています。
+
+### スラッシュコマンド
+
+```
+/imperial-new <slug> [テーマ]   新規プロジェクト作成
+/imperial-research <slug>       工程1〜5（調査・事実台帳・素材権利台帳）
+/imperial-plan <slug>           工程6〜8（企画評価・タイトル案・構成）
+/imperial-script <slug>         工程9〜10（長尺台本・Shorts台本＋検証）
+/imperial-production <slug>     工程11〜16（素材設計〜制作指示書）
+/imperial-audit <slug>          工程17・承認用サマリー
+/imperial-final <slug>          最終版の生成（承認後）
+/imperial-status <slug>         進捗と未確認事項の確認
+```
+
 ## 7. 承認方法
 
 1. `audit/19_荒木承認用サマリー.md` を開きます

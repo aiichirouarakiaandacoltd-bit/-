@@ -92,6 +92,39 @@ def init_project(slug: str, log) -> int:
     return 0
 
 
+def install_claude_assets(log) -> int:
+    """agents/ と commands/ の定義を .claude/ へ複製し、Claude Codeから使えるようにする.
+
+    正本は imperial_pipeline/agents/ と imperial_pipeline/commands/ である。
+    .claude/ 側は複製であり、編集しても正本には反映されない。
+    """
+    repo_root = ROOT.parent
+    pairs = (
+        (ROOT / "agents", repo_root / ".claude" / "agents"),
+        (ROOT / "commands", repo_root / ".claude" / "commands"),
+    )
+    # フロントマターを持たない参考資料は複製しない（エージェントとして誤登録されるため）
+    skip = {"共通ルール.md", "生成指針_工程別.md", "README.md"}
+    copied = 0
+    for source_dir, dest_dir in pairs:
+        if not source_dir.exists():
+            log.warn(f"複製元がありません: {source_dir}")
+            continue
+        dest_dir.mkdir(parents=True, exist_ok=True)
+        for path in sorted(source_dir.glob("*.md")):
+            if path.name in skip:
+                continue
+            shutil.copy2(path, dest_dir / path.name)
+            copied += 1
+            log.info(f"複製: {path.name} -> {dest_dir.relative_to(repo_root)}/")
+    print()
+    print(f"  {copied}件を .claude/ へ複製しました。")
+    print("  正本は imperial_pipeline/agents/ と imperial_pipeline/commands/ です。")
+    print("  定義を変更したら、このコマンドを再実行してください。")
+    print()
+    return 0
+
+
 def parse_steps(value: str | None) -> set[int] | None:
     if not value:
         return None
@@ -208,6 +241,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--stage", choices=["draft", "check", "final"], default="draft")
     parser.add_argument("--approval", help="承認ファイル（--stage final で必須）")
     parser.add_argument("--init", metavar="SLUG", help="新規プロジェクトを作成する")
+    parser.add_argument("--install-agents", action="store_true",
+                        help="agents/ と commands/ の定義を .claude/ へ複製する")
     parser.add_argument("--steps", help="対象工程（例: 1,2,3 または 1-5）")
     parser.add_argument("--refresh", action="store_true",
                         help="既存の成果物を _history へ退避してテンプレートから再生成する")
@@ -216,6 +251,10 @@ def main(argv: list[str] | None = None) -> int:
 
     log = logger_module.RunLogger(ROOT / "logs", quiet=args.quiet)
     stamp = datetime.now().strftime("%Y%m%d_%H%M")
+
+    if args.install_agents:
+        log.section("サブエージェント・スラッシュコマンドの複製")
+        return install_claude_assets(log)
 
     if args.init:
         log.section(f"新規プロジェクト作成: {args.init}")

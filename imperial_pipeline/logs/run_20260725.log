@@ -317,3 +317,20 @@
 [2026-07-25 06:33:54] [20260725_063354] [WARN] 素材権利台帳（最終版）：M002：承認により使用禁止
 [2026-07-25 06:33:54] [20260725_063354] [INFO] 最終パッケージ生成完了: 10件
 [2026-07-25 06:33:54] [20260725_063354] [INFO] 実行サマリー
+[2026-07-25 06:43:31] [20260725_064331] [INFO] ======== サブエージェント・スラッシュコマンドの複製 ========
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: final-auditor.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-fact-checker.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-researcher.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-safety-reviewer.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-shorts-writer.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-writer.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: production-director.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: rights-reviewer.md -> .claude/agents/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-audit.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-final.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-new.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-plan.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-production.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-research.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-script.md -> .claude/commands/
+[2026-07-25 06:43:31] [20260725_064331] [INFO] 複製: imperial-status.md -> .claude/commands/
