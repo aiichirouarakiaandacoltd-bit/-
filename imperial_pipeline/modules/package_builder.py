@@ -106,15 +106,45 @@ def strip_scan_markers(text: str) -> str:
 # 承認内容の反映
 # ---------------------------------------------------------------------
 def apply_approval_text(text: str, approval: dict) -> str:
+    """承認されたタイトル・サムネイルを最終版へ反映する.
+
+    未確定マーカーは3系統ありうる。
+      1. `{{APPROVED_TITLE}}` … テンプレートが未描画のまま残った場合
+      2. `【承認後に確定：タイトル】` … 下書き生成時に描画された現行のマーカー
+      3. `【承認後に確定】` … 旧版のマーカー（タイトルとサムネイルで共通だった）
+    3は同じ文字列のためどちらを埋めるべきか判別できない。
+    行内に「サムネイル」の語があるかどうかで振り分ける。
+    """
     title = str(approval.get("selected_title") or "").strip()
     thumbnail = str(approval.get("selected_thumbnail") or "").strip()
+
     if title:
         text = text.replace("{{APPROVED_TITLE}}", title)
-        text = re.sub(r"(?<=^## 正式タイトル\n\n)【承認後に確定】", title, text, flags=re.MULTILINE)
-        text = re.sub(r"(?<=^## 採用タイトル\n\n)【承認後に確定】", title, text, flags=re.MULTILINE)
+        text = text.replace("【承認後に確定：タイトル】", title)
     if thumbnail:
         text = text.replace("{{APPROVED_THUMBNAIL}}", thumbnail)
-    return text
+        text = text.replace("【承認後に確定：サムネイル】", thumbnail)
+
+    if not (title or thumbnail):
+        return text
+
+    lines = text.splitlines()
+    current_heading = ""
+    for index, line in enumerate(lines):
+        heading = _HEADING_LINE.match(line)
+        if heading:
+            current_heading = heading.group(2)
+        if "【承認後に確定】" not in line:
+            continue
+        # 行内と、その行が属する見出しの両方を見て振り分ける。
+        # 「## サムネイル」節の「- 採用案：」のように、
+        # 行だけでは判別できない書き方があるため。
+        context = f"{line} {current_heading}"
+        if "サムネイル" in context and thumbnail:
+            lines[index] = line.replace("【承認後に確定】", thumbnail)
+        elif title:
+            lines[index] = line.replace("【承認後に確定】", title)
+    return "\n".join(lines)
 
 
 def _csv_from_rows(header: list[str], rows: list[dict]) -> str:
@@ -233,6 +263,17 @@ def preflight(project_root: Path, fact_rows: list[dict], material_rows: list[dic
         result.blockers.append(
             "皇族方のAI生成顔・顔加工素材の疑いがある素材が含まれている："
             + "、".join(ai_faces)
+        )
+
+    # 設定値の未入力（ブロックしないが、このまま公開すると義務を果たせない）
+    for item in approval_builder.find_unresolved_settings(project_root):
+        result.warnings.append(f"**公開前に必須**：{item}")
+
+    # 10Aと10Bの本文が食い違ったまま編集者へ渡らないようにする
+    compare = approval_builder.compare_script_bodies(project_root)
+    if compare.get("match") is False:
+        result.warnings.append(
+            f"長尺台本 10A と 10B の本文が一致していない：{compare['detail']}"
         )
 
     # 参考情報（ブロックしない）

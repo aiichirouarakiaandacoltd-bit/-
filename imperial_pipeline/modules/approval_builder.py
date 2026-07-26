@@ -182,6 +182,11 @@ def risk_flags_markdown(flags: dict) -> str:
     if flags.get("ai_face"):
         lines.append("- **皇族方のAI生成顔・顔加工素材の疑い**：")
         lines.extend(f"    - {item}" for item in flags["ai_face"])
+    if flags.get("script_mismatch"):
+        lines.append(f"- **長尺台本 10A と 10B の本文が一致しない**：{flags['script_mismatch']}")
+    if flags.get("unresolved_settings"):
+        lines.append("- 設定値が未入力のまま成果物へ出ている：")
+        lines.extend(f"    - {item}" for item in flags["unresolved_settings"])
     if flags.get("honorifics"):
         lines.append("- 敬称の表記ゆれ候補：")
         lines.extend(f"    - {item}" for item in flags["honorifics"])
@@ -195,6 +200,71 @@ def risk_flags_markdown(flags: dict) -> str:
             f"（目標 {flags.get('char_target', '')}）"
         )
     return "\n".join(lines)
+
+
+def compare_script_bodies(project_root: Path) -> dict:
+    """10A（監査用）と10B（編集者用）の本文が一致しているか検査する.
+
+    両者はIDの有無だけが異なり、本文の文言は同一でなければならない。
+    片方だけを直したまま気付かない事故を防ぐための機械検査である。
+    """
+    project_root = Path(project_root)
+    audit_path = project_root / "scripts" / "10A_長尺台本_監査用.md"
+    editor_path = project_root / "scripts" / "10B_長尺台本_編集者用.md"
+
+    if not audit_path.exists() or not editor_path.exists():
+        return {"status": "判定不能（台本が未生成）", "match": None, "detail": ""}
+
+    def _body(path: Path, end_marker: str) -> str:
+        text = path.read_text(encoding=ENC)
+        if "## 本編" not in text or end_marker not in text:
+            return ""
+        body = text[text.index("## 本編"):text.index(end_marker)]
+        body = re.sub(r"<!--.*?-->", "", body, flags=re.DOTALL)
+        body = re.sub(r"【(事実|素材)ID[：:][^】]*】", "", body)
+        body = re.sub(r"^\*\*参考情報\*\*[：:].*$", "", body, flags=re.MULTILINE)
+        body = re.sub(r"^>.*$", "", body, flags=re.MULTILINE)
+        return re.sub(r"\s+", "", body)
+
+    audit_body = _body(audit_path, "## 使用した事実IDの一覧")
+    editor_body = _body(editor_path, "## 読み方注記")
+
+    if not audit_body and not editor_body:
+        return {"status": "判定不能（本文が未記入）", "match": None, "detail": ""}
+    if audit_body == editor_body:
+        return {"status": "一致", "match": True, "detail": f"本文 {len(audit_body)}字"}
+
+    detail = f"10A {len(audit_body)}字 / 10B {len(editor_body)}字"
+    for index, (left, right) in enumerate(zip(audit_body, editor_body)):
+        if left != right:
+            detail += (f"／最初の差異は {index} 文字目付近："
+                       f"10A「…{audit_body[max(0, index - 20):index + 20]}…」")
+            break
+    return {"status": "不一致", "match": False, "detail": detail}
+
+
+def find_unresolved_settings(project_root: Path) -> list[str]:
+    """設定値が未入力のまま成果物へ出ている箇所を検出する.
+
+    bgm_credit や contact が初期値のままだと、
+    クレジット表記や問い合わせ先が欠けた状態で編集者へ渡ってしまう。
+    """
+    markers = {
+        "【要確認・正式表記を荒木が入力】": "BGMクレジット（config/settings.yaml の bgm_credit）",
+        "【お問い合わせ先：要入力】": "問い合わせ先（config/settings.yaml の contact）",
+    }
+    found: list[str] = []
+    for relative in ("production/16_投稿設定.md", "production/17_編集者向け制作指示書.md"):
+        path = Path(project_root) / relative
+        if not path.exists():
+            continue
+        text = path.read_text(encoding=ENC)
+        for marker, label in markers.items():
+            if marker in text:
+                entry = f"{label} … {relative} に未入力のまま残っている"
+                if entry not in found:
+                    found.append(entry)
+    return found
 
 
 def count_script_chars(script_path: Path) -> int:
@@ -212,12 +282,23 @@ def count_script_chars(script_path: Path) -> int:
     lines = []
     for line in body.splitlines():
         stripped = line.strip()
-        if not stripped or stripped.startswith(("#", "|", ">", "-", "*", "```")):
+        if not stripped:
             continue
+        # 見出し・表・引用・コードフェンスは読み上げ対象外
+        if stripped.startswith(("#", "|", ">", "```")):
+            continue
+        # 箇条書きは「記号＋空白」の形のみ除外する。
+        # 「**発言は確認できていません。**」のような太字始まりの
+        # ナレーション行を箇条書きと誤認しないため。
+        if re.match(r"^([-*+]\s|\d+[.)]\s)", stripped):
+            continue
+        # テンプレートの指示文（丸かっこで囲まれた行）は除外する
         if stripped.startswith("（") and stripped.endswith("）"):
             continue
         lines.append(stripped)
     joined = "".join(lines)
+    # 強調記号は読み上げられないため、計数前に取り除く
+    joined = re.sub(r"\*\*|__|(?<!\*)\*(?!\*)", "", joined)
     joined = re.sub(r"\s", "", joined)
     return len(joined)
 
@@ -304,6 +385,10 @@ def build_machine_report(project_root: Path, forbidden_result, required_result,
     _listing("追加確認が必要な事実の参照", cross_check.get("needs_more_check", []))
     _listing("使用できない素材の参照", cross_check.get("unusable_materials", []))
     _listing("台本で未使用の事実ID", cross_check.get("unused_facts", []))
+    compare = flags.get("script_compare") or {}
+    if compare:
+        lines.append(f"- 10A と 10B の本文一致：{compare.get('status', '未検査')}"
+                     f"{'（' + compare['detail'] + '）' if compare.get('detail') else ''}")
 
     lines.extend([
         "",

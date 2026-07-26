@@ -151,8 +151,10 @@ def build_context(settings: dict, project, network_status: str,
         "SHORTS_ROWS_MAX": str(settings.get("shorts_visual_rows_max", 20)),
         "NETWORK_STATUS": network_status,
         "PAST_VIDEOS_STATUS": past_videos_status,
-        "APPROVED_TITLE": _s(approval.get("selected_title"), "【承認後に確定】"),
-        "APPROVED_THUMBNAIL": _s(approval.get("selected_thumbnail"), "【承認後に確定】"),
+        # 承認前の未確定マーカーは、タイトルとサムネイルで別の文字列にする。
+        # 同じ文字列にすると、最終版でどちらを埋めるべきか判別できなくなる。
+        "APPROVED_TITLE": _s(approval.get("selected_title"), "【承認後に確定：タイトル】"),
+        "APPROVED_THUMBNAIL": _s(approval.get("selected_thumbnail"), "【承認後に確定：サムネイル】"),
     }
 
 

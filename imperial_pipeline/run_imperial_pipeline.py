@@ -173,6 +173,8 @@ def run_checks(project_root: Path, configs: dict, data: dict, project) -> dict:
     )
     char_count = approval_builder.count_script_chars(data["script_path"])
     cpm = int(configs["settings"].get("chars_per_minute", 300) or 300)
+    script_compare = approval_builder.compare_script_bodies(project_root)
+    unresolved = approval_builder.find_unresolved_settings(project_root)
 
     flags = {
         "forbidden_blocking": len(forbidden_result.blocking),
@@ -184,6 +186,9 @@ def run_checks(project_root: Path, configs: dict, data: dict, project) -> dict:
         "fake_urls": approval_builder.find_fake_urls(project_root),
         "ai_face": approval_builder.find_ai_face_materials(data["material_rows"]),
         "honorifics": honorific_findings,
+        "script_mismatch": script_compare["detail"] if script_compare.get("match") is False else "",
+        "unresolved_settings": unresolved,
+        "script_compare": script_compare,
         "tags": approval_builder.count_unconfirmed_tags(project_root),
         "char_count": char_count,
         "char_target": f"{project.target_length_min * cpm:,}〜{project.target_length_max * cpm:,}字",
@@ -194,6 +199,7 @@ def run_checks(project_root: Path, configs: dict, data: dict, project) -> dict:
         "cross_check": cross_check,
         "flags": flags,
         "char_count": char_count,
+        "script_compare": script_compare,
     }
 
 
