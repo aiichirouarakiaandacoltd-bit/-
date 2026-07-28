@@ -1,0 +1,17 @@
+# =====================================================================
+# 承認ファイル
+# ---------------------------------------------------------------------
+# audit/19_荒木承認用サマリー.md を読み、荒木愛一朗が記入する。
+# 記入後：
+#   python run_imperial_pipeline.py projects/<slug>/input/project_input.yaml \
+#          --stage final --approval projects/<slug>/input/approval.yaml
+#
+# approval_status が approved 以外の場合、最終パッケージは生成されない。
+# =====================================================================
+
+approval_status: pending   # approved / pending / rejected
+selected_title:            # 採用するタイトル（全文）
+selected_thumbnail:        # 採用するサムネイル案の番号または名称（例: サムネイル案3）
+approved_risks: []         # 承知のうえで進めるリスク。承認用サマリーの記載を転記する。
+rejected_materials: []     # 使用を認めない素材ID（例: [M004, M007]）。最終版で使用禁止として扱う。
+revision_notes:            # 修正指示。空欄可。

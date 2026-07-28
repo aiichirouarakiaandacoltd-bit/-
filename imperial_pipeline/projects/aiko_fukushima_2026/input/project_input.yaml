@@ -1,0 +1,40 @@
+# =====================================================================
+# 企画入力ファイル
+# =====================================================================
+
+project_name: 愛子さま 福島ご訪問（震災から15年）
+project_slug: aiko_fukushima_2026
+channel: 日本が誇る皇室物語
+main_person: 愛子さま
+theme: >-
+  令和8年（2026年）4月6日から7日にかけて行われた、天皇皇后両陛下と愛子さまの
+  福島県へのご訪問を、当日の流れに沿って伝える。東日本大震災と原子力災害から
+  15年の節目にあたり、ご一家3人での被災地ご訪問であったこと、
+  愛子さまが被災された方々へ熱心にお尋ねになっていたことを中心に扱う。
+working_title:
+target_length_min: 12
+target_length_max: 14
+shorts_count: 1
+reference_urls:
+  - https://www.nikkei.com/article/DGXZQOUD021CZ0S6A400C2000000/
+  - https://www.jiji.com/jc/article?k=2026040700109&g=soc
+  - https://kahoku.news/articles/knp2026040601001154.html
+  - https://www.minyu-net.com/news/detail/2026040507170748170
+  - https://www.fukushima-tv.co.jp/localnews/2026/04/2026040600000019.html
+  - https://www.fukushima-tv.co.jp/localnews/2026/04/2026041200000001.html
+reference_files: []
+must_include:
+  - ご訪問の日付と訪問先を時系列で示すこと
+  - 震災・原子力災害から15年の節目であること
+  - 愛子さまが被災された方々へお尋ねになっていたこと
+must_not_include:
+  - 確認できていないお言葉の引用
+  - 内心の推測
+  - 皇族方の比較や対立を想起させる表現
+publication_target_date:
+editor_name:
+sample_mode: false
+notes: >-
+  この環境では WebFetch が遮断されており、宮内庁公式ページを開けていない。
+  事実は検索結果の要約による確認にとどまるため、確認状態はすべて
+  「一次資料未確認」とする。公開前に宮内庁公式での確認が必要。
