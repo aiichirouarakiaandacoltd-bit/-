@@ -1,2 +1,7 @@
 __pycache__/
 *.pyc
+
+# 実行時に生成されるもの（ディレクトリ自体は .gitkeep で保持する）
+imperial_pipeline/logs/*.log
+imperial_pipeline/logs/*.jsonl
+imperial_pipeline/projects/*/_history/
