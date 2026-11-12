@@ -76,11 +76,55 @@ def openjtalk(cuts, cfg, gap, target):
     return waves
 
 
+def place(cuts, waves, min_gap):
+    """各文を「カット開始」か「前の文の終了＋間」の遅いほうから始める。"""
+    starts, prev_end = [], -1.0
+    for c, w in zip(cuts, waves):
+        s = max(c["src"][0], prev_end + min_gap) if prev_end >= 0 else c["src"][0]
+        starts.append(s)
+        prev_end = s + len(w) / SR
+    return starts, prev_end
+
+
+def flow(cuts, cfg):
+    total = cuts[-1]["src"][1]
+    gap = cfg.get("min_gap_sec", 0.08)
+    for sp in cfg["speed_candidates"]:
+        waves = voicevox(cuts, dict(cfg, speed_scale=sp))
+        starts, end = place(cuts, waves, gap)
+        delay = max(s - c["src"][0] for s, c in zip(starts, cuts))
+        print(f"speed={sp:.2f} narration_end={end:.2f}s / {total:.2f}s  max_delay={delay:.2f}s")
+        if end <= total - 0.05:
+            break
+    n = int(round(total * SR))
+    track = np.zeros(n, np.float32)
+    timeline = []
+    (BUILD / "voice").mkdir(parents=True, exist_ok=True)
+    for c, w, s in zip(cuts, waves, starts):
+        i = int(round(s * SR))
+        w = w[: max(0, n - i)]
+        track[i:i + len(w)] += w
+        wavfile.write(BUILD / "voice" / f"cut_{c['id']:02d}.wav", SR, w)
+        timeline.append({"id": c["id"], "start": round(c["src"][0], 3), "dur": round(c["src"][1] - c["src"][0], 3),
+                         "speech_start": round(s, 3), "speech": round(len(w) / SR, 3)})
+    track = track / max(np.abs(track).max(), 1e-9) * 0.9
+    wavfile.write(BUILD / "narration_raw.wav", SR, track)
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(BUILD / "narration_raw.wav"),
+                    "-af", "loudnorm=I=-14:TP=-1.5:LRA=7", "-ar", str(SR), "-ac", "1",
+                    str(BUILD / "narration.wav")], check=True)
+    (BUILD / "timeline.json").write_text(json.dumps({"engine": "voicevox", "timing": "flow", "speed_scale": sp,
+                                                     "total": total, "cuts": timeline},
+                                                    ensure_ascii=False, indent=1), encoding="utf-8")
+    print(f"speed_scale={sp} total={total:.2f}s -> build/timeline.json, build/narration.wav")
+
+
 def main():
     sc = load_script()
     cfg = sc["meta"]["tts"]
     cuts = sc["cuts"]
     gap = cfg["gap_sec"]
+    if cfg["engine"] == "voicevox" and cfg.get("timing") == "flow":
+        return flow(cuts, cfg)
     if cfg["engine"] == "voicevox":
         waves = voicevox(cuts, cfg)
     else:

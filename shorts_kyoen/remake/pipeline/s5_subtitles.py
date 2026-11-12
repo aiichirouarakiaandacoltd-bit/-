@@ -46,8 +46,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     events, srt = [], []
     for n, cut in enumerate(sc["cuts"], 1):
         t = tl[cut["id"]]
-        start = t["start"]
-        end = t["start"] + t["speech"] + 0.12
+        start = t.get("speech_start", t["start"])
+        end = start + t["speech"] + 0.12
+        nxt = tl.get(cut["id"] + 1)
+        if nxt:  # 次の字幕と重ならないようにする
+            end = min(end, nxt.get("speech_start", nxt["start"]))
         lines = []
         for line in cut["text"]:
             parts = []

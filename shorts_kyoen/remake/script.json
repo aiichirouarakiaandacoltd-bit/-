@@ -13,14 +13,21 @@
       "engine": "voicevox",
       "voice_name": "VOICEVOX:青山龍星（ノーマル）",
       "speaker": 13,
-      "speed_scale": 0.9,
+      "speed_scale": 0.96,
       "python": "/tmp/claude-0/vv/venv/bin/python",
       "onnxruntime_lib": "/tmp/claude-0/vv/onnxruntime-linux-x64-1.13.1/lib",
       "gap_sec": 0.3,
       "target_total_sec": 67.2,
-      "timing": "match_source",
+      "timing": "flow",
       "min_gap_sec": 0.08,
-      "_timing": "match_source: 各カットの尺を素材の src 区間（元動画のテンポ）に合わせる。収まらない文だけ声の高さを変えずに詰める。free: 音声の長さ＋gap_sec で尺を決める。"
+      "_timing": "flow: 映像は src 区間どおり等速。ナレーションは各カットの開始以降に、前の文に続けて流す。全体が収まる最も遅い速度を speed_candidates から選ぶ。match_source: 各文をカット区間に収まるよう詰める。free: 音声の長さ＋gap_sec で尺を決める。",
+      "speed_candidates": [
+        0.96,
+        0.97,
+        0.98,
+        0.99,
+        1.0
+      ]
     },
     "bgm": {
       "file": "input/bgm.wav",
