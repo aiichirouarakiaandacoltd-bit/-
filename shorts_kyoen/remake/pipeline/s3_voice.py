@@ -32,6 +32,15 @@ def to_sr(x, sr):
     return resample_poly(x, SR // g, sr // g)
 
 
+def atempo(w, factor):
+    """声の高さを変えずに速さだけ変える（ffmpeg atempo）。"""
+    src, dst = BUILD / "tmp_in.wav", BUILD / "tmp_out.wav"
+    wavfile.write(src, SR, w.astype(np.float32))
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(src), "-af", f"atempo={factor:.5f}",
+                    "-ar", str(SR), str(dst)], check=True)
+    return wavfile.read(dst)[1].astype(np.float32)
+
+
 def voicevox(cuts, cfg):
     import pyopenjtalk  # 辞書の場所を借りる
     dic = glob.glob(os.path.join(os.path.dirname(pyopenjtalk.__file__), "open_jtalk_dic*"))[0]
@@ -79,13 +88,24 @@ def main():
 
     (BUILD / "voice").mkdir(parents=True, exist_ok=True)
     timeline, track, t = [], [], 0.0
+    match = cfg.get("timing") == "match_source"
     for c, w in zip(cuts, waves):
-        seg = len(w) + int(gap * SR)
+        tempo = 1.0
+        if match:
+            slot = c["src"][1] - c["src"][0]
+            room = slot - cfg.get("min_gap_sec", 0.08)
+            if len(w) / SR > room:
+                tempo = (len(w) / SR) / room
+                w = atempo(w, tempo)
+            seg = int(round(slot * SR))
+            w = w[:seg]
+        else:
+            seg = len(w) + int(gap * SR)
         buf = np.zeros(seg, np.float32)
         buf[: len(w)] = w
         track.append(buf)
         wavfile.write(BUILD / "voice" / f"cut_{c['id']:02d}.wav", SR, w)
-        timeline.append({"id": c["id"], "start": round(t, 3), "speech": round(len(w) / SR, 3), "dur": round(seg / SR, 3)})
+        timeline.append({"id": c["id"], "start": round(t, 3), "speech": round(len(w) / SR, 3), "dur": round(seg / SR, 3), "tempo": round(tempo, 3)})
         t += seg / SR
 
     raw = np.concatenate(track)
