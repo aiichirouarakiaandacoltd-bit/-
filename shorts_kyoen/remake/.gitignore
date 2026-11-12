@@ -1,0 +1,4 @@
+# 動画・音声などの重いファイルはGitに入れない
+input/
+build/
+output/
