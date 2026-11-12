@@ -81,8 +81,9 @@ def main():
             ramp = np.linspace(0, 1, fe)
             a[:fe], a[-fe:] = ramp, ramp[::-1]
         Image.fromarray((np.tile(a[:, None], (1, m["source_size"][0])) * 255).astype(np.uint8), "L").save(BUILD / "img" / "mask.png")
-    bgm(m["tts"]["target_total_sec"] + 2)
-    print("backgrounds, circle_arrow, bgm -> build/img, build/bgm.wav")
+    if not m.get("bgm", {}).get("file"):
+        bgm(m["tts"]["target_total_sec"] + 2)  # BGMファイル未指定のときだけ自作パッドを使う
+    print("backgrounds, circle_arrow, mask -> build/img")
 
 
 if __name__ == "__main__":

@@ -53,7 +53,8 @@ def main():
             inputs += ["-loop", "1", "-i", str(BUILD / "img" / "mask.png")]
             f = [x.replace("[MASK]", f"[{n_in}:v]") for x in f]
         out = BUILD / "clips" / f"cut_{c['id']:02d}.mp4"
-        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(src), *inputs,
+        csrc = ROOT / c["file"] if c.get("file") else src
+        cmd = ["ffmpeg", "-v", "error", "-y", "-i", str(csrc), *inputs,
                "-filter_complex", ";".join(f), "-map", "[out]", "-t", f"{dur:.3f}",
                "-r", str(fps), "-c:v", "libx264", "-preset", "medium", "-crf", "18",
                "-pix_fmt", "yuv420p", "-an", str(out)]

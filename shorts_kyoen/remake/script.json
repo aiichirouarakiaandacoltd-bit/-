@@ -6,7 +6,17 @@
     "fps": 30,
     "source_video": "input/orig.mp4",
     "source_size": [406, 720],
-    "tts": { "engine": "pyopenjtalk", "speed": 1.0, "half_tone": 0.0, "gap_sec": 0.30, "target_total_sec": 67.2 },
+    "tts": {
+      "engine": "voicevox",
+      "voice_name": "VOICEVOX:青山龍星（ノーマル）",
+      "speaker": 13,
+      "speed_scale": 0.90,
+      "python": "/tmp/claude-0/vv/venv/bin/python",
+      "onnxruntime_lib": "/tmp/claude-0/vv/onnxruntime-linux-x64-1.13.1/lib",
+      "gap_sec": 0.30,
+      "target_total_sec": 67.2
+    },
+    "bgm": { "file": "input/bgm.wav", "loudness_lufs": -30, "fade_out_sec": 1.5 },
     "subtitle": {
       "font": "Noto Sans CJK JP Black",
       "size": 118,
@@ -31,7 +41,7 @@
       "pink": { "top": "#F3B6EA", "bottom": "#FBE1E6" }
     }
   },
-  "_markup": "字幕の [[語|色名]] はキーワードの色指定。[[語|色名|白縁]] は白い縁取り。reading は音声合成用の読み（未指定なら字幕どおり読む）。src は素材動画の使用区間（秒）。",
+  "_markup": "cuts の file を指定すると、そのカットだけ別の素材動画を使う（src はその動画内の秒）。字幕の [[語|色名]] はキーワードの色指定。[[語|色名|白縁]] は白い縁取り。reading は音声合成用の読み（未指定なら字幕どおり読む）。src は素材動画の使用区間（秒）。",
   "cuts": [
     { "id": 1,  "text": ["この[[映像|red]]を見てほしい"], "src": [0.00, 1.90], "layout": "letterbox", "band": [188, 526], "bg": "gold", "overlay": "circle_arrow" },
     { "id": 2,  "text": ["これは[[世界各国|green]]から", "国王や大統領が招かれた"], "src": [1.90, 5.36], "layout": "letterbox", "band": [188, 526], "bg": "gold" },
