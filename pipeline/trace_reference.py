@@ -55,6 +55,23 @@ def subtitle_mask(bgr: np.ndarray) -> np.ndarray:
     return full
 
 
+def full_mask(bgr: np.ndarray) -> np.ndarray:
+    """原寸の字幕マスク(0/255)。高解像度にも対応。"""
+    h, w = bgr.shape[:2]
+    if w <= 500:
+        return subtitle_mask(bgr)
+    small = cv2.resize(bgr, (406, round(h * 406 / w)), interpolation=cv2.INTER_AREA)
+    m = subtitle_mask(small)
+    if not m.any():
+        return np.zeros((h, w), np.uint8)
+    m = cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST)
+    region = cv2.dilate(m, np.ones((45, 261), np.uint8)) > 0
+    hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+    textish = (hsv[..., 2] > 140) | (hsv[..., 2] < 75) | (hsv[..., 1] > 110)
+    m = ((m > 0) | (region & textish)).astype(np.uint8) * 255
+    return cv2.dilate(m, np.ones((9, 9), np.uint8))
+
+
 def clean_frame(bgr: np.ndarray) -> np.ndarray:
     h, w = bgr.shape[:2]
     if w > 500:
