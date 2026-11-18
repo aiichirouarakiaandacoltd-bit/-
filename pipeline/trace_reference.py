@@ -97,9 +97,20 @@ def main():
     ap.add_argument("--ref", default=str(ROOT / "references" / "reference_01.mp4"))
     ap.add_argument("--subs", default=str(ROOT / "references" / "reference_01_subs.json"))
     ap.add_argument("--job", default="trace_reference_01")
+    ap.add_argument("--exact", action="store_true",
+                    help="完全一致モード: 映像を加工せず(字幕も元のまま)1080x1920/30fpsへ変換し、元の音声をそのまま使う")
     a = ap.parse_args()
     job = Job(a.job)
     log = get_logger(job)
+    cfg = settings()["output"]
+    if a.exact:
+        log.info("=== 完全一致モード(私的検証用・公開禁止) ===")
+        run(["ffmpeg", "-y", "-v", "error", "-i", a.ref,
+             "-vf", f"scale=1080:1920:flags=lanczos,fps={cfg['fps']},format=yuv420p",
+             "-c:v", "libx264", "-preset", "slow", "-crf", "14", "-profile:v", "high",
+             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(job.video)])
+        log.info(f"完了: {job.video}")
+        return
     log.info("=== トレース再現(私的検証用・公開禁止) ===")
     bg = job.output / "background_clean.mp4"
     if not bg.exists():
