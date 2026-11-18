@@ -1,0 +1,15 @@
+# 第三者著作物(参考動画)はリポジトリに含めない
+references/*.mp4
+references/*.mov
+# 生成物
+output/
+logs/
+research/*/
+scripts/*/
+assets/jobs/
+audio/jobs/
+audio/bgm/generated_*.wav
+subtitles/*/
+__pycache__/
+*.pyc
+.venv/

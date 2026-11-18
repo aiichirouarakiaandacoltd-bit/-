@@ -1,0 +1,48 @@
+{
+  "channel_name": "日本が誇る皇室物語",
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "vcodec": "libx264",
+    "crf": 18,
+    "preset": "medium",
+    "acodec": "aac",
+    "audio_bitrate": "192k",
+    "max_duration": 60.0,
+    "target_loudness_lufs": -16.0
+  },
+  "tts": {
+    "engine_order": ["voicevox", "openjtalk"],
+    "voicevox_url": "http://127.0.0.1:50021",
+    "voicevox_speaker_name": "青山龍星",
+    "voicevox_style_name": "ノーマル",
+    "voicevox_speaker_id_fallback": 13,
+    "speed": 1.0,
+    "volume": 1.0,
+    "sentence_pause_sec": 0.18,
+    "openjtalk_note": "VOICEVOX が起動していない場合のフォールバック(速度1.0)。音色は青山龍星と異なる。"
+  },
+  "bgm": {
+    "enabled": true,
+    "dir": "audio/bgm",
+    "volume_db_below_voice": 22,
+    "fade_in": 0.5,
+    "fade_out": 1.5,
+    "note": "参考動画は台詞の間の無音部が -51〜-66dB でBGMはほぼ聞こえない。既定では非常に小さく敷く。"
+  },
+  "research": {
+    "lookback_days": 21,
+    "max_candidates": 30,
+    "llm_backend_order": ["claude_cli", "anthropic_api"],
+    "claude_cli_model": "",
+    "anthropic_model": "claude-opus-5-5"
+  },
+  "assets": {
+    "commons_user_agent": "RoyalShortsPipeline/1.0 (non-commercial research tool)",
+    "allowed_licenses": ["CC0", "Public domain", "PD", "CC BY", "CC BY-SA", "Attribution"],
+    "blocked_license_keywords": ["NC", "ND", "Fair use", "Non-free"],
+    "min_long_side": 700,
+    "max_per_scene_candidates": 6
+  }
+}

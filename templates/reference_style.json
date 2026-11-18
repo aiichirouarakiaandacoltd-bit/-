@@ -1,0 +1,126 @@
+{
+  "_about": "参考動画(references/reference_01.mp4)の分析から抽出した再現可能な編集ルール。自動測定値は reference_analysis_reference_01.json。映像・音声・台本そのものは複製しない。",
+  "source_reference": "references/reference_01.mp4",
+
+  "measured_summary": {
+    "duration_sec": 59.93,
+    "resolution": "406x720 (9:16, 低解像度アップロード版)",
+    "fps": 29.97,
+    "codec": "H.264 High / AAC LC 44.1kHz stereo 128kbps",
+    "shot_count": 17,
+    "avg_shot_sec": 3.53,
+    "shot_range_sec": [1.07, 6.26],
+    "subtitle_chunks": "約48〜50(平均 約1.2〜1.3秒/チャンク)",
+    "loudness_lufs": -17.9,
+    "bgm": "台詞間の無音部が -51〜-66dB。BGMは無いか、ほぼ聞こえないレベル",
+    "narration": "男性ナレーター、だ・である調、文末で短い間(約0.25〜0.3秒)。推定 約6.5字/秒(字幕文字数から推定、確度:中)",
+    "image_vs_video": "ほぼ全て静止画(写真)+ズーム。一部AI生成風・カラー化風の画像あり(本システムでは不採用)"
+  },
+
+  "visual_observations": {
+    "image_types": ["当事者の学生時代の写真(カラー/白黒)", "人物アップ", "書店・本棚の情景(生成画像風)", "足元の歩行カット(イメージ映像)", "集合写真"],
+    "framing": "9:16全面に被写体をトリミング(左右を大きく切る)。人物の顔は画面上1/4〜1/2に置き、字幕帯(画面高57〜65%)と重ならないよう配置",
+    "motion": "ほぼ全カットでゆっくりしたズームイン(1.00→1.08程度)。パンは少なめ",
+    "transition": "基本はハードカット。字幕の切替に合わせて写真が変わるのではなく、話題の切替(2〜4チャンク)単位でカット",
+    "hook": "冒頭1秒: 対象人物を赤い円で囲み、赤い矢印で指す注目演出 + 大きめの赤字テロップ『これを見てほしい』系の呼びかけ",
+    "sync": "人物名が出るタイミングで、その人物の写真に切り替わる",
+    "end": "結論を言い切らずに次の興味を残す一言で終わる(ループ再生を誘う)"
+  },
+
+  "subtitle_observations": {
+    "position": "画面中央やや下(縦57〜65%)、中央揃え",
+    "font": "極太の角ゴシック(丸みのある太字系)。特定不可→ Noto Sans CJK JP Black で代替",
+    "size": "高さ720pxで約30px → 1920pxで約80px",
+    "fill": "白",
+    "outline": "黒の太い縁取り + 軽い影",
+    "highlight": "人物名や核心語を色付け。人物ごとに色を固定(例: ある人物=ピンク, 別の人物=緑, 宮家=水色)。強い語(暴露・証言・できない等)=赤。強調語は白の縁取り",
+    "lines": "1〜2行。1行 最大10〜11字",
+    "chars_per_chunk": "6〜20字",
+    "entrance": "ポップイン(小→等倍に拡大)、左からのスライドイン(斜体ぎみ)、フェードの3種を混在。約0.15秒",
+    "exit": "次の字幕に即切替(ほぼ無音区間なし)",
+    "background_box": "なし"
+  },
+
+  "structure_observations": {
+    "0-1s": "視覚的フック(人物を丸で囲む + 呼びかけ)",
+    "1-8s": "テーマ提示: 『〇〇の△△に、今注目が集まっている』型",
+    "8-20s": "定説・背景の提示(〜と語られてきたが)",
+    "20-50s": "核心情報を時系列で積み上げる(誰が・何を・どう言ったか)",
+    "50-60s": "意味づけ + 余韻を残す締め",
+    "retention_devices": ["冒頭の呼びかけ", "『実は』『さらに』等の接続で次を期待させる", "1.2秒ごとの字幕切替でテンポを維持", "人物名の色分けで登場人物を瞬時に識別させる"],
+    "caution": "参考動画の題材は匿名の『証言』に基づく未確認情報で、実在人物の評価に関わる。本システムでは同種の未確認情報・煽り表現は採用しない"
+  },
+
+  "rules": {
+    "canvas": {"width": 1080, "height": 1920, "fps": 30},
+    "shot": {
+      "target_sec": 3.5,
+      "min_sec": 1.2,
+      "max_sec": 6.0,
+      "hook_first_shot_sec": 1.6,
+      "cut_on": "scene boundary または 人物名の初出チャンク",
+      "zoom_start": 1.0,
+      "zoom_end": 1.09,
+      "pan_max_ratio": 0.04,
+      "transition": "cut",
+      "flash_on_hook": true
+    },
+    "framing": {
+      "face_target_y": 0.30,
+      "subtitle_safe_band": [0.55, 0.70],
+      "fill_mode": "crop_if_faces_fit_else_blur_bg",
+      "max_upscale": 3.0
+    },
+    "subtitle": {
+      "font_candidates": ["Noto Sans CJK JP Black", "Noto Sans CJK JP Bold", "IPAGothic"],
+      "font_size": 80,
+      "hook_font_size": 104,
+      "center_y": 0.615,
+      "max_chars_per_line": 11,
+      "max_lines": 2,
+      "min_chunk_sec": 0.7,
+      "primary_color": "#FFFFFF",
+      "outline_color": "#000000",
+      "outline_px": 9,
+      "shadow_px": 4,
+      "highlight_outline_color": "#FFFFFF",
+      "highlight_outline_px": 6,
+      "entrance_ms": 150,
+      "entrance_styles": ["pop", "slide", "fade"],
+      "emphasis_color": "#FF1E1E",
+      "person_colors": {
+        "天皇陛下": "#3FA9F5",
+        "天皇皇后両陛下": "#3FA9F5",
+        "両陛下": "#3FA9F5",
+        "皇后雅子さま": "#FF5FA2",
+        "雅子さま": "#FF5FA2",
+        "皇后さま": "#FF5FA2",
+        "敬宮愛子さま": "#FFB000",
+        "愛子さま": "#FFB000",
+        "佳子さま": "#7CD957",
+        "秋篠宮さま": "#28C8E0",
+        "秋篠宮ご夫妻": "#28C8E0",
+        "紀子さま": "#E05FC8",
+        "悠仁さま": "#4F7DFF",
+        "上皇さま": "#B48CFF",
+        "上皇后美智子さま": "#B48CFF",
+        "宮内庁": "#C8A2FF"
+      }
+    },
+    "narration": {
+      "voice": "VOICEVOX 青山龍星 ノーマル",
+      "speed": 1.0,
+      "style": "だ・である調を基本に、敬語は報道基準(〜された、〜さま)",
+      "sentence_pause_sec": 0.18,
+      "max_sec": 58.5
+    },
+    "audio": {"target_lufs": -16.0, "bgm_db_below_voice": 22},
+    "script_template": [
+      {"role": "hook", "sec": [0, 5], "desc": "人物+出来事の最も印象的な一点を短く。視覚的な注目演出つき"},
+      {"role": "background", "sec": [5, 15], "desc": "いつ・どこで・何の行事か"},
+      {"role": "main", "sec": [15, 40], "desc": "出来事・発言・重要情報を時系列で。発言は報道で確認できた言葉のみ"},
+      {"role": "twist", "sec": [40, 53], "desc": "意外性・背景・補足(事実の範囲で)"},
+      {"role": "closing", "sec": [53, 60], "desc": "意味づけと余韻。チャンネルらしい温かい締め"}
+    ]
+  }
+}
