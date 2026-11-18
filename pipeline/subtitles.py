@@ -196,6 +196,70 @@ def _t(sec: float) -> str:
     return f"{h}:{m:02d}:{s:05.2f}"
 
 
+def write_ass(job: Job, chunks: list[dict]) -> None:
+    """チャンク列を ASS 字幕として書き出す(チャンクごとに色・登場演出・サイズの上書き可)。"""
+    st = style()["rules"]["subtitle"]
+    W, H = 1080, 1920
+    colors = st["person_colors"]
+    emph = st["emphasis_color"]
+    font = st["font_candidates"][0]
+    cy = int(H * st["center_y"])
+    white, black = _ass_color(st["primary_color"]), _ass_color(st["outline_color"])
+    hdr = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {W}
+PlayResY: {H}
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+YCbCr Matrix: TV.709
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Back,{font},{st['font_size']},{black},{black},{black},&H64000000&,0,0,0,0,100,100,2,0,1,{st['outline_px'] + 5},{st['shadow_px']},5,40,40,0,1
+Style: Main,{font},{st['font_size']},{white},{white},{black},&H00000000&,0,0,0,0,100,100,2,0,1,3,0,5,40,40,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+    ev = []
+    for i, c in enumerate(chunks):
+        hook = c.get("hook", i == 0 and c.get("role") == "hook")
+        size = c.get("size") or (st["hook_font_size"] if hook else st["font_size"])
+        ccolors = {**colors, **c.get("colors", {})}
+        dur_ms = int((c["end"] - c["start"]) * 1000)
+        has_hl = any(col for ln in c["lines"] for _, col in highlight_spans(ln, c["terms"], ccolors, emph))
+        kind = c.get("entrance_fixed") or ("pop" if (hook or has_hl) else ("slide" if c.get("sentence_start") else "fade"))
+        c["entrance"] = kind
+        ms = st["entrance_ms"]
+        if kind == "pop":
+            anim = f"\\fscx55\\fscy55\\t(0,{ms},\\fscx100\\fscy100)"
+            pos = f"\\pos(540,{cy})"
+        elif kind == "slide":
+            anim = f"\\fad({ms},0)"
+            pos = f"\\move(470,{cy},540,{cy},0,{ms})"
+        else:
+            anim = f"\\fad({ms},0)"
+            pos = f"\\pos(540,{cy})"
+        back_txt, main_txt = [], []
+        for ln in c["lines"]:
+            spans = highlight_spans(ln, c["terms"], ccolors, emph)
+            if hook or c.get("all_color"):
+                spans = [(ln, c.get("all_color") or emph)]
+            back_txt.append(ln)
+            seg = ""
+            for txt, col in spans:
+                if col:
+                    seg += f"{{\\c{_ass_color(col)}\\3c{white}\\bord{st['highlight_outline_px']}}}{txt}"
+                else:
+                    seg += f"{{\\c{white}\\3c{black}\\bord3}}{txt}"
+            main_txt.append(seg)
+        base = f"{{\\an5{pos}\\fs{size}{anim}}}"
+        ev.append(f"Dialogue: 0,{_t(c['start'])},{_t(c['end'])},Back,,0,0,0,,{base}" + "\\N".join(back_txt))
+        ev.append(f"Dialogue: 1,{_t(c['start'])},{_t(c['end'])},Main,,0,0,0,,{base}" + "\\N".join(main_txt))
+        c["duration_ms"] = dur_ms
+    job.ass.write_text(hdr + "\n".join(ev) + "\n", encoding="utf-8")
+
+
 def build(job: Job, script: dict, timeline: dict) -> list[dict]:
     log = get_logger(job)
     st = style()["rules"]["subtitle"]
@@ -240,62 +304,7 @@ def build(job: Job, script: dict, timeline: dict) -> list[dict]:
     if chunks:
         chunks[-1]["end"] = max(chunks[-1]["end"], timeline["duration"] - 0.05)
 
-    # ---- ASS 出力 ----
-    font = st["font_candidates"][0]
-    cy = int(H * st["center_y"])
-    white, black = _ass_color(st["primary_color"]), _ass_color(st["outline_color"])
-    hdr = f"""[Script Info]
-ScriptType: v4.00+
-PlayResX: {W}
-PlayResY: {H}
-WrapStyle: 2
-ScaledBorderAndShadow: yes
-YCbCr Matrix: TV.709
-
-[V4+ Styles]
-Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Back,{font},{st['font_size']},{black},{black},{black},&H64000000&,0,0,0,0,100,100,2,0,1,{st['outline_px'] + 5},{st['shadow_px']},5,40,40,0,1
-Style: Main,{font},{st['font_size']},{white},{white},{black},&H00000000&,0,0,0,0,100,100,2,0,1,3,0,5,40,40,0,1
-
-[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
-"""
-    ev = []
-    for i, c in enumerate(chunks):
-        hook = i == 0 and c["role"] == "hook"
-        size = st["hook_font_size"] if hook else st["font_size"]
-        dur_ms = int((c["end"] - c["start"]) * 1000)
-        has_hl = any(col for ln in c["lines"] for _, col in highlight_spans(ln, c["terms"], colors, emph))
-        kind = "pop" if (hook or has_hl) else ("slide" if c["sentence_start"] else "fade")
-        c["entrance"] = kind
-        ms = st["entrance_ms"]
-        if kind == "pop":
-            anim = f"\\fscx55\\fscy55\\t(0,{ms},\\fscx100\\fscy100)"
-            pos = f"\\pos(540,{cy})"
-        elif kind == "slide":
-            anim = f"\\fad({ms},0)"
-            pos = f"\\move(470,{cy},540,{cy},0,{ms})"
-        else:
-            anim = f"\\fad({ms},0)"
-            pos = f"\\pos(540,{cy})"
-        back_txt, main_txt = [], []
-        for ln in c["lines"]:
-            spans = highlight_spans(ln, c["terms"], colors, emph)
-            if hook:
-                spans = [(ln, emph)]
-            back_txt.append(ln)
-            seg = ""
-            for txt, col in spans:
-                if col:
-                    seg += f"{{\\c{_ass_color(col)}\\3c{white}\\bord{st['highlight_outline_px']}}}{txt}"
-                else:
-                    seg += f"{{\\c{white}\\3c{black}\\bord3}}{txt}"
-            main_txt.append(seg)
-        base = f"{{\\an5{pos}\\fs{size}{anim}}}"
-        ev.append(f"Dialogue: 0,{_t(c['start'])},{_t(c['end'])},Back,,0,0,0,,{base}" + "\\N".join(back_txt))
-        ev.append(f"Dialogue: 1,{_t(c['start'])},{_t(c['end'])},Main,,0,0,0,,{base}" + "\\N".join(main_txt))
-        c["duration_ms"] = dur_ms
-    job.ass.write_text(hdr + "\n".join(ev) + "\n", encoding="utf-8")
+    write_ass(job, chunks)
     save_json(job.subs / "chunks.json", chunks)
     avg = sum(c["end"] - c["start"] for c in chunks) / max(1, len(chunks))
     log.info(f"字幕 {len(chunks)}チャンク (平均{avg:.2f}秒) → {job.ass}")
