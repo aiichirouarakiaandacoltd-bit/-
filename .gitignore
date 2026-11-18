@@ -16,3 +16,5 @@ __pycache__/
 assets/cache/
 references/*_subs.json
 references/*_segments.json
+assets/generated/*.png
+assets/collected/

@@ -137,6 +137,27 @@ def stitch_plate(frames, rel, keys, b, max_ratio=2.0):
     return plate, O
 
 
+def cover_plate(img, W, H, margin=1.10):
+    """縦横比を保ったまま W*margin x H*margin を覆うように拡大し中央を切り出す(変形なし)。"""
+    PW, PH = int(W * margin), int(H * margin)
+    h, w = img.shape[:2]
+    sc = max(PW / w, PH / h)
+    r = cv2.resize(img, (int(w * sc + 0.5), int(h * sc + 0.5)), interpolation=cv2.INTER_LANCZOS4)
+    y0, x0 = (r.shape[0] - PH) // 2, (r.shape[1] - PW) // 2
+    return r[y0:y0 + PH, x0:x0 + PW]
+
+
+def kenburns(n, W, H, PW, PH, z0=1.0, z1=1.07):
+    out = []
+    for k in range(n):
+        u = k / max(1, n - 1)
+        z = z0 + (z1 - z0) * u
+        sc = (W / PW) * z
+        tx, ty = W / 2 - sc * PW / 2, H / 2 - sc * PH / 2
+        out.append([[sc, 0, tx], [0, sc, ty]])
+    return out
+
+
 def render_shot_frames(shot, still, n, W, H):
     for k in range(n):
         M = np.array(shot["transforms"][min(k, len(shot["transforms"]) - 1)])
@@ -149,6 +170,8 @@ def main():
     ap.add_argument("--subs", default=str(ROOT / "references" / "reference_02_subs.json"))
     ap.add_argument("--segments", default=str(ROOT / "references" / "reference_02_segments.json"))
     ap.add_argument("--job", default="rebuild_reference_02")
+    ap.add_argument("--replace", default=None,
+                    help='カットを生成画像等に差し替えるJSON。例: {"7": ["assets/generated/a.png"], "14": ["b.png", "c.png"]}')
     a = ap.parse_args()
     job = Job(a.job)
     log = get_logger(job)
@@ -172,6 +195,27 @@ def main():
         p = stills_dir / f"shot{s['index']:02d}.png"
         cv2.imwrite(str(p), still)
         s["still"] = str(p.relative_to(ROOT))
+    # 差し替え(AI生成画像など): 参考動画と同じカット時刻で、ゆっくりズームを付ける
+    if a.replace:
+        rep = json.loads(open(a.replace).read()) if a.replace.endswith(".json") else json.loads(a.replace)
+        new = []
+        for s in shots:
+            imgs = rep.get(str(s["index"]))
+            if not imgs:
+                new.append(s)
+                continue
+            n = s["end_frame"] - s["start_frame"]
+            parts = np.array_split(np.arange(n), len(imgs))
+            for j, (img, idx) in enumerate(zip(imgs, parts)):
+                plate = cover_plate(cv2.imread(str(ROOT / img)), W, H, 1.10)
+                p = stills_dir / f"shot{s['index']:02d}_{j}.png"
+                cv2.imwrite(str(p), plate)
+                new.append({"index": s["index"], "part": j, "start_frame": s["start_frame"] + int(idx[0]),
+                            "end_frame": s["start_frame"] + int(idx[-1]) + 1, "replaced_by": img,
+                            "transforms": kenburns(len(idx), W, H, plate.shape[1], plate.shape[0]),
+                            "still": str(p.relative_to(ROOT))})
+            log.info(f"  カット{s['index']} を差し替え: {imgs}")
+        shots = new
     save_json(job.output / "rebuild_shots.json", [{k: v for k, v in x.items() if k != "transforms"} for x in shots])
 
     # 2) 映像(静止画+測定したカメラワーク)
