@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import io
+import os
 import re
 import wave
 
@@ -71,6 +72,26 @@ class VoiceVox:
         return x
 
 
+class VoiceVoxCore:
+    """VOICEVOX CORE(Python版)を直接使う。エンジンのサーバー起動不要(pipeline/vv_core.py)。"""
+    name = "voicevox_core"
+
+    def __init__(self, cfg):
+        from . import vv_core
+        if not (os.path.exists(vv_core.VVM) and os.path.exists(vv_core.ORT)):
+            raise RuntimeError(f"VOICEVOX CORE の音声モデル/実行環境が見つかりません: {vv_core.VV_DIR}")
+        vv_core.synthesizer()
+        self.vv = vv_core
+        self.cfg = cfg
+        self.style = cfg.get("voicevox_core_style_id", vv_core.STYLE_AOYAMA_NORMAL)
+        self.label = f"VOICEVOX:青山龍星(ノーマル, style={self.style}, 速度{cfg['speed']}) ※VOICEVOX CORE"
+
+    def synth(self, text: str) -> np.ndarray:
+        x = self.vv.synth(text, style=self.style, speed=self.cfg["speed"], sr=48000,
+                          pitch=self.cfg.get("pitch", 0.0), intonation=self.cfg.get("intonation", 1.0))
+        return x * self.cfg.get("volume", 1.0)
+
+
 class OpenJTalk:
     name = "openjtalk"
 
@@ -94,7 +115,7 @@ def get_engine(log, prefer: str | None = None):
     order = [prefer] if prefer else cfg["engine_order"]
     for name in order:
         try:
-            eng = {"voicevox": VoiceVox, "openjtalk": OpenJTalk}[name](cfg)
+            eng = {"voicevox": VoiceVox, "voicevox_core": VoiceVoxCore, "openjtalk": OpenJTalk}[name](cfg)
             log.info(f"音声エンジン: {eng.label}")
             return eng
         except Exception as e:

@@ -13,7 +13,11 @@
     "target_loudness_lufs": -16.0
   },
   "tts": {
-    "engine_order": ["voicevox", "openjtalk"],
+    "engine_order": [
+      "voicevox",
+      "voicevox_core",
+      "openjtalk"
+    ],
     "voicevox_url": "http://127.0.0.1:50021",
     "voicevox_speaker_name": "青山龍星",
     "voicevox_style_name": "ノーマル",
@@ -21,7 +25,8 @@
     "speed": 1.0,
     "volume": 1.0,
     "sentence_pause_sec": 0.18,
-    "openjtalk_note": "VOICEVOX が起動していない場合のフォールバック(速度1.0)。音色は青山龍星と異なる。"
+    "openjtalk_note": "VOICEVOX が起動していない場合のフォールバック(速度1.0)。音色は青山龍星と異なる。",
+    "voicevox_core_style_id": 13
   },
   "bgm": {
     "enabled": true,
@@ -34,14 +39,29 @@
   "research": {
     "lookback_days": 21,
     "max_candidates": 30,
-    "llm_backend_order": ["claude_cli", "anthropic_api"],
+    "llm_backend_order": [
+      "claude_cli",
+      "anthropic_api"
+    ],
     "claude_cli_model": "",
     "anthropic_model": "claude-opus-5-5"
   },
   "assets": {
     "commons_user_agent": "RoyalShortsPipeline/1.0 (non-commercial research tool)",
-    "allowed_licenses": ["CC0", "Public domain", "PD", "CC BY", "CC BY-SA", "Attribution"],
-    "blocked_license_keywords": ["NC", "ND", "Fair use", "Non-free"],
+    "allowed_licenses": [
+      "CC0",
+      "Public domain",
+      "PD",
+      "CC BY",
+      "CC BY-SA",
+      "Attribution"
+    ],
+    "blocked_license_keywords": [
+      "NC",
+      "ND",
+      "Fair use",
+      "Non-free"
+    ],
     "min_long_side": 700,
     "max_per_scene_candidates": 6
   }

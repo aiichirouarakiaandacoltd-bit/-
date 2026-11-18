@@ -24,7 +24,7 @@ def main(argv=None):
     ap.add_argument("--from", dest="from_stage", choices=STAGES, help="このステージから再実行")
     ap.add_argument("--only", choices=STAGES, help="このステージだけ実行")
     ap.add_argument("--script", help="手動で用意した script.json を使う(research/script をスキップ)")
-    ap.add_argument("--tts-engine", choices=["voicevox", "openjtalk"])
+    ap.add_argument("--tts-engine", choices=["voicevox", "voicevox_core", "openjtalk"])
     ap.add_argument("--no-bgm", action="store_true")
     ap.add_argument("--days", type=int, help="ニュース検索の遡り日数")
     ap.add_argument("--brief", help="台本生成への追加指示(文字列 or ファイルパス)")
@@ -110,6 +110,9 @@ def main(argv=None):
         credits = sorted({f"{r['source_title'].split(':', 1)[-1]} / {r['rights_holder'] or '作者不明'} / {r['license']} / {r.get('source_url', '')}"
                           for k, r in man.get("files", {}).items() if k in used})
         meta += ["", "【写真クレジット】"] + credits
+        tl = load_json(job.timeline, {}) or {}
+        if str(tl.get("engine", "")).startswith("voicevox"):
+            meta += ["", "音声: VOICEVOX:青山龍星"]
         meta += ["", ("BGM: オリジナル(自動生成)" if bgm_path and bgm_path.parent == job.audio else f"BGM: {bgm_path.name}" if bgm_path else "BGM: なし")]
         (job.output / "upload_metadata.txt").write_text("\n".join(meta), encoding="utf-8")
         log.info(f"=== 完了: {job.video} ===")

@@ -231,8 +231,15 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         kind = c.get("entrance_fixed") or ("pop" if (hook or has_hl) else ("slide" if c.get("sentence_start") else "fade"))
         c["entrance"] = kind
         ms = st["entrance_ms"]
+        # はみ出し防止: 最長行の推定幅が画面幅の上限を超える場合は横方向を縮める
+        sx, sy = st.get("scale_x", 100), st.get("scale_y", 100)
+        longest = max(len(ln) for ln in c["lines"])  # 読点も字幅を取る
+        est_w = longest * size * 0.80 * sx / 100  # Noto CJK Black の字幅 ≈ Fontsize×0.80(縁取り込み)
+        limit = W * st.get("max_text_width_ratio", 0.92)
+        if est_w > limit:
+            sx = sx * limit / est_w
+        fit = f"\\fscx{sx:.0f}" if sx != st.get("scale_x", 100) else ""
         if kind == "pop":
-            sx, sy = st.get("scale_x", 100), st.get("scale_y", 100)
             anim = f"\\fscx{sx * 0.55:.0f}\\fscy{sy * 0.55:.0f}\\t(0,{ms},\\fscx{sx}\\fscy{sy})"
             pos = f"\\pos(540,{cy})"
         elif kind == "slide":
@@ -254,7 +261,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
                 else:
                     seg += f"{{\\c{white}\\3c{black}\\bord3}}{txt}"
             main_txt.append(seg)
-        base = f"{{\\an5{pos}\\fs{size}{anim}}}"
+        base = f"{{\\an5{pos}\\fs{size}{fit}{anim}}}"
         ev.append(f"Dialogue: 0,{_t(c['start'])},{_t(c['end'])},Back,,0,0,0,,{base}" + "\\N".join(back_txt))
         ev.append(f"Dialogue: 1,{_t(c['start'])},{_t(c['end'])},Main,,0,0,0,,{base}" + "\\N".join(main_txt))
         c["duration_ms"] = dur_ms
