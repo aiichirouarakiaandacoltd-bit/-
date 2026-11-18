@@ -182,8 +182,31 @@ def _label(text: str, credit: str) -> Image.Image:
 
 
 # ---------------- ショット設計 ----------------
-def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: dict) -> list[dict]:
+def reference_bounds(timeline: dict, ref_analysis: dict, min_sec: float) -> list[float]:
+    """参考動画のカット位置(尺に合わせて伸縮)を、近いシーン境界(±1.2秒)→文境界(±0.8秒)に吸着させる。"""
+    dur = timeline["duration"]
+    rdur = ref_analysis["technical"]["duration_sec"]
+    scene_b = [sc["start"] for sc in timeline["scenes"][1:]]
+    sent_b = [se["start"] for sc in timeline["scenes"] for se in sc["sentences"]][1:]
+    out = [0.0]
+    for c in ref_analysis["cuts"]["cut_times"]:
+        t = c * dur / rdur
+        near = min(scene_b, key=lambda b: abs(b - t), default=None)
+        if near is not None and abs(near - t) <= 1.2:
+            t = near
+        else:
+            near = min(sent_b, key=lambda b: abs(b - t), default=None)
+            if near is not None and abs(near - t) <= 0.8:
+                t = near
+        if t - out[-1] >= min_sec * 0.8 and dur - t >= min_sec * 0.8:
+            out.append(t)
+    return out + [dur]
+
+
+def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: dict, ref_analysis: dict | None = None) -> list[dict]:
     sh = rules["shot"]
+    if ref_analysis:
+        return _plan_reference(script, timeline, manifest, rules, ref_analysis)
     picks = {s["scene"]: s["picks"] for s in manifest["scenes"]}
     files = manifest["files"]
     scene_by_id = {s["id"]: s for s in script["scenes"]}
@@ -229,6 +252,39 @@ def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: di
             b["variant"] = "close" if a["variant"] == "wide" else "wide"
     for s in shots:
         s["start"], s["end"] = round(s["start"], 3), round(s["end"], 3)
+    return shots
+
+
+def _plan_reference(script, timeline, manifest, rules, ref_analysis) -> list[dict]:
+    """参考動画と同じカット割りモード: 区間の中央で話しているシーンの素材を使う。"""
+    bounds = reference_bounds(timeline, ref_analysis, rules["shot"]["min_sec"])
+    picks = {s["scene"]: s["picks"] for s in manifest["scenes"]}
+    files = manifest["files"]
+    scene_by_id = {s["id"]: s for s in script["scenes"]}
+    usage: dict[str, int] = {}
+    shots = []
+    for k, (a, b) in enumerate(zip(bounds, bounds[1:])):
+        mid = (a + b) / 2
+        sc = next((x for x in timeline["scenes"] if x["start"] <= mid < x["end"]), timeline["scenes"][-1])
+        v = scene_by_id[sc["id"]].get("visual", {})
+        p = list(picks.get(sc["id"], []))
+        if p:
+            p.sort(key=lambda f: usage.get(f, 0))
+            f = p[0]
+            usage[f] = usage.get(f, 0) + 1
+            rec = files.get(f, {})
+            shots.append({"scene": sc["id"], "start": round(a, 3), "end": round(b, 3), "type": "image",
+                          "file": str(ROOT / f), "variant": "close" if usage[f] % 2 == 0 else "wide",
+                          "credit": f"{(rec.get('rights_holder') or '')[:30]} / {rec.get('license', '')}".strip(" /"),
+                          "fallback_text": v.get("card_text") or v.get("subject", ""), "sub": v.get("card_sub", ""),
+                          "label": "資料写真" if "library" not in rec.get("found_via", "") else "",
+                          "hook": k == 0})
+        else:
+            shots.append({"scene": sc["id"], "start": round(a, 3), "end": round(b, 3), "type": "card",
+                          "text": v.get("card_text") or v.get("subject", ""), "sub": v.get("card_sub", ""), "hook": False})
+    for x, y in zip(shots, shots[1:]):
+        if x.get("file") and x.get("file") == y.get("file") and x.get("variant") == y.get("variant"):
+            y["variant"] = "close" if x["variant"] == "wide" else "wide"
     return shots
 
 
@@ -358,12 +414,14 @@ def mix_audio(job: Job, bgm: Path | None, duration: float, log) -> Path:
     return mixed
 
 
-def render(job: Job, script: dict, timeline: dict, manifest: dict, bgm: Path | None) -> Path:
+def render(job: Job, script: dict, timeline: dict, manifest: dict, bgm: Path | None, ref_analysis: dict | None = None) -> Path:
     log = get_logger(job)
     rules = style()["rules"]
     cfg = settings()["output"]
     duration = min(timeline["duration"], cfg["max_duration"])
-    shots = plan_shots(job, script, timeline, manifest, rules)
+    shots = plan_shots(job, script, timeline, manifest, rules, ref_analysis)
+    if ref_analysis:
+        log.info(f"参考動画カット割りモード: {ref_analysis['cuts']['shot_count']}カット → {len(shots)}カット")
     save_json(job.output / "shots.json", shots)
     log.info(f"ショット {len(shots)}本 (平均 {duration / len(shots):.2f}秒) を描画中…")
     raw = render_video(job, shots, duration, rules, log)

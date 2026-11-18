@@ -27,6 +27,9 @@ def main(argv=None):
     ap.add_argument("--tts-engine", choices=["voicevox", "openjtalk"])
     ap.add_argument("--no-bgm", action="store_true")
     ap.add_argument("--days", type=int, help="ニュース検索の遡り日数")
+    ap.add_argument("--brief", help="台本生成への追加指示(文字列 or ファイルパス)")
+    ap.add_argument("--match-reference", nargs="?", const=str(ROOT / "templates" / "reference_analysis_reference_01.json"),
+                    help="参考動画の分析JSONのカット位置に合わせて編集(既定: reference_01)")
     a = ap.parse_args(argv)
 
     job = Job(a.job or new_job_id(a.topic))
@@ -61,7 +64,8 @@ def main(argv=None):
 
     try:
         stage("research", lambda: research.run_research(job, a.topic, a.days))
-        stage("script", lambda: script_writer.generate(job, a.topic, force="script" in run_stages and not a.script))
+        stage("script", lambda: script_writer.generate(job, a.topic, force="script" in run_stages and not a.script,
+                                                              brief=(Path(a.brief).read_text(encoding="utf-8") if a.brief and Path(a.brief).exists() else a.brief)))
         script = load_json(job.script)
         if script is None:
             log.error(f"台本がありません: {job.script}")
@@ -89,7 +93,8 @@ def main(argv=None):
         if bgm_path is None and "bgm" not in run_stages:
             p = job.audio / "bgm.wav"
             bgm_path = p if p.exists() and not a.no_bgm else None
-        stage("render", lambda: render.render(job, script, timeline, load_json(job.asset_manifest), bgm_path))
+        stage("render", lambda: render.render(job, script, timeline, load_json(job.asset_manifest), bgm_path,
+                                                    load_json(a.match_reference) if a.match_reference else None))
         res = stage("qa", lambda: qa.check(job))
         # 公開用メタデータ
         man = load_json(job.asset_manifest, {})

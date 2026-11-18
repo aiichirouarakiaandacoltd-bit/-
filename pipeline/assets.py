@@ -229,7 +229,8 @@ def collect(job: Job, script: dict) -> dict:
         for k, art in PERSON_ARTICLES.items():
             if k in subject and art not in articles:
                 articles.append(art)
-        if v.get("kind") in ("place", "object", "event") or not articles:
+        # 人物シーンでは一般語の記事検索をしない(風景などの無関係な画像が混ざるため)
+        if v.get("kind") != "person" and (v.get("kind") in ("place", "object", "event") or not articles):
             for q in [subject] + [q for q in queries if re.search(r"[぀-鿿]", q)]:
                 if q:
                     a = jawiki_search_article(http, q)

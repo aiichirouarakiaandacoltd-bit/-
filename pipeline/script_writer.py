@@ -134,12 +134,14 @@ def total_chars(script: dict) -> int:
     return sum(len(s["narration"]) for s in script["scenes"])
 
 
-def generate(job: Job, topic: str | None, force=False) -> dict:
+def generate(job: Job, topic: str | None, force=False, brief: str | None = None) -> dict:
     log = get_logger(job)
     if job.script.exists() and not force:
         log.info(f"既存の台本を使用: {job.script}")
         return load_json(job.script)
     prompt = build_prompt(job, topic)
+    if brief:
+        prompt += "\n\n# 追加指示(制作者から。上記のルールより具体的な場合はこちらを優先。ただし事実確認と禁止事項は必ず守る)\n" + brief
     (job.scripts / "prompt.md").write_text(prompt, encoding="utf-8")
     raw = call_llm(prompt, log)
     (job.scripts / "llm_raw.txt").write_text(raw, encoding="utf-8")

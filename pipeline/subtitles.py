@@ -107,7 +107,7 @@ def _fits(parts: list[str], max_line: int) -> bool:
     return False
 
 
-def pack_chunks(bs: list[str], max_line: int, target: int = 8, max_chunk: int = 16) -> list[list[str]]:
+def pack_chunks(bs: list[str], max_line: int, target: int = 6, max_chunk: int = 14) -> list[list[str]]:
     chunks: list[list[str]] = []
     cur: list[str] = []
     for b in bs:

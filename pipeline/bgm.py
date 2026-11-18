@@ -40,6 +40,8 @@ def synth_bgm(duration: float, seed: int = 7) -> np.ndarray:
     for b in range(int(duration / bar) + 2):
         ch = chords[b % len(chords)]
         s0 = int(b * bar * SR)
+        if s0 >= n:
+            break
         seg = np.arange(int(bar * 1.5 * SR))
         env = np.minimum(1, seg / (SR * 1.2)) * np.exp(-seg / (SR * 4.5))
         for k in ch:
@@ -55,6 +57,8 @@ def synth_bgm(duration: float, seed: int = 7) -> np.ndarray:
             k = int(rng.integers(3, len(scale)))
             note = _pluck(base * scale[k], 2.2, rng)
             s0 = int(i * step * SR)
+            if s0 >= n:
+                break
             e = min(n, s0 + len(note))
             pl[s0:e] += 0.22 * note[: e - s0]
     x = pad + pl
