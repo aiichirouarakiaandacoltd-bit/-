@@ -9,6 +9,7 @@
 """
 from __future__ import annotations
 
+import os
 import subprocess
 
 import cv2
@@ -55,6 +56,22 @@ def subtitle_mask(bgr: np.ndarray) -> np.ndarray:
 
 
 def clean_frame(bgr: np.ndarray) -> np.ndarray:
+    h, w = bgr.shape[:2]
+    if w > 500:
+        # 高解像度: 判定は参考動画と同じ 406 幅で行い、マスクを拡大して原寸で修復
+        small = cv2.resize(bgr, (406, round(h * 406 / w)), interpolation=cv2.INTER_AREA)
+        m = subtitle_mask(small)
+        if not m.any():
+            return bgr
+        m = cv2.resize(m, (w, h), interpolation=cv2.INTER_NEAREST)
+        # 周辺を原寸で再判定(色付き強調語や縁取りの取りこぼしを拾う)
+        region = cv2.dilate(m, np.ones((45, 261), np.uint8)) > 0  # 字幕は横一列: 行全体に広げる
+        hsv = cv2.cvtColor(bgr, cv2.COLOR_BGR2HSV)
+        vv, ss = hsv[..., 2], hsv[..., 1]
+        textish = (vv > 140) | (vv < 75) | (ss > 110)
+        m = ((m > 0) | (region & textish)).astype(np.uint8) * 255
+        m = cv2.dilate(m, np.ones((7, 7), np.uint8))
+        return cv2.inpaint(bgr, m, 5, cv2.INPAINT_TELEA)
     m = subtitle_mask(bgr)
     if m.any():
         return cv2.inpaint(bgr, m, 6, cv2.INPAINT_TELEA)
@@ -62,30 +79,50 @@ def clean_frame(bgr: np.ndarray) -> np.ndarray:
 
 
 def build_background(src: str, out: str, W=1080, H=1920, passes=2, log=print) -> None:
-    """全フレームの字幕を消去し、1080x1920 に拡大して書き出す。"""
+    """全フレームの字幕を消去し、指定サイズで書き出す(元が1080幅以上なら原寸のまま)。"""
     cap = cv2.VideoCapture(src)
+    sw, sh = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    native = sw >= 1080
+    if native:
+        W, H = sw, sh
     fps = cap.get(cv2.CAP_PROP_FPS)
     n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}",
                            "-r", f"{fps:.5f}", "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "14",
                            "-pix_fmt", "yuv420p", out], stdin=subprocess.PIPE)
+    from multiprocessing import Pool
+
+    def frames():
+        while True:
+            ok, fr = cap.read()
+            if not ok:
+                return
+            yield fr
+
     k = 0
-    while True:
-        ok, f = cap.read()
-        if not ok:
-            break
-        for _ in range(passes):
-            f = clean_frame(f)
-        big = cv2.resize(f, (W, H), interpolation=cv2.INTER_LANCZOS4)
-        blur = cv2.GaussianBlur(big, (0, 0), 1.6)
-        big = cv2.addWeighted(big, 1.45, blur, -0.45, 0)  # 拡大による甘さを補う軽いシャープ
+    pool = Pool(max(1, (os.cpu_count() or 2)))
+    for f in pool.imap(_clean_n, ((fr, passes) for fr in frames()), chunksize=4):
+        if native:
+            big = f
+        else:
+            big = cv2.resize(f, (W, H), interpolation=cv2.INTER_LANCZOS4)
+            blur = cv2.GaussianBlur(big, (0, 0), 1.6)
+            big = cv2.addWeighted(big, 1.45, blur, -0.45, 0)  # 拡大による甘さを補う軽いシャープ
         ff.stdin.write(big.tobytes())
         k += 1
         if k % 300 == 0:
             log(f"  背景 {k}/{n} フレーム")
+    pool.close()
     ff.stdin.close()
     if ff.wait() != 0:
         raise RuntimeError("背景映像のエンコード失敗")
+
+
+def _clean_n(args):
+    fr, n = args
+    for _ in range(n):
+        fr = clean_frame(fr)
+    return fr
 
 
 def main():
@@ -105,10 +142,19 @@ def main():
     cfg = settings()["output"]
     if a.exact:
         log.info("=== 完全一致モード(私的検証用・公開禁止) ===")
+        from .common import ffprobe
+        vs = next(x for x in ffprobe(a.ref)["streams"] if x["codec_type"] == "video")
+        num, den = map(int, vs["r_frame_rate"].split("/"))
+        if int(vs["width"]) >= 1080:
+            # 高解像度の元動画: 画面サイズ・フレームレートを変えずにそのまま再エンコード(完全一致を優先)
+            vf = "format=yuv420p"
+            log.info(f"元動画の仕様を維持: {vs['width']}x{vs['height']} {num / den:.3f}fps")
+        else:
+            vf = f"scale=1080:1920:flags=lanczos,fps={cfg['fps']},format=yuv420p"
         run(["ffmpeg", "-y", "-v", "error", "-i", a.ref,
-             "-vf", f"scale=1080:1920:flags=lanczos,fps={cfg['fps']},format=yuv420p",
-             "-c:v", "libx264", "-preset", "slow", "-crf", "14", "-profile:v", "high",
-             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", str(job.video)])
+             "-vf", vf,
+             "-c:v", "libx264", "-preset", "slow", "-crf", "10", "-profile:v", "high",
+             "-c:a", "aac", "-b:a", "256k", "-movflags", "+faststart", str(job.video)])
         log.info(f"完了: {job.video}")
         return
     log.info("=== トレース再現(私的検証用・公開禁止) ===")
@@ -119,13 +165,22 @@ def main():
     chunks = load_json(a.subs)["chunks"]
     subtitles.write_ass(job, chunks)
     log.info(f"字幕 {len(chunks)}チャンクを再描画")
-    cfg = settings()["output"]
     ass = str(job.ass).replace(":", "\\:")
-    run(["ffmpeg", "-y", "-v", "error", "-i", str(bg), "-i", a.ref,
-         "-filter_complex", f"[0:v]ass='{ass}':fontsdir=/usr/share/fonts/opentype/noto,fps={cfg['fps']},format=yuv420p[v];"
-                            f"[1:a]aresample=48000,loudnorm=I={cfg['target_loudness_lufs']}:TP=-1.5:LRA=11[a]",
-         "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high",
-         "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", str(job.video)])
+    from .common import ffprobe
+    vs = next(x for x in ffprobe(a.ref)["streams"] if x["codec_type"] == "video")
+    if int(vs["width"]) >= 1080:
+        # 元が高画質: 画面サイズ・fps・音声(無加工コピー)・尺を元動画と完全に揃える
+        run(["ffmpeg", "-y", "-v", "error", "-i", str(bg), "-i", a.ref,
+             "-filter_complex", f"[0:v]ass='{ass}':fontsdir=/usr/share/fonts/opentype/noto,format=yuv420p[v]",
+             "-map", "[v]", "-map", "1:a", "-c:v", "libx264", "-preset", "slow", "-crf", "12", "-profile:v", "high",
+             "-r", vs["r_frame_rate"], "-c:a", "copy", "-movflags", "+faststart", str(job.video)])
+    else:
+        cfg = settings()["output"]
+        run(["ffmpeg", "-y", "-v", "error", "-i", str(bg), "-i", a.ref,
+             "-filter_complex", f"[0:v]ass='{ass}':fontsdir=/usr/share/fonts/opentype/noto,fps={cfg['fps']},format=yuv420p[v];"
+                                f"[1:a]aresample=48000,loudnorm=I={cfg['target_loudness_lufs']}:TP=-1.5:LRA=11[a]",
+             "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-profile:v", "high",
+             "-c:a", "aac", "-b:a", "192k", "-movflags", "+faststart", "-shortest", str(job.video)])
     log.info(f"完了: {job.video}")
 
 

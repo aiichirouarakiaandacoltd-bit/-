@@ -95,7 +95,7 @@
       ],
       "font_size": 122,
       "hook_font_size": 150,
-      "center_y": 0.615,
+      "center_y": 0.6,
       "max_chars_per_line": 11,
       "max_lines": 2,
       "min_chunk_sec": 0.7,
@@ -130,7 +130,10 @@
         "上皇后美智子さま": "#B48CFF",
         "宮内庁": "#C8A2FF"
       },
-      "_size_note": "ASSのFontsizeは行高基準。Noto CJKでは実際の字形が約0.7倍になるため、参考動画の字幅(1920px換算で約86px/字)に合わせて122を指定"
+      "_size_note": "ASSのFontsizeは行高基準。Noto CJKでは実際の字形が約0.7倍になるため、参考動画の字幅(1920px換算で約86px/字)に合わせて122を指定",
+      "scale_x": 115,
+      "scale_y": 103,
+      "_pos_note": "reference_02(1080x1914)との実測比較で、字幅+15%・中心位置0.602に合わせた"
     },
     "narration": {
       "voice": "VOICEVOX 青山龍星 ノーマル",

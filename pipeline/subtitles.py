@@ -215,8 +215,8 @@ YCbCr Matrix: TV.709
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Back,{font},{st['font_size']},{black},{black},{black},&H64000000&,0,0,0,0,100,100,2,0,1,{st['outline_px'] + 5},{st['shadow_px']},5,40,40,0,1
-Style: Main,{font},{st['font_size']},{white},{white},{black},&H00000000&,0,0,0,0,100,100,2,0,1,3,0,5,40,40,0,1
+Style: Back,{font},{st['font_size']},{black},{black},{black},&H64000000&,0,0,0,0,{st.get('scale_x', 100)},{st.get('scale_y', 100)},2,0,1,{st['outline_px'] + 5},{st['shadow_px']},5,40,40,0,1
+Style: Main,{font},{st['font_size']},{white},{white},{black},&H00000000&,0,0,0,0,{st.get('scale_x', 100)},{st.get('scale_y', 100)},2,0,1,3,0,5,40,40,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
@@ -232,7 +232,8 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
         c["entrance"] = kind
         ms = st["entrance_ms"]
         if kind == "pop":
-            anim = f"\\fscx55\\fscy55\\t(0,{ms},\\fscx100\\fscy100)"
+            sx, sy = st.get("scale_x", 100), st.get("scale_y", 100)
+            anim = f"\\fscx{sx * 0.55:.0f}\\fscy{sy * 0.55:.0f}\\t(0,{ms},\\fscx{sx}\\fscy{sy})"
             pos = f"\\pos(540,{cy})"
         elif kind == "slide":
             anim = f"\\fad({ms},0)"
