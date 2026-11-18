@@ -216,6 +216,7 @@ def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: di
                 credit = f"{(rec.get('rights_holder') or '')[:30]} / {rec.get('license', '')}".strip(" /")
                 shots.append({"scene": sc["id"], "start": bounds[k], "end": bounds[k + 1], "type": "image",
                               "file": str(ROOT / f), "variant": variant, "credit": credit,
+                              "fallback_text": v.get("card_text") or v.get("subject", ""), "sub": v.get("card_sub", ""),
                               "label": "資料写真" if v.get("kind") in ("person", None) or "library" not in rec.get("found_via", "") else "",
                               "hook": i == 0 and k == 0 and sc.get("role") == "hook"})
             else:
@@ -254,8 +255,10 @@ def _plate_for(idx: int):
     else:
         try:
             pl = make_plate(s["file"], s.get("variant", "wide"), Z, _RULES)
-        except Exception:
-            pl = make_card(s.get("text", ""), "", Z, seed=idx)
+        except Exception as e:  # 素材が壊れていても止めずに図解カードで代替(理由は標準エラーに出す)
+            import sys
+            print(f"[render] 素材読み込み失敗 {s['file']}: {e!r} → 図解カードで代替", file=sys.stderr)
+            pl = make_card(s.get("text") or s.get("fallback_text", ""), s.get("sub", ""), Z, seed=idx)
         if s.get("hook"):
             pl["img"] = annotate_hook(pl["img"], pl["faces"], pl["focus"])
     pl["Z"] = Z

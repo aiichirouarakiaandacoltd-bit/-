@@ -13,3 +13,4 @@ subtitles/*/
 __pycache__/
 *.pyc
 .venv/
+assets/cache/

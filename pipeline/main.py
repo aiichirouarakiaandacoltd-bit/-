@@ -95,8 +95,17 @@ def main(argv=None):
         man = load_json(job.asset_manifest, {})
         meta = [f"タイトル: {script.get('youtube_title', '')}", "", script.get("description", ""), "",
                 " ".join(script.get("hashtags", [])), "", "【出典】"]
-        meta += sorted({f"{f['source_name']}: {f['url']}" for f in script.get("facts", []) if f.get("status") != "unverified"})
-        meta += ["", "【写真クレジット】"] + man.get("credits", []) + ["", ("BGM: オリジナル(自動生成)" if bgm_path and bgm_path.parent == job.audio else f"BGM: {bgm_path.name}" if bgm_path else "BGM: なし")]
+        urls = {}
+        for f in script.get("facts", []):
+            if f.get("status") != "unverified" and f.get("url") and f["url"] not in script.get("description", ""):
+                urls.setdefault(f["url"], f["source_name"])
+        meta += [f"{n}: {u}" for u, n in urls.items()] or ["(概要欄本文に記載)"]
+        shots = load_json(job.output / "shots.json", [])
+        used = {str(Path(s["file"]).relative_to(ROOT)) for s in shots if s.get("file")}
+        credits = sorted({f"{r['source_title'].split(':', 1)[-1]} / {r['rights_holder'] or '作者不明'} / {r['license']} / {r.get('source_url', '')}"
+                          for k, r in man.get("files", {}).items() if k in used})
+        meta += ["", "【写真クレジット】"] + credits
+        meta += ["", ("BGM: オリジナル(自動生成)" if bgm_path and bgm_path.parent == job.audio else f"BGM: {bgm_path.name}" if bgm_path else "BGM: なし")]
         (job.output / "upload_metadata.txt").write_text("\n".join(meta), encoding="utf-8")
         log.info(f"=== 完了: {job.video} ===")
         if res is not None and not res["passed"]:

@@ -39,7 +39,7 @@ PERSON_ARTICLES = {
     "悠仁さま": "悠仁親王",
     "上皇さま": "明仁", "上皇后美智子さま": "上皇后美智子",
 }
-EXCLUDE_FILE = re.compile(r"(\.svg|\.gif|\.tif|seal|crest|emblem|flag|logo|signature|map|coat_of_arms|紋|旗|地図|Imperial_Seal|Commons-logo|Wiki)", re.I)
+EXCLUDE_FILE = re.compile(r"(WC|toilet|restroom|トイレ|\.svg|\.gif|\.tif|seal|crest|emblem|flag|logo|signature|map|coat_of_arms|紋|旗|地図|Imperial_Seal|Commons-logo|Wiki)", re.I)
 
 
 class Http:
@@ -49,8 +49,13 @@ class Http:
         self.log = log
         self.commons_blocked = False
 
-    def get_json(self, url, params, tries=3):
+    def get_json(self, url, params, tries=4):
         params = {**params, "format": "json", "formatversion": 2}
+        # API応答はディスクにキャッシュ(再実行時にレート制限を受けないため)
+        key = hashlib.md5((url + json.dumps(params, sort_keys=True)).encode()).hexdigest()
+        cpath = ROOT / "assets" / "cache" / f"{key}.json"
+        if cpath.exists():
+            return json.loads(cpath.read_text(encoding="utf-8"))
         for k in range(tries):
             try:
                 r = self.s.get(url, params=params, timeout=25)
@@ -59,11 +64,15 @@ class Http:
                         self.commons_blocked = True
                         self.log.warning("Commons API がレート制限(429)中 → ja.wikipedia 経由のみで検索")
                         return None
-                    time.sleep(3 * (k + 1))
+                    self.log.warning(f"ja.wikipedia API 429(レート制限) 待機して再試行 {k + 1}/{tries}")
+                    time.sleep(5 * (k + 1))
                     continue
                 r.raise_for_status()
-                time.sleep(0.4)
-                return r.json()
+                time.sleep(0.6)
+                data = r.json()
+                cpath.parent.mkdir(parents=True, exist_ok=True)
+                cpath.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+                return data
             except Exception as e:
                 self.log.warning(f"API失敗 {url} {e}")
                 time.sleep(2 * (k + 1))
@@ -90,7 +99,7 @@ def _imageinfo(http: Http, api: str, titles: list[str]) -> list[dict]:
     out = []
     for i in range(0, len(titles), 20):
         d = http.get_json(api, {"action": "query", "titles": "|".join(titles[i:i + 20]), "prop": "imageinfo",
-                                "iiprop": "url|size|mime|extmetadata", "iiurlwidth": 1600,
+                                "iiprop": "url|size|mime|extmetadata", "iiurlwidth": 1280,
                                 "iiextmetadatafilter": "LicenseShortName|UsageTerms|Artist|Credit|DateTimeOriginal|ImageDescription|AttributionRequired|LicenseUrl"})
         if not d:
             continue
@@ -103,11 +112,35 @@ def _imageinfo(http: Http, api: str, titles: list[str]) -> list[dict]:
 
 
 def jawiki_article_images(http: Http, article: str) -> list[dict]:
-    d = http.get_json(JAWIKI, {"action": "query", "titles": article, "prop": "images", "imlimit": 50, "redirects": 1})
+    d = http.get_json(JAWIKI, {"action": "query", "titles": article, "prop": "images|pageimages", "imlimit": 50,
+                               "piprop": "name", "redirects": 1})
     if not d:
         return []
-    titles = [im["title"] for p in d["query"]["pages"] for im in p.get("images", []) if not EXCLUDE_FILE.search(im["title"])]
-    return _imageinfo(http, JAWIKI, titles)
+    pages = d["query"]["pages"]
+    lead = {p.get("pageimage", "") for p in pages}
+    titles = [im["title"] for p in pages for im in p.get("images", []) if not EXCLUDE_FILE.search(im["title"])]
+    out = _imageinfo(http, JAWIKI, titles)
+    for c in out:
+        c["is_lead"] = c["title"].split(":", 1)[-1].replace(" ", "_") in lead
+    return out
+
+
+GENERIC_EN = {"japan", "japanese", "traditional", "photo", "image", "official", "visit", "with", "from", "craft", "crafts",
+              "prefecture", "city", "exhibition", "hall", "smile", "smiling", "workshop", "craftsmanship", "figurine"}
+
+
+def relevant(c: dict, subject: str, queries: list[str], kind: str | None) -> bool:
+    """人物記事の画像以外は、記事の代表画像か、ファイル名/説明に主題語を含むものだけ採用。"""
+    if kind == "person" and c.get("via", "").startswith("ja.wikipedia:"):
+        return True
+    if c.get("is_lead"):
+        return True
+    text = (c["title"] + " " + _strip(c.get("extmetadata", {}).get("ImageDescription", {}).get("value", ""))).lower()
+    toks = set(re.findall(r"[\u4e00-\u9fff\u30a0-\u30ff]{2,}", subject))
+    for q in queries:
+        toks |= set(re.findall(r"[\u4e00-\u9fff\u30a0-\u30ff]{2,}", q))
+        toks |= {t for t in re.findall(r"[a-z]{4,}", q.lower()) if t not in GENERIC_EN}
+    return any(t.lower() in text for t in toks)
 
 
 def jawiki_search_article(http: Http, q: str) -> str | None:
@@ -120,7 +153,7 @@ def commons_search(http: Http, q: str, n=12) -> list[dict]:
     if http.commons_blocked:
         return []
     d = http.get_json(COMMONS, {"action": "query", "generator": "search", "gsrnamespace": 6, "gsrsearch": q,
-                                "gsrlimit": n, "prop": "imageinfo", "iiprop": "url|size|mime|extmetadata", "iiurlwidth": 1600})
+                                "gsrlimit": n, "prop": "imageinfo", "iiprop": "url|size|mime|extmetadata", "iiurlwidth": 1280})
     if not d:
         return []
     return [{"title": p["title"], **p["imageinfo"][0]} for p in d.get("query", {}).get("pages", []) if "imageinfo" in p]
@@ -141,7 +174,7 @@ def library_assets() -> list[dict]:
 def _score(c: dict, subject: str, queries: list[str]) -> float:
     s = 0.0
     w, h = c.get("width", 0), c.get("height", 0)
-    s += min(w * h / 2_000_000, 2.0)
+    s += min(w * h / 2_000_000, 2.0) + (1.5 if c.get("is_lead") else 0)
     s += 1.0 if h >= w * 0.9 else 0.0  # 縦長・正方形は9:16に切り出しやすい
     t = c["title"].lower()
     for q in queries:
@@ -164,6 +197,10 @@ def collect(job: Job, script: dict) -> dict:
                 "rejected": [], "candidates_need_permission": []}
     used: dict[str, int] = {}
     cache: dict[str, list[dict]] = {}
+    # 人による除外指定: assets/jobs/<job>/exclude.txt に素材タイトルの一部を1行ずつ書くと次回から除外
+    excl_file = job.assets / "exclude.txt"
+    excludes = [l.strip() for l in excl_file.read_text(encoding="utf-8").splitlines()
+                if l.strip() and not l.startswith("#")] if excl_file.exists() else []
 
     # 宮内庁一次情報ページの画像は「要許可」候補として記録のみ
     for f in script.get("facts", []):
@@ -221,7 +258,13 @@ def collect(job: Job, script: dict) -> dict:
                 c["license_ok"], c["license"] = True, c.get("license") or "利用許可済み(ライブラリ)"
                 chosen.append(c)
                 continue
+            if any(x in c["title"] for x in excludes):
+                manifest["rejected"].append({"scene": sc["id"], "title": c["title"], "reason": "人による除外指定(exclude.txt)"})
+                continue
             if EXCLUDE_FILE.search(c["title"]) or c.get("mime") not in ("image/jpeg", "image/png", "image/webp"):
+                continue
+            if not relevant(c, subject, queries, v.get("kind")):
+                manifest["rejected"].append({"scene": sc["id"], "title": c["title"], "reason": "主題との関連が確認できない"})
                 continue
             ok, lic = license_ok(c.get("extmetadata", {}))
             meta = c.get("extmetadata", {})
@@ -270,6 +313,18 @@ def collect(job: Job, script: dict) -> dict:
         else:
             log.info(f"  {sc['id']} {subject}: {len(entry['picks'])}点 ({', '.join(Path(p).name[:30] for p in entry['picks'])})")
         manifest["scenes"].append(entry)
+    # 素材が取れなかったシーンは、同じ主題で取得できた別シーンの素材を共有する
+    by_subject: dict[str, list[str]] = {}
+    for e in manifest["scenes"]:
+        if e["picks"]:
+            by_subject.setdefault(e["subject"], [])
+            by_subject[e["subject"]] += [p for p in e["picks"] if p not in by_subject[e["subject"]]]
+    for e in manifest["scenes"]:
+        if not e["picks"] and by_subject.get(e["subject"]):
+            e["picks"] = list(by_subject[e["subject"]])
+            e.pop("fallback", None)
+            e["shared_from_subject"] = True
+            log.info(f"  {e['scene']} {e['subject']}: 同じ主題の素材を共有 ({len(e['picks'])}点)")
     manifest["credits"] = sorted({f"{r['source_title'].replace('File:', '').replace('ファイル:', '')} / {r['rights_holder'] or '作者不明'} / {r['license']}"
                                   for r in manifest["files"].values()})
     save_json(job.asset_manifest, manifest)
@@ -280,21 +335,27 @@ def collect(job: Job, script: dict) -> dict:
     return manifest
 
 
+_FAILED: set[str] = set()
+
+
 def _download(http: Http, c: dict, job: Job, log) -> str | None:
-    # thumb.wikimedia.org は環境で未許可のため原寸(upload.wikimedia.org)を取得してローカルで縮小
-    url = c.get("url") or c.get("thumburl")
-    if not url:
+    if c["title"] in _FAILED:
         return None
-    ext = Path(urllib.parse.urlparse(url).path).suffix.lower() or ".jpg"
+    # 縮小版(thumb.wikimedia.org)を優先。原寸(upload.wikimedia.org)は大きく、レート制限を受けやすい
+    urls = [u for u in (c.get("thumburl"), c.get("url")) if u]
+    if not urls:
+        return None
     name = hashlib.md5(c["title"].encode()).hexdigest()[:10] + ".jpg"
     path = job.assets / name
     if path.exists():
         return str(path)
-    for k in range(3):
+    for k in range(4):
+        url = urls[k % len(urls)]
         try:
             r = http.s.get(url, timeout=60)
             if r.status_code == 429:
-                time.sleep(4 * (k + 1))
+                log.warning(f"ダウンロード 429(レート制限) {url[:90]} 再試行")
+                time.sleep(3 * (k + 1))
                 continue
             r.raise_for_status()
             from io import BytesIO
@@ -309,6 +370,7 @@ def _download(http: Http, c: dict, job: Job, log) -> str | None:
         except Exception as e:
             log.warning(f"ダウンロード失敗 {url}: {e}")
             time.sleep(2)
+    _FAILED.add(c["title"])
     return None
 
 
