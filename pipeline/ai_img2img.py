@@ -29,4 +29,6 @@ def regenerate(bgr: np.ndarray, prompt: str, strength: float = 0.35, steps: int 
     g = torch.Generator().manual_seed(seed)
     out = pipe()(prompt=prompt, image=img, strength=strength, num_inference_steps=steps, guidance_scale=0.0, generator=g).images[0]
     res = cv2.cvtColor(np.array(out), cv2.COLOR_RGB2BGR)
-    return cv2.resize(res, (w, h), interpolation=cv2.INTER_LANCZOS4)
+    res = cv2.resize(res, (w, h), interpolation=cv2.INTER_LANCZOS4)
+    blur = cv2.GaussianBlur(res, (0, 0), 1.4)
+    return cv2.addWeighted(res, 1.5, blur, -0.5, 0)  # 拡大分の甘さを補う軽いシャープ

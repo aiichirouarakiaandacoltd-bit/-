@@ -103,7 +103,7 @@ def subtitle_masks_from_ass(job, chunks, W, H, dil=31):
         m = (g > 10).astype(np.uint8) * 255
         # 幅・高さの実測差(数%)を見込んで大きめに広げる
         m = cv2.dilate(m, np.ones((dil, int(dil * 2.2)), np.uint8))
-        m = m | np.roll(m, -90, axis=1) | np.roll(m, -180, axis=1)  # 左から滑り込む出始めの位置も覆う
+        # (出始めの滑り込み中のコマは素材に使わないので、位置の拡張は不要)
         masks.append((c["start"], c["end"], m))
     return masks
 
@@ -152,19 +152,23 @@ def plan_shots(ref: str, cuts: list[float], fps: float, nframes: int, log, chunk
                 allT.append(T[lo] + (T[hi] - T[lo]) * u)
             scales = [float(np.sqrt(t[0, 0] ** 2 + t[1, 0] ** 2)) for t in allT]
             clean = [j for j in sub if (s + j) not in avoid] or sub
-            b = min(clean, key=lambda j: scales[j - a0])
+            # 基準 = 最も寄ったコマ(細部が最も細かい)。引きのコマは縮小して重ねるのでボケない
+            b = max(clean, key=lambda j: scales[j - a0])
             Tb_inv = np.linalg.inv(allT[b - a0])
             rel = {j: allT[j - a0] @ Tb_inv for j in sub}
             use_keys = [k for k in ks if (s + k) not in avoid] or [b]
             if b not in use_keys:
                 use_keys.append(b)
-            extra = None
-            if ass_masks:
-                t0, t1 = (s + a0) / fps, (s + a1) / fps
-                for (cs, ce, m) in ass_masks:
-                    if cs < t1 and ce > t0:
-                        extra = m if extra is None else (extra | m)
-            plate, O, info = stitch_plate(frames, rel, use_keys, b, extra_mask=extra, mask_keys=ks)
+            # コマごとの字幕位置(そのコマに出ている字幕だけを除外 → 字幕の裏が他のコマで見えれば使える)
+            fmask = {}
+            for k in use_keys:
+                tk = (s + k) / fps
+                m = full_mask(frames[k])
+                for (cs, ce, am) in (ass_masks or []):
+                    if cs - 0.05 <= tk < ce + 0.05:
+                        m = m | am
+                fmask[k] = m
+            plate, O, info = stitch_plate(frames, rel, use_keys, b, frame_masks=fmask)
             tr = [(rel[j] @ np.linalg.inv(O))[:2].tolist() for j in sub]
             holes = info.pop("holes")
             shots.append({"index": i + 1, "part": si, "start_frame": s + a0, "end_frame": s + a1, "base_offset": b,
@@ -175,18 +179,12 @@ def plan_shots(ref: str, cuts: list[float], fps: float, nframes: int, log, chunk
     return shots
 
 
-def stitch_plate(frames, rel, keys, b, max_ratio=2.4, consist_thr=12.0, extra_mask=None, mask_keys=None):
+def stitch_plate(frames, rel, keys, b, max_ratio=2.4, consist_thr=12.0, frame_masks=None):
     """コマを基準座標につなぎ合わせて元の写真(プレート)を復元する。
     - 字幕: カット内で字幕が出た範囲の和集合(画面座標)を全コマで除外
     - 動く被写体: 基準コマと重ねて一致しないコマは使わない(二重写し防止)"""
     h, w = frames[0].shape[:2]
-    union = np.zeros((h, w), np.uint8)
-    for k in (mask_keys or keys):  # 字幕の検出は全キー(出始めのコマも含む)で行う
-        union |= full_mask(frames[k])
-    if extra_mask is not None:
-        union |= extra_mask
-    union = cv2.dilate(union, np.ones((21, 21), np.uint8))
-    valid0 = (union == 0).astype(np.uint8) * 255
+
     corners = np.array([[0, 0, 1], [w, 0, 1], [0, h, 1], [w, h, 1]], np.float64).T
     pts = np.hstack([(np.linalg.inv(rel[k]) @ corners)[:2] for k in keys])
     x0, y0 = np.floor(pts.min(1)).astype(int)
@@ -200,7 +198,12 @@ def stitch_plate(frames, rel, keys, b, max_ratio=2.4, consist_thr=12.0, extra_ma
     filled = np.zeros((CH, CW), bool)
     base_w = None
     used, rejected = 0, 0
-    for k in sorted(keys, key=lambda k: abs(k - b)):
+    def scale_of(k):
+        return float(np.sqrt(rel[k][0, 0] ** 2 + rel[k][1, 0] ** 2))
+    # 細部の多いコマ(寄り)から優先して埋める
+    for k in sorted(keys, key=lambda k: (-round(scale_of(k), 3), abs(k - b))):
+        fm = frame_masks.get(k) if frame_masks else full_mask(frames[k])
+        valid0 = (cv2.dilate(fm, np.ones((17, 17), np.uint8)) == 0).astype(np.uint8) * 255
         M = (O @ np.linalg.inv(rel[k]))[:2]
         wf = cv2.warpAffine(frames[k], M, (CW, CH), flags=cv2.INTER_LANCZOS4)
         wv = cv2.warpAffine(valid0, M, (CW, CH), flags=cv2.INTER_NEAREST) > 0
@@ -267,9 +270,17 @@ def cross_fill(stills: list[dict], log, min_inliers=60, consist=20.0):
             wb = cv2.warpAffine(B, M, (A.shape[1], A.shape[0]), flags=cv2.INTER_LANCZOS4)
             ok = cv2.warpAffine((~HB).astype(np.uint8) * 255, M, (A.shape[1], A.shape[0]), flags=cv2.INTER_NEAREST) > 0
             ov = ok & ~HA
+            if ov.sum() < 5000:
+                continue
             dA, dB = A.astype(np.float32)[ov], wb.astype(np.float32)[ov]
-            tint = np.abs(dA.mean(0) - dB.mean(0)).max() if ov.any() else 999  # 色調(白黒/青)の違い
-            if ov.sum() < 5000 or np.abs(dB - dA).mean() > consist or tint > 6:
+            tint = np.abs(dA.mean(0) - dB.mean(0)).max()
+            satA, satB = float(np.std(dA, 1).mean()), float(np.std(dB, 1).mean())
+            if tint > 15 or (min(satA, satB) < 5 and max(satA, satB) > 10):
+                continue  # 白黒とカラー/青など色調が違う写真は使わない
+            # 明るさ・色味を合わせてから使う(チャンネルごとの平均・標準偏差)
+            g = dA.std(0) / (dB.std(0) + 1e-6)
+            wb = np.clip((wb.astype(np.float32) - dB.mean(0)) * g + dA.mean(0), 0, 255).astype(np.uint8)
+            if np.abs(wb.astype(np.float32)[ov] - dA).mean() > consist:
                 continue  # 同じ写真でも色調が違う(白黒/青など)場合は使わない
             take = HA & ok
             if take.any():
@@ -379,9 +390,12 @@ def main():
             if not pr:
                 continue
             src = cv2.imread(str(ROOT / s["still"]))
-            out = regenerate(src, pr, strength=a.ai_strength, width=768, seed=s["index"] * 10 + s.get("part", 0))
-            p = stills_dir / f"shot{s['index']:02d}_{s.get('part', 0)}_ai.png"
-            cv2.imwrite(str(p), out)
+            import hashlib
+            key = hashlib.md5(src.tobytes() + f"{pr}{a.ai_strength}".encode()).hexdigest()[:10]
+            p = stills_dir / f"shot{s['index']:02d}_{s.get('part', 0)}_ai_{key}.png"
+            if not p.exists():  # 同じ下絵・同じ指示なら再生成しない(キャッシュ)
+                out = regenerate(src, pr, strength=a.ai_strength, width=1024, seed=s["index"] * 10 + s.get("part", 0))
+                cv2.imwrite(str(p), out)
             s["still"] = str(p.relative_to(ROOT))
             s["ai_regenerated"] = {"prompt": pr, "strength": a.ai_strength, "model": "stabilityai/sd-turbo img2img"}
             log.info(f"  カット{s['index']}-{s.get('part', 0) + 1} をAIで描き直し")
