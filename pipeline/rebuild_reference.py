@@ -74,7 +74,7 @@ def _residual(fa, fb, M):
     return float(np.abs(wa - gb)[valid].mean()) if valid.any() else 255.0
 
 
-def entrance_frames(chunks, fps, n_total, win=0.45):
+def entrance_frames(chunks, fps, n_total, win=0.6):
     """字幕が滑り込み・拡大・回転しながら出てくる最初の win 秒のコマ番号(素材に使わない)。"""
     bad = set()
     for c in chunks:
@@ -323,6 +323,22 @@ def render_shot_frames(shot, still, n, W, H):
         yield cv2.warpAffine(still, M, (W, H), flags=cv2.INTER_LANCZOS4, borderMode=cv2.BORDER_REPLICATE)
 
 
+def _video_job(args):
+    ref, sf, ef, fps, W, H, out, masks = args
+    from .video_shot import rebuild_frames
+    cap = cv2.VideoCapture(ref)
+    cap.set(cv2.CAP_PROP_POS_FRAMES, sf)
+    frames = [cap.read()[1] for _ in range(ef - sf)]
+    res = rebuild_frames(frames, masks, sf / fps, fps)
+    ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}",
+                           "-r", str(fps), "-i", "-", "-c:v", "ffv1", out], stdin=subprocess.PIPE)
+    for f in res:
+        ff.stdin.write(f.tobytes())
+    ff.stdin.close()
+    ff.wait()
+    return f"{out} ({len(res)}コマ)"
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--ref", default=str(ROOT / "references" / "reference_02.mp4"))
@@ -332,6 +348,7 @@ def main():
     ap.add_argument("--ai-shots", default=None,
                     help='AIで描き直すカットとプロンプトのJSON(下絵=復元素材, img2img)。例: assets/generated/ai_shots_reference_02.json')
     ap.add_argument("--ai-strength", type=float, default=0.35)
+    ap.add_argument("--video-shots", default=None, help="1コマずつ再現する動きのあるカット番号(例: 8,9,10,14,15)")
     ap.add_argument("--no-fill", action="store_true", help="字幕の裏の穴の補完(別カット+LaMa)をしない")
     ap.add_argument("--replace", default=None,
                     help='カットを生成画像等に差し替えるJSON。例: {"7": ["assets/generated/a.png"], "14": ["b.png", "c.png"]}')
@@ -420,6 +437,26 @@ def main():
                             "still": str(p.relative_to(ROOT))})
             log.info(f"  カット{s['index']} を差し替え: {imgs}")
         shots = new
+    # 動きのあるカット(映像)は1コマずつ再現して差し替える
+    if a.video_shots:
+        from multiprocessing import Pool
+        vidx = {int(x) for x in a.video_shots.split(",")}
+        bounds = [0] + [int(round(c * fps)) for c in analysis["cuts"]["cut_times"]] + [nframes]
+        jobs = []
+        for i in sorted(vidx):
+            sf, ef = bounds[i - 1], bounds[i]
+            out = stills_dir / f"video_shot{i:02d}.mkv"
+            jobs.append((a.ref, sf, ef, fps, W, H, str(out), [(cs, ce, m) for (cs, ce, m) in ass_masks
+                                                           if cs < ef / fps + 0.2 and ce > sf / fps - 0.2]))
+        log.info(f"動きのあるカット {sorted(vidx)} を1コマずつ再現中…")
+        with Pool(min(4, len(jobs))) as pool:
+            for r in pool.imap_unordered(_video_job, jobs):
+                log.info(f"  {r}")
+        new = [x for x in shots if x["index"] not in vidx]
+        for i in sorted(vidx):
+            new.append({"index": i, "part": 0, "start_frame": bounds[i - 1], "end_frame": bounds[i], "type": "video",
+                        "video": str((stills_dir / f"video_shot{i:02d}.mkv").relative_to(ROOT))})
+        shots = sorted(new, key=lambda x: x["start_frame"])
     save_json(job.output / "rebuild_shots.json", [{k: v for k, v in x.items() if k != "transforms"} for x in shots])
 
     # 2) 映像(静止画+測定したカメラワーク)
@@ -428,6 +465,12 @@ def main():
                            "-r", vs["r_frame_rate"], "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "12",
                            "-pix_fmt", "yuv420p", str(raw)], stdin=subprocess.PIPE)
     for s in shots:
+        if s.get("type") == "video":
+            cap = cv2.VideoCapture(str(ROOT / s["video"]))
+            for _ in range(s["end_frame"] - s["start_frame"]):
+                ok, fr = cap.read()
+                ff.stdin.write(fr.tobytes())
+            continue
         still = cv2.imread(str(ROOT / s["still"]))
         for fr in render_shot_frames(s, still, s["end_frame"] - s["start_frame"], W, H):
             ff.stdin.write(fr.tobytes())
