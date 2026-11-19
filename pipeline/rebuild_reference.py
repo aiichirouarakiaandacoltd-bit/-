@@ -296,6 +296,34 @@ def cross_fill(stills: list[dict], log, min_inliers=60, consist=20.0):
             s["hole_ratio"] = round(float(HA.mean()), 4)
 
 
+SUB_COLORS = [(0x17, 0x88, 0xAA), (0x85, 0x30, 0xA6), (0x82, 0xB6, 0x52)]  # 字幕の水色・紫・緑(RGB)
+
+
+def remnant_mask(img, band=(0.40, 0.80), tol=25, min_area=25, max_area=4000, region=None):
+    """字幕の消し残り(字幕の色に近い小さな破片)を検出する。"""
+    h = img.shape[0]
+    m = np.zeros(img.shape[:2], np.uint8)
+    y0, y1 = int(h * band[0]), int(h * band[1])
+    roi = img[y0:y1].astype(np.int16)
+    full = img.astype(np.int16)
+    outside = None if region is None else (cv2.dilate(region, np.ones((61, 61), np.uint8)) == 0)
+    for r, g, b in SUB_COLORS:
+        if outside is not None:
+            dd = np.abs(full[..., 2] - r) + np.abs(full[..., 1] - g) + np.abs(full[..., 0] - b)
+            if (dd[outside] < tol * 2).mean() > 0.002:
+                continue  # 写真そのものにこの色がある(例: 水色のセーター)→ 字幕の残りとは判定しない
+        d = np.abs(roi[..., 2] - r) + np.abs(roi[..., 1] - g) + np.abs(roi[..., 0] - b)
+        m[y0:y1] |= (d < tol * 2).astype(np.uint8)
+    if region is not None:
+        m &= (cv2.dilate(region, np.ones((25, 25), np.uint8)) > 0).astype(np.uint8)
+    n, lab, st, _ = cv2.connectedComponentsWithStats(m)
+    out = np.zeros_like(m)
+    for i in range(1, n):
+        if min_area <= st[i, 4] <= max_area:
+            out[lab == i] = 255
+    return cv2.dilate(out, np.ones((15, 15), np.uint8))
+
+
 def cover_plate(img, W, H, margin=1.10):
     """縦横比を保ったまま W*margin x H*margin を覆うように拡大し中央を切り出す(変形なし)。"""
     PW, PH = int(W * margin), int(H * margin)
@@ -325,6 +353,9 @@ def render_shot_frames(shot, still, n, W, H):
 
 def _video_job(args):
     ref, sf, ef, fps, W, H, out, masks = args
+    import os
+    if os.path.exists(out) and os.path.getsize(out) > 0:
+        return f"{out} (作成済みを再利用)"
     from .video_shot import rebuild_frames
     cap = cv2.VideoCapture(ref)
     cap.set(cv2.CAP_PROP_POS_FRAMES, sf)
@@ -386,6 +417,12 @@ def main():
     # 字幕の裏で写っていなかった穴を埋める: ①別カットの同じ写真 → ②LaMa(消去跡の補完AI)
     if not a.no_fill:
         log.info("字幕の裏の穴を補完中…")
+        import shutil
+        for s in shots:
+            if s.get("holes_file"):
+                h0 = s["holes_file"].replace("_holes.png", "_holes0.png")
+                shutil.copy(ROOT / s["holes_file"], ROOT / h0)
+                s["holes0_file"] = h0
         cross_fill(shots, log)
         from .lama_inpaint import inpaint as lama
         for s in shots:
@@ -394,6 +431,11 @@ def main():
             src = cv2.imread(str(ROOT / s["still"]))
             holes = cv2.imread(str(ROOT / s["holes_file"]), cv2.IMREAD_GRAYSCALE)
             out = lama(src, holes)
+            rem = remnant_mask(out, region=cv2.imread(str(ROOT / s["holes0_file"]), cv2.IMREAD_GRAYSCALE)
+                               if s.get("holes0_file") else None)
+            if rem.any():
+                out = lama(out, rem)
+                log.info(f"  カット{s['index']}-{s.get('part', 0) + 1} の字幕の消し残り({int((rem > 0).sum())}px)を除去")
             p = stills_dir / f"shot{s['index']:02d}_{s.get('part', 0)}_filled.png"
             cv2.imwrite(str(p), out)
             s["still"] = str(p.relative_to(ROOT))
