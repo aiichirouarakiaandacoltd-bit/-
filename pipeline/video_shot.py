@@ -26,9 +26,13 @@ def rebuild_frames(frames, ass_masks, t0, fps, search=30, log=None):
         for (cs, ce, am) in ass_masks:
             if cs - 0.1 <= t < ce + 0.1:
                 m = m | am
-                if t - cs < 0.6:  # 滑り込み中の字幕の位置(左側)も
-                    m = m | np.roll(am, -120, axis=1)
-        masks.append(cv2.dilate(m, np.ones((15, 15), np.uint8)))
+                if t - cs < 0.7:  # 滑り込み中・拡大中の字幕の位置(左側・外側)も覆う
+                    for dx in range(60, 481, 60):
+                        sh = np.zeros_like(am)
+                        sh[:, :-dx] = am[:, dx:]
+                        m = m | sh
+                    m = m | cv2.dilate(am, np.ones((61, 61), np.uint8))
+        masks.append(cv2.dilate(m, np.ones((27, 27), np.uint8)))
     out = []
     prev = None
     for j in range(n):
@@ -51,7 +55,7 @@ def rebuild_frames(frames, ass_masks, t0, fps, search=30, log=None):
                 take = hole & wv
                 # 周辺(穴の外側の帯)で位置が合っているか確認(動く被写体の二重写しを防ぐ)
                 ring = (cv2.dilate(take.astype(np.uint8), np.ones((25, 25), np.uint8)) > 0) & ~hole & wv
-                if ring.sum() > 200 and np.abs(wk.astype(np.float32) - f.astype(np.float32))[ring].mean() > 18:
+                if ring.sum() > 200 and np.abs(wk.astype(np.float32) - f.astype(np.float32))[ring].mean() > 8:
                     continue
                 f[take] = wk[take]
                 hole &= ~take
