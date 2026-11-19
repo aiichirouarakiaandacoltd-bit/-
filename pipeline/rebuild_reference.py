@@ -379,6 +379,7 @@ def main():
     ap.add_argument("--ai-shots", default=None,
                     help='AIで描き直すカットとプロンプトのJSON(下絵=復元素材, img2img)。例: assets/generated/ai_shots_reference_02.json')
     ap.add_argument("--ai-strength", type=float, default=0.35)
+    ap.add_argument("--touchups", default=None, help='手直しする跡のJSON {"カット番号": [[x,y,w,h],...]}(画面座標)')
     ap.add_argument("--video-shots", default=None, help="1コマずつ再現する動きのあるカット番号(例: 8,9,10,14,15)")
     ap.add_argument("--no-fill", action="store_true", help="字幕の裏の穴の補完(別カット+LaMa)をしない")
     ap.add_argument("--replace", default=None,
@@ -440,6 +441,28 @@ def main():
             cv2.imwrite(str(p), out)
             s["still"] = str(p.relative_to(ROOT))
             s["lama_filled_ratio"] = s.get("hole_ratio", 0)
+    # 目視で見つけた跡の手直し(画面座標の矩形 → 素材座標に変換して LaMa で補完)
+    if a.touchups:
+        from .lama_inpaint import inpaint as lama
+        tu = json.loads(open(a.touchups).read())
+        for s in shots:
+            rects = tu.get(str(s["index"]))
+            if not rects or "transforms" not in s:
+                continue
+            img = cv2.imread(str(ROOT / s["still"]))
+            Minv = cv2.invertAffineTransform(np.array(s["transforms"][0]))
+            m = np.zeros(img.shape[:2], np.uint8)
+            for x, y, w_, h_ in rects:
+                pts = np.array([[x, y], [x + w_, y], [x, y + h_], [x + w_, y + h_]], np.float64)
+                pp = (Minv[:, :2] @ pts.T + Minv[:, 2:]).T
+                x0, y0 = np.floor(pp.min(0)).astype(int)
+                x1, y1 = np.ceil(pp.max(0)).astype(int)
+                m[max(0, y0):y1, max(0, x0):x1] = 255
+            img = lama(img, m)
+            p = ROOT / s["still"].replace(".png", "_tu.png")
+            cv2.imwrite(str(p), img)
+            s["still"] = str(p.relative_to(ROOT))
+            log.info(f"  カット{s['index']} の跡を手直し({len(rects)}か所)")
     # AIで描き直し(下絵=復元素材)。カメラの動きは測定値のまま
     if a.ai_shots:
         from .ai_img2img import regenerate
