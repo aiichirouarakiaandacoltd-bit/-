@@ -1,0 +1,26 @@
+[
+ {
+  "name": "shelf_reach_rb",
+  "n": 2,
+  "seed": 151,
+  "w": 512,
+  "h": 768,
+  "prompt": "retro 1980s film photograph, side view of a young Japanese man with shaggy black hair, wearing a vivid royal blue (cobalt blue) crew-neck sweater over a light blue collared shirt, reaching for a book on a tall wooden library bookshelf full of dark brown and green old leather-bound books, warm faded colors, film grain"
+ },
+ {
+  "name": "shelf_hold_rb",
+  "n": 2,
+  "seed": 161,
+  "w": 512,
+  "h": 768,
+  "prompt": "retro 1980s film photograph of a young Japanese man with shaggy black hair, vivid royal blue (cobalt blue) crew-neck sweater over light blue collared shirt, white trousers, standing in front of a wooden library bookshelf with dark brown and green old leather-bound books, holding an open book in both hands, warm faded colors, film grain"
+ },
+ {
+  "name": "shelf_read_rb",
+  "n": 2,
+  "seed": 171,
+  "w": 512,
+  "h": 768,
+  "prompt": "retro 1980s film photograph of a young Japanese man with shaggy black hair, vivid royal blue (cobalt blue) crew-neck sweater over light blue collared shirt, looking down and reading an open book, standing in a library aisle with dark brown and green old leather-bound books on wooden shelves, slight smile, warm faded colors, film grain"
+ }
+]
