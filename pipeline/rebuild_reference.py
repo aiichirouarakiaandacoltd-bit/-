@@ -103,7 +103,7 @@ def subtitle_masks_from_ass(job, chunks, W, H, dil=31):
         m = (g > 10).astype(np.uint8) * 255
         # 幅・高さの実測差(数%)を見込んで大きめに広げる
         m = cv2.dilate(m, np.ones((dil, int(dil * 2.2)), np.uint8))
-        m = m | np.roll(m, -90, axis=1)  # 左から滑り込む出始めの位置も覆う
+        m = m | np.roll(m, -90, axis=1) | np.roll(m, -180, axis=1)  # 左から滑り込む出始めの位置も覆う
         masks.append((c["start"], c["end"], m))
     return masks
 
@@ -267,7 +267,9 @@ def cross_fill(stills: list[dict], log, min_inliers=60, consist=20.0):
             wb = cv2.warpAffine(B, M, (A.shape[1], A.shape[0]), flags=cv2.INTER_LANCZOS4)
             ok = cv2.warpAffine((~HB).astype(np.uint8) * 255, M, (A.shape[1], A.shape[0]), flags=cv2.INTER_NEAREST) > 0
             ov = ok & ~HA
-            if ov.sum() < 5000 or np.abs(wb.astype(np.float32) - A.astype(np.float32))[ov].mean() > consist:
+            dA, dB = A.astype(np.float32)[ov], wb.astype(np.float32)[ov]
+            tint = np.abs(dA.mean(0) - dB.mean(0)).max() if ov.any() else 999  # 色調(白黒/青)の違い
+            if ov.sum() < 5000 or np.abs(dB - dA).mean() > consist or tint > 6:
                 continue  # 同じ写真でも色調が違う(白黒/青など)場合は使わない
             take = HA & ok
             if take.any():
