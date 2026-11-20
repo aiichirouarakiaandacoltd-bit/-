@@ -171,16 +171,16 @@ def make_card(text: str, sub: str, Z: float, seed: int = 0) -> dict:
 @lru_cache(maxsize=64)
 def _label(text: str, credit: str) -> Image.Image:
     """左上の『資料写真』ラベル+クレジット(RGBA)。"""
-    f1 = ImageFont.truetype(find_font(("NotoSansCJK-Bold.ttc", "ipag.ttf")), 34)
-    f2 = ImageFont.truetype(find_font(("NotoSansCJK-Regular.ttc", "NotoSansCJK-Bold.ttc", "ipag.ttf")), 24)
-    im = Image.new("RGBA", (W, 130), (0, 0, 0, 0))
+    f1 = ImageFont.truetype(find_font(("NotoSansCJK-Bold.ttc", "ipag.ttf")), 46)
+    f2 = ImageFont.truetype(find_font(("NotoSansCJK-Bold.ttc", "ipag.ttf")), 30)
+    im = Image.new("RGBA", (W, 150), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     tw = d.textlength(text, font=f1)
-    d.rounded_rectangle((36, 150 - 120, 36 + tw + 28, 150 - 120 + 50), 8, fill=(0, 0, 0, 140))
-    d.text((50, 150 - 120 + 25), text, font=f1, fill=(255, 255, 255, 235), anchor="lm")
+    d.rounded_rectangle((36, 20, 36 + tw + 32, 84), 10, fill=(0, 0, 0, 170))
+    d.text((52, 52), text, font=f1, fill=(255, 255, 255, 245), anchor="lm")
     if credit:
-        d.text((40, 150 - 120 + 76), credit[:70], font=f2, fill=(255, 255, 255, 210), anchor="lm",
-               stroke_width=2, stroke_fill=(0, 0, 0, 200))
+        d.text((40, 116), credit[:60], font=f2, fill=(255, 255, 255, 230), anchor="lm",
+               stroke_width=3, stroke_fill=(0, 0, 0, 220))
     return im
 
 

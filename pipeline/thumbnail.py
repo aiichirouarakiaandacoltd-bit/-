@@ -164,15 +164,18 @@ def crop_for_frame(img_path: str, fw: int, fh: int, face_y=0.36, face_index=None
     if faces:
         x0 = min(x for x, _, _, _ in faces); x1 = max(x + fw_ for x, _, fw_, _ in faces)
         y0 = min(y for _, y, _, _ in faces); y1 = max(y + fh_ for _, y, _, fh_ in faces)
-        # 顔が小さければ寄る(顔の幅が枠の1/3程度)
-        span = max(x1 - x0, (y1 - y0) * ar)
-        cw = int(min(cw, max(span * 1.9, cw * 0.55)))
+        # 顔(複数なら全員)の幅が枠の約1/3になるまで寄る。顔は必ず枠内に余白つきで収める
+        want = int(max((x1 - x0) / 0.34, (y1 - y0) / 0.30 * ar))
+        cw = int(min(cw, max(want, (x1 - x0) * 1.3)))
         ch = int(cw / ar)
         cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
     else:
         cx, cy = w / 2, h * 0.45
     left = int(min(max(cx - cw / 2, 0), w - cw))
     top = int(min(max(cy - face_y * ch, 0), h - ch))
+    if faces:  # 顔が切れないよう補正
+        left = int(min(max(left, x1 + 8 - cw), x0 - 8)) if (x1 - x0) + 16 <= cw else left
+        left = int(min(max(left, 0), w - cw))
     crop = img[top:top + ch, left:left + cw]
     crop = cv2.resize(crop, (fw * 2, fh * 2), interpolation=cv2.INTER_LANCZOS4)  # Canva用に2倍解像度
     return Image.fromarray(cv2.cvtColor(crop, cv2.COLOR_BGR2RGB))
