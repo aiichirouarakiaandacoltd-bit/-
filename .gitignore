@@ -19,3 +19,7 @@ references/*_segments.json
 assets/generated/*.png
 assets/collected/
 state/
+projects/*/voicevox_test.wav
+projects/*/output/
+projects/*/assets/
+assets/bgm/*.wav
