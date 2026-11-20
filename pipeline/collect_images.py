@@ -27,7 +27,7 @@ from .common import ROOT
 
 UA = {"User-Agent": "Mozilla/5.0 (internal study material; contact: none)"}
 LEDGER_COLS = ["番号", "ファイル名", "取得元URL", "掲載サイト名", "取得日", "写っている人物", "撮影日・場所・行事",
-               "確認したキャプション", "使用する場面", "長辺px"]
+               "確認したキャプション", "使用する場面", "素材種別", "長辺px"]
 
 # キャプション中の表記 → 画面に出す人物名(宮内庁の表記に合わせた短い呼び方)
 PERSONS = [
@@ -143,7 +143,7 @@ def collect(project: str, pages: list[str], queries: list[str], scene_hint: str 
         im.save(adir / fn, quality=93)
         rows.append({"番号": no, "ファイル名": f"assets/{project}/{fn}", "取得元URL": c["src"], "掲載サイト名": c["site"],
                      "取得日": dt.date.today().isoformat(), "写っている人物": "・".join(who),
-                     "撮影日・場所・行事": c["event"], "確認したキャプション": c["caption"], "使用する場面": scene_hint,
+                     "撮影日・場所・行事": c["event"], "確認したキャプション": c["caption"], "使用する場面": scene_hint, "素材種別": "写真",
                      "長辺px": max(im.size)})
         seen.add(c["src"])
         time.sleep(0.8)

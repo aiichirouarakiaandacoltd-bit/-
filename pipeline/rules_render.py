@@ -217,6 +217,40 @@ def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str):
         yield cv2.warpAffine(pl, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
 
 
+VIDEO_EXT = (".mp4", ".mov", ".webm", ".m4v", ".mkv")
+
+
+def is_video(path: str) -> bool:
+    return Path(path).suffix.lower() in VIDEO_EXT
+
+
+def video_frames(path: str, start: float, n: int, W: int, H: int):
+    """実写映像(第4-2章): 指定区間を30fpsで読み、歪めずに画面いっぱいへ切り抜く。短ければ区間の頭に戻る。"""
+    cap = cv2.VideoCapture(path)
+    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
+    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
+    first = int(start * fps)
+    cache, last = {}, None
+    for k in range(n):
+        idx = first + int(k * fps / 30.0)
+        if total and idx >= total:
+            idx = first + (idx - first) % max(1, total - first)
+        if idx not in cache:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
+            ok, fr = cap.read()
+            cache = {idx: fr if ok else last}
+        fr = cache[idx]
+        if fr is None:
+            fr = np.zeros((H, W, 3), np.uint8)
+        h, w = fr.shape[:2]
+        s = max(W / w, H / h)
+        fr = cv2.resize(fr, (int(w * s + 0.5), int(h * s + 0.5)), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
+        y0, x0 = (fr.shape[0] - H) // 2, (fr.shape[1] - W) // 2
+        last = fr[y0:y0 + H, x0:x0 + W]
+        yield last
+    cap.release()
+
+
 def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit: str) -> np.ndarray:
     """人物名(人物ごと)・撮影の日付/場所/行事(隅に小さく)・音声クレジット。RGBA。"""
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
@@ -292,13 +326,18 @@ def build(project: str, kind: str = "縦型") -> Path:
         b = scenes[i + 1]["start_sec"] if i + 1 < len(scenes) else total
         n = max(1, math.ceil((b - a) / sp["cut"][1]))
         imgs = s.get("images") or ([s["image"]] if s.get("image") else [])
+        off = 0
+        if imgs and shots and len(imgs) > 1 and imgs[0] == shots[-1]["image"]:
+            off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない
         for k in range(n):
-            img = imgs[k % len(imgs)] if imgs else None
+            img = imgs[(k + off) % len(imgs)] if imgs else None
             crop = s.get("crop", "全身") if k == 0 else crops[(crops.index(s.get("crop", "全身")) + k) % 3]
             motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
             shots.append({"scene": s["scene"], "start": a + (b - a) * k / n, "end": a + (b - a) * (k + 1) / n,
                           "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
-                          "person_label": s.get("person_label", ""), "caption": s.get("caption", "")})
+                          "person_label": s.get("person_label", ""), "caption": s.get("caption", ""),
+                          "clip_start": float((s.get("clip") or {}).get("start", 0)) + (b - a) * k / n,
+                          "diagram": bool(s.get("diagram"))})
     # 3) 映像
     raw = out_dir / "video_nosub.mp4"
     ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", "30",
@@ -317,6 +356,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             for j, iid in enumerate(ids[:2]):
                 pl, fo = plate(str(ROOT / ledger[iid]["ファイル名"]), sh["crop"], half, H)
                 subs.append(list(frames_for(pl, fo, n, half, H, sh["motion"])))
+            sh["media"] = "写真"
             ov = overlay(W, H, [(labs[0], W // 4), (labs[1], 3 * W // 4)], sh["caption"], credit)
             for k in range(n):
                 fr = np.full((H, W, 3), NAVY[::-1], np.uint8)
@@ -327,10 +367,17 @@ def build(project: str, kind: str = "縦型") -> Path:
             # 人物名が複数(「両陛下」「・」区切り)の場面は写真全体を見せ、名前と画面を一致させる
             multi = ("両" in sh["person_label"] or "・" in sh["person_label"] or "、" in sh["person_label"]
                      or sh["crop"] == "全体")
-            pl, fo = plate(str(ROOT / ledger[sh["image"]]["ファイル名"]), sh["crop"], W, H, keep_all=multi)
+            src = str(ROOT / ledger[sh["image"]]["ファイル名"])
             labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
             ov = overlay(W, H, labels, sh["caption"], credit)
-            for fr in frames_for(pl, fo, n, W, H, sh["motion"]):
+            if is_video(src):
+                sh["media"] = "映像"
+                gen = video_frames(src, sh["clip_start"], n, W, H)
+            else:
+                sh["media"] = "写真"
+                pl, fo = plate(src, sh["crop"], W, H, keep_all=multi)
+                gen = frames_for(pl, fo, n, W, H, sh["motion"])
+            for fr in gen:
                 ff.stdin.write(blend(fr, ov).tobytes())
         fcount += n
     ff.stdin.close()

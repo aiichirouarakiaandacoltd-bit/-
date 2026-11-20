@@ -108,6 +108,18 @@ def check(project: str, kind: str = "縦型") -> bool:
     if len(shots) < sp["cuts"][0] or n_img < sp["images"]:
         res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)} / 画像 {n_img}枚",
                     "目標の70%未満なら第7章により生成停止"))
+    # 7-2 第4-2章 素材の豊富さと画面の華やかさ
+    seq = [None if s.get("compare") else s.get("image") for s in shots]
+    adj = [f"{shots[i]['scene']}:{seq[i]}" for i in range(1, len(seq)) if seq[i] and seq[i] == seq[i - 1]]
+    div = n_img / max(1, len(shots))
+    div_min = 0.6 if kind == "縦型" else 0.5
+    diag = sum(d for s, d in zip(shots, durs) if s.get("diagram") or not (s.get("image") or s.get("compare")))
+    diag_ok = diag <= 3.0 if kind == "縦型" else diag <= 0.05 * sum(durs)
+    n_clip = sum(1 for s in shots if s.get("media") == "映像")
+    add("第4-2章 素材の豊富さ(隣接の重複・多様さ・図解の量)", not adj and div >= div_min and diag_ok,
+        f"隣り合う同じ画像 {adj or 'なし'} / 異なる画像÷カット数 {div:.2f}(目安{div_min}以上) / "
+        f"図解・文字だけ {diag:.1f}秒(上限{'3秒' if kind == '縦型' else '全体の5%'}) / 実写映像カット {n_clip}",
+        "同じ行事の別の写真・実写映像を追加し、scenes.json の images に複数指定する(内容に合わない素材で水増ししない)")
     # 8 黒画面・無音・音割れ・BGM
     blk = re.findall(r"black_start:([0-9.]+)", ff(["-i", str(video), "-vf", "blackdetect=d=0.2:pix_th=0.08", "-an", "-f", "null", "-"]))
     sil = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", ff(["-i", str(video), "-af", "silencedetect=n=-45dB:d=1.5", "-vn", "-f", "null", "-"])) if float(x) < dur - 1.5]
@@ -124,7 +136,7 @@ def check(project: str, kind: str = "縦型") -> bool:
              "| 項目 | 合否 | 実測・詳細 | 対応案 |", "|---|---|---|---|"]
     for n, ok, d, todo in res:
         lines.append(f"| {n} | {'合格' if ok else '不合格'} | {d if isinstance(d, str) else d} | {'' if ok else todo} |")
-    lines += ["", "## 実測値", f"- 尺 {dur:.2f}秒 / カット数 {len(shots)} / 異なる画像 {n_img}枚 / 人物が映る割合 {person:.0%}"]
+    lines += ["", "## 実測値", f"- 尺 {dur:.2f}秒 / カット数 {len(shots)} / 異なる画像 {n_img}枚 / 人物が映る割合 {person:.0%} / 実写映像カット {n_clip} / 図解 {diag:.1f}秒"]
     (pdir / "qa_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
     return passed
