@@ -433,7 +433,7 @@ def render(job: Job, script: dict, timeline: dict, manifest: dict, bgm: Path | N
          "-map", "[v]", "-map", "1:a", "-c:v", cfg["vcodec"], "-preset", cfg["preset"], "-crf", str(cfg["crf"]),
          "-profile:v", "high", "-r", str(cfg["fps"]), "-c:a", cfg["acodec"], "-b:a", cfg["audio_bitrate"],
          "-movflags", "+faststart", "-t", f"{duration:.3f}", str(job.video)])
-    raw.unlink(missing_ok=True)
+    # 字幕なし映像はサムネイル用フレームの切り出しに使うので残す
     log.info(f"書き出し完了: {job.video} ({media_duration(job.video):.2f}秒)")
     job.mark("render", True, video=str(job.video.relative_to(ROOT)), shots=len(shots))
     return job.video

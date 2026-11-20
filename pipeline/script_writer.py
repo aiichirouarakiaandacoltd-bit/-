@@ -196,5 +196,7 @@ if __name__ == "__main__":
     ap.add_argument("--job", required=True)
     ap.add_argument("--topic")
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--brief", help="企画書(brief.md)のパス。台本生成の追加指示として渡す")
     a = ap.parse_args()
-    generate(Job(a.job), a.topic, a.force)
+    b = open(a.brief, encoding="utf-8").read() if a.brief else None
+    generate(Job(a.job), a.topic, a.force, brief=b)

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+# 係の進行管理(state.json)。使い方は bin/kabu --help / .claude/commands/kabu.md
+cd "$(dirname "$0")/.." && exec python3 -m pipeline.kabu "$@"
