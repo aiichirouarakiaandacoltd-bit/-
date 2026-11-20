@@ -248,10 +248,11 @@ def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: di
                 variant = "close" if usage[f] % 2 == 0 else "wide"
                 rec = files.get(f, {})
                 credit = f"{(rec.get('rights_holder') or '')[:30]} / {rec.get('license', '')}".strip(" /")
+                yr = re.search(r"(19|20)\d\d", (rec.get("shot_date") or "") + " " + rec.get("source_title", ""))
                 shots.append({"scene": sc["id"], "start": bounds[k], "end": bounds[k + 1], "type": "image",
                               "file": str(ROOT / f), "variant": variant, "credit": credit,
                               "fallback_text": v.get("card_text") or v.get("subject", ""), "sub": v.get("card_sub", ""),
-                              "label": "資料写真" if v.get("kind") in ("person", None) or "library" not in rec.get("found_via", "") else "",
+                              "label": (f"資料写真({yr.group(0)}年)" if yr else "資料写真") if v.get("kind") in ("person", None) or "library" not in rec.get("found_via", "") else "",
                               "hook": i == 0 and k == 0 and sc.get("role") == "hook"})
             else:
                 shots.append({"scene": sc["id"], "start": bounds[k], "end": bounds[k + 1], "type": "card",
@@ -264,6 +265,14 @@ def plan_shots(job: Job, script: dict, timeline: dict, manifest: dict, rules: di
     for s in shots:
         s["start"], s["end"] = round(s["start"], 3), round(s["end"], 3)
     return shots
+
+
+def _photo_label(rec: dict) -> str:
+    """資料写真ラベル(撮影年が分かれば付ける)。"""
+    if "library" in rec.get("found_via", ""):
+        return ""
+    yr = re.search(r"(19|20)\d\d", (rec.get("shot_date") or "") + " " + rec.get("source_title", ""))
+    return f"資料写真({yr.group(0)}年)" if yr else "資料写真"
 
 
 def _plan_reference(script, timeline, manifest, rules, ref_analysis) -> list[dict]:
@@ -292,7 +301,7 @@ def _plan_reference(script, timeline, manifest, rules, ref_analysis) -> list[dic
                           "file": str(ROOT / f), "variant": "close" if usage[f] % 2 == 0 else "wide",
                           "credit": f"{(rec.get('rights_holder') or '')[:30]} / {rec.get('license', '')}".strip(" /"),
                           "fallback_text": v.get("card_text") or v.get("subject", ""), "sub": v.get("card_sub", ""),
-                          "label": "資料写真" if "library" not in rec.get("found_via", "") else "",
+                          "label": _photo_label(rec),
                           "hook": k == 0})
         else:
             shots.append({"scene": sc["id"], "start": round(a, 3), "end": round(b, 3), "type": "card",
