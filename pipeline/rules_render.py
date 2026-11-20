@@ -1,0 +1,384 @@
+"""制作ルール(2026-11-21版)準拠の生成(G4)。scenes.json → 音声・字幕・映像 → MP4。
+
+入力 : projects/<制作番号>/scenes.json(G3で確定・荒木承認済み)、ledger.csv、env_check.json
+出力 : projects/<制作番号>/output/<制作番号>_<縦型|横型>_internal.mp4、scenes.json に start/end/subtitle を記入
+
+scenes.json(配列)の1場面:
+  {"scene": "01-1", "chapter": "疑問", "role": "question|answer|body",
+   "narration": "完成ナレーション", "image": "A003", "crop": "全身|顔の寄り|手元・装い",
+   "motion": "ゆっくり拡大|ゆっくり縮小|左へパン|右へパン", "person_label": "愛子内親王殿下",
+   "caption": "2026年10月29日 園遊会(赤坂御苑)",
+   "compare": {"images": ["A002", "A005"], "labels": ["天皇陛下", "..."]}   # 比較場面だけ(左右並び)
+  }
+仕様: 第4章(切替・最長表示・同一画像3回まで)、第5章(尺・画面・fps・音声0.90・字幕・BGM -18〜-24dB)。
+"""
+from __future__ import annotations
+
+import argparse
+import csv
+import io
+import json
+import math
+import re
+import subprocess
+import wave
+from pathlib import Path
+
+import cv2
+import numpy as np
+import requests
+from PIL import Image, ImageDraw, ImageFont
+
+from .common import ROOT, load_json, save_json
+
+FONT_DIR = Path("/usr/local/share/fonts/noto-sans-jp")
+FONT_B = str(FONT_DIR / "NotoSansJP-Bold.ttf")
+FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
+VV = "http://127.0.0.1:50021"
+SPEED = 0.90
+SPEC = {
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 14, "sub_size": 70,
+             "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
+    "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 24, "sub_size": 64,
+             "sub_y": 0.86, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
+}
+NAVY, GOLD, WHITE = (22, 36, 58), (216, 188, 114), (255, 255, 255)
+
+
+def font(path, size):
+    return ImageFont.truetype(path, size)
+
+
+# ---------------- 音声(VOICEVOX エンジン・青山龍星・0.90) ----------------
+def speaker_id() -> int:
+    sp = requests.get(VV + "/speakers", timeout=10).json()
+    return next(s["id"] for p in sp if p["name"] == "青山龍星" for s in p["styles"] if s["name"] == "ノーマル")
+
+
+def tts(text: str, sid: int, readings: dict) -> np.ndarray:
+    t = text
+    for k in sorted(readings, key=len, reverse=True):
+        t = t.replace(k, readings[k])
+    t = re.sub(r"[「」『』【】]", "", t)
+    q = requests.post(VV + "/audio_query", params={"text": t, "speaker": sid}, timeout=60).json()
+    q["speedScale"] = SPEED
+    q["outputSamplingRate"] = 48000
+    q["prePhonemeLength"] = 0.05
+    q["postPhonemeLength"] = 0.12
+    w = requests.post(VV + "/synthesis", params={"speaker": sid}, json=q, timeout=300).content
+    with wave.open(io.BytesIO(w)) as f:
+        x = np.frombuffer(f.readframes(f.getnframes()), np.int16).astype(np.float32) / 32768
+        ch = f.getnchannels()
+    return x.reshape(-1, ch).mean(1) if ch > 1 else x
+
+
+# ---------------- 字幕 ----------------
+def split_sub(text: str, line: int) -> list[list[str]]:
+    """全文を、1行 line 字・最大2行の塊に分ける(文節の切れ目を優先)。"""
+    from .subtitles import bunsetsu
+    parts = bunsetsu(text) if text else []
+    chunks, cur = [], ""
+    for p in parts:
+        if len(re.sub(r"[、。]", "", cur + p)) > line * 2 and cur:
+            chunks.append(cur)
+            cur = p
+        else:
+            cur += p
+    if cur:
+        chunks.append(cur)
+    out = []
+    for c in chunks:
+        c = re.sub(r"。$", "", c)
+        if len(c) <= line:
+            out.append([c])
+            continue
+        best = None
+        acc = 0
+        for p in bunsetsu(c):
+            acc += len(p)
+            if 0 < acc < len(c):
+                key = (max(acc, len(c) - acc) <= line, -abs(acc - len(c) / 2))
+                if best is None or key > best[0]:
+                    best = (key, acc)
+        i = best[1] if best else len(c) // 2
+        out.append([c[:i], c[i:]])
+    return out
+
+
+def ass_time(t):
+    return f"{int(t // 3600)}:{int(t % 3600 // 60):02d}:{t % 60:05.2f}"
+
+
+def write_ass(path: Path, subs: list[dict], sp: dict):
+    W, H = sp["W"], sp["H"]
+    hdr = f"""[Script Info]
+ScriptType: v4.00+
+PlayResX: {W}
+PlayResY: {H}
+WrapStyle: 2
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Sub,Noto Sans JP,{sp['sub_size']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,7,2,5,40,40,0,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+"""
+    ev = [f"Dialogue: 0,{ass_time(s['start'])},{ass_time(s['end'])},Sub,,0,0,0,,"
+          f"{{\\an5\\pos({W // 2},{int(H * sp['sub_y'])})}}" + "\\N".join(s["lines"]) for s in subs]
+    path.write_text(hdr + "\n".join(ev) + "\n", encoding="utf-8")
+
+
+# ---------------- 画像の切り抜き・動き・表示 ----------------
+_CASC = None
+
+
+def faces(img):
+    global _CASC
+    if _CASC is None:
+        _CASC = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
+    g = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    sc = min(1.0, 1000 / max(g.shape))
+    f = _CASC.detectMultiScale(cv2.resize(g, None, fx=sc, fy=sc), 1.1, 6, minSize=(24, 24))
+    return [tuple(int(v / sc) for v in x) for x in f]
+
+
+def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: float = 0.70,
+          keep_all: bool = False) -> tuple[np.ndarray, tuple]:
+    """変形なしで W*Z x H*Z の素材を作る。顔は字幕帯より上に置く。全体が入らない横長写真はぼかし背景+全体表示。"""
+    img = cv2.imread(img_path)
+    ih, iw = img.shape[:2]
+    PW, PH = int(W * Z), int(H * Z)
+    fs = faces(img)
+    ar = PW / PH
+    if fs:
+        x0 = min(f[0] for f in fs); x1 = max(f[0] + f[2] for f in fs)
+        y0 = min(f[1] for f in fs); y1 = max(f[1] + f[3] for f in fs)
+        fh = max(f[3] for f in fs)
+        cx, cy = (x0 + x1) / 2, (y0 + y1) / 2
+    else:
+        x0 = x1 = cx = iw / 2; cy = ih * 0.4; fh = ih * 0.15; y0 = y1 = cy
+    if crop == "顔の寄り" and fs:
+        ch = min(ih, fh / 0.18)
+    elif crop == "手元・装い" and fs:
+        ch = min(ih, fh / 0.10)
+        cy = cy + fh * 2.2
+    else:
+        ch = ih
+    cw = ch * ar
+    if cw > iw:
+        cw = iw
+        ch = cw / ar
+    target_face_y = 0.30 if W < H else 0.38
+    if not keep_all and ((x1 - x0) <= cw * 0.9 or iw / ih <= ar * 1.3):
+        left = min(max(cx - cw / 2, 0), iw - cw)
+        top = min(max(cy - target_face_y * ch, 0), ih - ch)
+        out = cv2.resize(img[int(top):int(top + ch), int(left):int(left + cw)], (PW, PH), interpolation=cv2.INTER_LANCZOS4)
+        focus = ((cx - left) * PW / cw, (cy - top) * PH / ch)
+    else:  # 横長で人物が入りきらない → ぼかし背景 + 全体
+        bg = cv2.resize(img, (int(iw * PH / ih), PH))
+        bx = (bg.shape[1] - PW) // 2
+        bg = cv2.GaussianBlur(bg[:, bx:bx + PW], (0, 0), 25) * 0.55
+        fw = PW
+        fh2 = int(ih * fw / iw)
+        fg = cv2.resize(img, (fw, fh2), interpolation=cv2.INTER_LANCZOS4)
+        top = max(int(PH * (0.40 if W < H else 0.45) - fh2 / 2), 0)
+        out = bg.astype(np.uint8)
+        out[top:top + fh2] = fg[:PH - top]
+        focus = (cx * fw / iw, cy * fw / iw + top)
+    return out, focus
+
+
+def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str):
+    PH, PW = pl.shape[:2]
+    Z = PW / W
+    for k in range(n):
+        u = k / max(1, n - 1)
+        e = 0.5 - 0.5 * math.cos(math.pi * u)
+        if motion == "ゆっくり縮小":
+            z = 1.08 - 0.08 * e
+        elif motion in ("左へパン", "右へパン"):
+            z = 1.04
+        else:
+            z = 1.0 + 0.08 * e
+        ww = PW / Z / z
+        wh = PH / Z / z
+        cx = PW / 2 + (focus[0] - PW / 2) * 0.25 * e
+        cy = PH / 2 + (focus[1] - PH / 2) * 0.15 * e
+        if motion == "左へパン":
+            cx = PW / 2 + (PW - ww) * (0.5 - e) * 0.9
+        elif motion == "右へパン":
+            cx = PW / 2 - (PW - ww) * (0.5 - e) * 0.9
+        cx = min(max(cx, ww / 2), PW - ww / 2)
+        cy = min(max(cy, wh / 2), PH - wh / 2)
+        a = ww / W
+        M = np.float32([[1 / a, 0, -(cx - ww / 2) / a], [0, 1 / a, -(cy - wh / 2) / a]])
+        yield cv2.warpAffine(pl, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+
+
+def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit: str) -> np.ndarray:
+    """人物名(人物ごと)・撮影の日付/場所/行事(隅に小さく)・音声クレジット。RGBA。"""
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(im)
+    vert = W < H
+    fs_name = 56 if vert else 50
+    for text, cx in labels:
+        f = font(FONT_B, fs_name)
+        tw = d.textlength(text, font=f)
+        x = min(max(cx - tw / 2, 24), W - tw - 24)
+        y = int(H * (0.13 if vert else 0.06))
+        d.rounded_rectangle((x - 18, y - 10, x + tw + 18, y + fs_name + 18), 12, fill=NAVY + (215,), outline=GOLD + (255,), width=3)
+        d.text((x, y), text, font=f, fill=WHITE)
+    if caption:
+        f = font(FONT_R, 30 if vert else 28)
+        tw = d.textlength(caption, font=f)
+        x, y = 28, int(H * (0.215 if vert else 0.16))
+        if not vert:
+            x, y = W - tw - 40, int(H * 0.06) + 10
+        d.rounded_rectangle((x - 10, y - 6, x + tw + 10, y + 42), 8, fill=(0, 0, 0, 150))
+        d.text((x, y), caption, font=f, fill=WHITE)
+    f = font(FONT_R, 24)
+    tw = d.textlength(credit, font=f)
+    d.text((W - tw - 24, int(H * 0.035) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),
+           stroke_width=2, stroke_fill=(0, 0, 0, 180))
+    return np.array(im)
+
+
+def blend(fr: np.ndarray, ov: np.ndarray) -> np.ndarray:
+    a = ov[..., 3:4].astype(np.float32) / 255
+    rgb = ov[..., :3][..., ::-1].astype(np.float32)
+    return (fr.astype(np.float32) * (1 - a) + rgb * a).astype(np.uint8)
+
+
+# ---------------- 本体 ----------------
+def build(project: str, kind: str = "縦型") -> Path:
+    sp = SPEC[kind]
+    W, H = sp["W"], sp["H"]
+    pdir = ROOT / "projects" / project
+    scenes = load_json(pdir / "scenes.json")
+    ledger = {r["番号"]: r for r in csv.DictReader(open(pdir / "ledger.csv", encoding="utf-8"))}
+    readings = {k: v for k, v in (load_json(ROOT / "config" / "reading_dict.json", {}) or {}).items() if not k.startswith("_")}
+    readings.update(load_json(pdir / "readings.json", {}) or {})
+    sid = speaker_id()
+    out_dir = pdir / "output"
+    out_dir.mkdir(exist_ok=True)
+    # 1) 音声(場面ごとに合成・実測)
+    sr = 48000
+    gap = 0.12
+    t = 0.25
+    pieces = [np.zeros(int(sr * t), np.float32)]
+    for s in scenes:
+        x = tts(s["narration"], sid, readings)
+        s["start_sec"] = round(t, 3)
+        t += len(x) / sr
+        pieces += [x, np.zeros(int(sr * gap), np.float32)]
+        t += gap
+        s["end_sec"] = round(t, 3)
+    pieces.append(np.zeros(int(sr * 0.6), np.float32))
+    total = t + 0.6
+    narr = np.concatenate(pieces)
+    narr = narr / (np.abs(narr).max() + 1e-9) * 0.89
+    wav = out_dir / "narration.wav"
+    with wave.open(str(wav), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(sr)
+        w.writeframes((narr * 32767).astype(np.int16).tobytes())
+    # 2) 場面を切替間隔の上限で分割(同じ画像なら切り抜き/動きを変える)
+    shots = []
+    crops = ["全身", "顔の寄り", "手元・装い"]
+    motions = ["ゆっくり拡大", "左へパン", "ゆっくり縮小", "右へパン"]
+    for i, s in enumerate(scenes):
+        a = 0.0 if i == 0 else s["start_sec"]
+        b = scenes[i + 1]["start_sec"] if i + 1 < len(scenes) else total
+        n = max(1, math.ceil((b - a) / sp["cut"][1]))
+        imgs = s.get("images") or ([s["image"]] if s.get("image") else [])
+        for k in range(n):
+            img = imgs[k % len(imgs)] if imgs else None
+            crop = s.get("crop", "全身") if k == 0 else crops[(crops.index(s.get("crop", "全身")) + k) % 3]
+            motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
+            shots.append({"scene": s["scene"], "start": a + (b - a) * k / n, "end": a + (b - a) * (k + 1) / n,
+                          "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
+                          "person_label": s.get("person_label", ""), "caption": s.get("caption", "")})
+    # 3) 映像
+    raw = out_dir / "video_nosub.mp4"
+    ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", "30",
+                           "-i", "-", "-c:v", "libx264", "-preset", "veryfast", "-crf", "16", "-pix_fmt", "yuv420p", str(raw)],
+                          stdin=subprocess.PIPE)
+    credit = "VOICEVOX:青山龍星"
+    fcount = 0
+    for sh in shots:
+        n = int(round(sh["end"] * 30)) - fcount
+        if n <= 0:
+            continue
+        if sh["compare"]:
+            ids, labs = sh["compare"]["images"], sh["compare"]["labels"]
+            half = W // 2 - 6
+            subs = []
+            for j, iid in enumerate(ids[:2]):
+                pl, fo = plate(str(ROOT / ledger[iid]["ファイル名"]), sh["crop"], half, H)
+                subs.append(list(frames_for(pl, fo, n, half, H, sh["motion"])))
+            ov = overlay(W, H, [(labs[0], W // 4), (labs[1], 3 * W // 4)], sh["caption"], credit)
+            for k in range(n):
+                fr = np.full((H, W, 3), NAVY[::-1], np.uint8)
+                fr[:, :half] = subs[0][k]
+                fr[:, W - half:] = subs[1][k]
+                ff.stdin.write(blend(fr, ov).tobytes())
+        else:
+            # 人物名が複数(「両陛下」「・」区切り)の場面は写真全体を見せ、名前と画面を一致させる
+            multi = ("両" in sh["person_label"] or "・" in sh["person_label"] or "、" in sh["person_label"]
+                     or sh["crop"] == "全体")
+            pl, fo = plate(str(ROOT / ledger[sh["image"]]["ファイル名"]), sh["crop"], W, H, keep_all=multi)
+            labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
+            ov = overlay(W, H, labels, sh["caption"], credit)
+            for fr in frames_for(pl, fo, n, W, H, sh["motion"]):
+                ff.stdin.write(blend(fr, ov).tobytes())
+        fcount += n
+    ff.stdin.close()
+    ff.wait()
+    # 4) 字幕(全文・1行の目安字数・最大2行)
+    subs = []
+    from .tts import mora_count
+    for s in scenes:
+        chunks = split_sub(s["narration"], sp["line"])
+        ms = [max(1, mora_count("".join(c))) for c in chunks]
+        a, b = s["start_sec"], s["end_sec"] - 0.06
+        acc = a
+        s["subtitle"] = []
+        for c, m in zip(chunks, ms):
+            e = acc + (b - a) * m / sum(ms)
+            subs.append({"start": acc, "end": e, "lines": c})
+            s["subtitle"].append(c)
+            acc = e
+    ass = out_dir / "subtitles.ass"
+    write_ass(ass, subs, sp)
+    # 5) 合成(BGM UNL1337 をナレーションより約21dB下げる)
+    env = load_json(pdir / "env_check.json", {}) or {}
+    bgm = ROOT / (env.get("bgm") or "assets/bgm/UNL1337.wav")
+    final = out_dir / f"{project}_{kind}_internal.mp4"
+    assp = str(ass).replace(":", "\\:")
+    fc = (f"[0:v]ass='{assp}':fontsdir={FONT_DIR},format=yuv420p[v];"
+          f"[1:a]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[n];"
+          f"[2:a]aresample=48000,loudnorm=I=-37:TP=-9:LRA=11,afade=t=in:d=1,afade=t=out:st={max(0, total - 2):.2f}:d=2[b];"
+          f"[n][b]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.70[a]")
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-i", str(wav), "-stream_loop", "-1", "-i", str(bgm),
+                    "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+                    "-r", "30", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", "-movflags", "+faststart", str(final)],
+                   check=True)
+    # 6) scenes.json に実測の時刻と字幕を記入
+    for s in scenes:
+        s["start"] = f"{int(s['start_sec'] // 60)}:{s['start_sec'] % 60:05.2f}"
+        s["end"] = f"{int(s['end_sec'] // 60)}:{s['end_sec'] % 60:05.2f}"
+    save_json(pdir / "scenes.json", scenes)
+    save_json(out_dir / "shots.json", shots)
+    save_json(out_dir / "render_info.json", {"kind": kind, "speaker_id": sid, "speed": SPEED, "duration": round(total, 3),
+                                             "font": FONT_B, "bgm": str(bgm.relative_to(ROOT)), "bgm_gain_db": -37})
+    print(f"書き出し: {final} ({total:.2f}秒, {len(shots)}カット)")
+    return final
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--project", required=True)
+    ap.add_argument("--kind", default="縦型", choices=["縦型", "横型"])
+    a = ap.parse_args()
+    build(a.project, a.kind)

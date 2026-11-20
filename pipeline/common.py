@@ -140,9 +140,13 @@ def media_duration(path: Path | str) -> float:
     return float(ffprobe(path)["format"]["duration"])
 
 
-def find_font(prefer=("NotoSansCJK-Black.ttc", "NotoSansCJK-Bold.ttc", "ipag.ttf")) -> str:
-    for base in ("/usr/share/fonts", "/usr/local/share/fonts", str(ROOT / "templates" / "fonts")):
+def find_font(prefer=("NotoSansJP-Black.ttf", "NotoSansJP-Bold.ttf")) -> str:
+    """画面上の文字は Noto Sans JP のみ(制作ルール 第0-2章④)。他のフォントへの置き換えはしない。"""
+    m = {"NotoSansCJK-Black.ttc": "NotoSansJP-Black.ttf", "NotoSansCJK-Bold.ttc": "NotoSansJP-Bold.ttf",
+         "NotoSansCJK-Regular.ttc": "NotoSansJP-Regular.ttf", "ipag.ttf": "NotoSansJP-Bold.ttf"}
+    prefer = tuple(dict.fromkeys(m.get(p, p) for p in prefer))
+    for base in ("/usr/local/share/fonts", str(ROOT / "templates" / "fonts"), "/usr/share/fonts"):
         for p in Path(base).rglob("*"):
             if p.name in prefer:
                 return str(p)
-    raise FileNotFoundError("日本語フォントが見つかりません: apt-get install fonts-noto-cjk")
+    raise FileNotFoundError("Noto Sans JP が見つかりません: python -m pipeline.env_check --project <番号> で導入してください")

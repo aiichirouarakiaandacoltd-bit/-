@@ -43,12 +43,21 @@ def _faces(img):
 
 def extract(job: Job, subjects: list[str], n: int = 5) -> dict:
     log = get_logger(job)
-    src = job.output / "video_nosub.mp4"
-    if not src.exists():
-        src = job.video
-    shots = load_json(job.output / "shots.json", []) or []
-    script = load_json(job.script, {}) or {}
-    vis = {s["id"]: s.get("visual", {}) for s in script.get("scenes", [])}
+    proj = ROOT / "projects" / job.id / "output"
+    if proj.exists():  # 制作ルール版(projects/<制作番号>/output)
+        src = proj / "video_nosub.mp4"
+        shots = load_json(proj / "shots.json", []) or []
+        vis = {}
+        for sh in shots:
+            sh.setdefault("scene", sh.get("scene"))
+            vis[sh["scene"]] = {"subject": sh.get("person_label") or "・".join((sh.get("compare") or {}).get("labels", []))}
+    else:
+        src = job.output / "video_nosub.mp4"
+        if not src.exists():
+            src = job.video
+        shots = load_json(job.output / "shots.json", []) or []
+        script = load_json(job.script, {}) or {}
+        vis = {s["id"]: s.get("visual", {}) for s in script.get("scenes", [])}
     cap = cv2.VideoCapture(str(src))
     out = job.output / "thumbs" / "candidates"
     out.mkdir(parents=True, exist_ok=True)
@@ -102,7 +111,7 @@ def extract(job: Job, subjects: list[str], n: int = 5) -> dict:
 
 # ---------------- 文字組み ----------------
 def _font(size):
-    return ImageFont.truetype(find_font(("NotoSansCJK-Black.ttc", "NotoSansCJK-Bold.ttc")), size)
+    return ImageFont.truetype(find_font(("NotoSansJP-Black.ttf", "NotoSansJP-Bold.ttf")), size)
 
 
 def _width(text, size):
@@ -239,7 +248,8 @@ def check_variant(r: dict, texts: dict) -> list[str]:
 
 def render(job: Job) -> dict:
     log = get_logger(job)
-    ty = yaml.safe_load(open(job.output / "thumb.yaml", encoding="utf-8"))
+    ty_path = ROOT / "projects" / job.id / "thumb.yaml"
+    ty = yaml.safe_load(open(ty_path if ty_path.exists() else job.output / "thumb.yaml", encoding="utf-8"))
     cands = {c["id"]: c for c in load_json(job.output / "thumbs" / "candidates" / "candidates.json")["candidates"]}
     outdir = job.output / "thumbs"
     texts = ty["texts"]

@@ -22,19 +22,22 @@
     "voicevox_speaker_name": "青山龍星",
     "voicevox_style_name": "ノーマル",
     "voicevox_speaker_id_fallback": 13,
-    "speed": 1.0,
+    "speed": 0.9,
     "volume": 1.0,
     "sentence_pause_sec": 0.18,
     "openjtalk_note": "VOICEVOX が起動していない場合のフォールバック(速度1.0)。音色は青山龍星と異なる。",
-    "voicevox_core_style_id": 13
+    "voicevox_core_style_id": 13,
+    "note_rules": "制作ルール2026-11-21: VOICEVOXエンジン(localhost:50021)・青山龍星ノーマル(/speakersから取得)・speedScale 0.90"
   },
   "bgm": {
     "enabled": true,
     "dir": "audio/bgm",
-    "volume_db_below_voice": 22,
+    "volume_db_below_voice": 21,
     "fade_in": 0.5,
     "fade_out": 1.5,
-    "note": "参考動画は台詞の間の無音部が -51〜-66dB でBGMはほぼ聞こえない。既定では非常に小さく敷く。"
+    "note": "参考動画は台詞の間の無音部が -51〜-66dB でBGMはほぼ聞こえない。既定では非常に小さく敷く。",
+    "file": "assets/bgm/UNL1337.wav",
+    "source": "UNL1337(箕輪レコーズ) GoogleDrive 1NI_d0oPaY1N1QrG1F9MeKY0T7S29Rh9N"
   },
   "research": {
     "lookback_days": 21,

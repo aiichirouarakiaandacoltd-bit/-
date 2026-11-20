@@ -1,48 +1,42 @@
 ---
-description: 皇室ニュース動画を係(サブエージェント)で自動制作する指揮。引数「テーマ | 主役」(例: /kabu 雅子さまと久子さまの洋装 | 雅子さま,久子さま)
+description: 皇室物語の内部学習教材動画を、係(サブエージェント)で制作ルール(docs/production_rules.md)どおりに制作する指揮。引数「テーマ | 主役 | 縦型/横型」(例: /kabu 愛子さまの園遊会 | 愛子内親王殿下 | 縦型)
 ---
-あなたはメイン(/kabu の指揮)です。組織図どおりに係を立て、`bin/kabu`(state.json)で工程を進めます。
-承認者は荒木さん(テーマ・確認①・確認②・公開の4か所)。`--auto-approve` の案件ではメインが承認を代行し、理由を記録します。
+あなたはメイン(/kabu の指揮)です。**docs/production_rules.md(2026-11-21版)を正とし、旧版は参照しない。**
+成果物は Claude塾の内部学習教材専用。外部への公開・配布・共有は一切しない。
+荒木さんの承認は **G0(企画)と G3(台本)** の2か所。承認がない限り次へ進まない(代行しない)。
 
 ## 手順
-1. 引数 `$ARGUMENTS` を「テーマ | 主役」に分け、`bin/kabu new --topic "<テーマ>" --subject "<主役>"` で案件を作る(既にあれば `bin/kabu status`)。
+1. 引数 `$ARGUMENTS` を「テーマ | 主役 | 縦型/横型(省略時 縦型)」に分け、
+   `bin/kabu new --topic "<テーマ>" --subject "<主役>" --kind <縦型|横型> --job <制作番号>` で案件を作る(制作番号は例 KB-YYYYMMDD-01)。
 2. 以後くり返す: `bin/kabu next` を見て、
-   - kind=tool → `bin/kabu run <工程>`(棚調べ係・書き出し係に任せてもよい)→ 成功なら `bin/kabu done <工程>`
-   - kind=agent / check → 担当の係を Agent ツールで呼ぶ(subagent_type は下表)。成果を読み、check で「判定: 不合格」なら `bin/kabu fail <工程> --note "<直し指示>"`、合格なら `bin/kabu done <工程>`
-   - kind=gate → 荒木さんに承認を求める(auto_approve の案件は代行して `bin/kabu approve <テーマ|確認1|確認2|公開> --note "<代行の理由>"`)
-   - 同じ工程の差し戻しが3回を超えたら止めて荒木さんに報告する。
-3. 全工程が終わったら、完成動画・サムネPNG・Canvaリンク・publish.yaml・人が確認すべき点を報告する。
+   - kind=tool → `bin/kabu run <工程>` → 成功なら `bin/kabu done <工程>`
+   - kind=agent / check → 担当の係を Agent ツールで呼ぶ(下表)。check で「判定: 不合格」なら `bin/kabu fail <工程> --note "<直し指示>"`
+   - kind=gate(G0・G3)→ 成果物(plan.md / script.md・scenes.json)を荒木さんに示して承認を待つ。承認を得たら `bin/kabu approve G0|G3 --note "荒木さん承認 <日時>"`
+3. 停止条件(本書第7章)に当たったら生成を止め、不足事項・理由・必要な対応を報告する。
+4. G5 の qa_report.md が全項目合格のときだけ「完成」と報告する。
 
-| 工程 | 係(subagent_type) |
-|---|---|
-| research | tanashirabe(棚調べ係) |
-| brief | kikaku(企画係) |
-| script | daihon(台本係) |
-| factcheck | jijitsu(事実確認係) |
-| rules_script / rules_publish | kimari(決まりの確認係) |
-| assets・layout | seisaku(制作係)→ gamenwari(画面割り係)/ designer / designer-key / naoshi |
-| tts・subtitles・render | kakidashi(書き出し係) |
-| frames | atekko(当てっこ係) |
-| review | kakunin(確認係) |
-| video_review | douga-kakunin(動画の確認係) |
-| shorts | short(ショート係) |
-| thumb_frames・thumb_title | thumb-title(サムネ・タイトル係) |
-| thumb_render | designer-key(デザイナー(重要))+ メインがCanvaを操作 |
-| 公開後 | bunseki / tanashirabe / toorisugari / kata-bunseki |
+| 工程 | 係(subagent_type) | 出力 |
+|---|---|---|
+| env_check | (tool) | env_check.md(不合格なら停止) |
+| research | tanashirabe | research/<番号>/candidates.json |
+| plan(G0) | kikaku | plan.md(型A/B/C・疑問・回答の要旨・100点評価。80点以上で候補) |
+| facts(G1) | jijitsu | facts.md(F1…の表。公式事実/報道/分析・出典URL) |
+| images(G2) | seisaku → `bin/kabu run images --pages <宮内庁等の写真ページ> --commons <検索語>` | ledger.csv(キャプションで人物・行事を確認できたものだけ) |
+| script(G3) | daihon | script.md(章ごとの完成ナレーション全文)+ scenes.json(第6章の項目を省略なく・fact_ids・role=question/body/answer) |
+| rules_script | kimari | 本書で採点 |
+| render(G4) | (tool)kakidashi | output/<番号>_<縦型|横型>_internal.mp4 |
+| frames | atekko | 人物の取り違え・崩れの点検 |
+| qa(G5) | (tool)→ kakunin が qa_report.md を読んで直し指示 | qa_report.md |
+| thumb_* | thumb-title / designer-key | 表紙画像(人物1〜2人・短い疑問文・濃紺/金/白・赤なし)、Canva デザイン |
 
-## サムネ工程(thumb_frames → thumb_title → thumb_render)
-1. `bin/kabu run thumb_frames` で候補フレーム5枚(output/<job>/thumbs/candidates/ の sheet.jpg・candidates.json。字幕なし映像から切り出し)。
-2. サムネ・タイトル係が output/<job>/thumb.yaml を書く:
-   ```yaml
-   title: "動画タイトル"
-   texts: {upper: "【…】", middle: "…", lower: "“…”"}   # 人の指定があれば一字一句そのまま
-   adopted: 1                                           # 採用案
-   variants:                                            # A/B/C 3案(YouTube Studio「テストと比較」用)
-     - {layout: S-B, photos: [cand1, cand3], reason: "…"}
-     - {layout: S-A, photos: [cand2], reason: "…"}
-     - {layout: S-B, photos: [cand4, cand1], reason: "…"}
-   ```
-   と output/<job>/publish.yaml(タイトル3案・タグ・章・概要欄・出典・写真クレジット・VOICEVOX:青山龍星)。
-3. `bin/kabu run thumb_render` で3案のPNG(thumbs/thumb_v*.png)、Canva用の写真(thumbs/v*_photo*.png)、canva_plan.json。
-4. Canva(メインが操作): テンプレート `DAHatUQFKSI`(日本が誇る皇室物語｜3段テキスト基本)を copy-design → 写真を create-upload-url でアップロード(curl で生データをPOST)→ read-design(open_transaction)→ edit-design で写真枠の差し替え・上中下段の文字(一字一句)・文字サイズ/位置・デザイン名 → commit → export-design(PNG)。テンプレート本体は変更しない。書き出したPNGを thumbs/canva_v<n>.png に保存し、編集URLを canva_plan.json に記録。
-5. 決まりの確認係がサムネ・投稿文を採点 → 公開承認。
+## scenes.json の場面(本書第6章)
+`{"scene":"03-2","chapter":"…","role":"question|body|answer","narration":"完成ナレーション","fact_ids":["F3"],
+  "image":"A015","crop":"全身|顔の寄り|手元・装い|全体","motion":"ゆっくり拡大|ゆっくり縮小|左へパン|右へパン",
+  "person_label":"愛子内親王殿下","caption":"2026年10月29日 園遊会(赤坂御苑)"}`
+比較場面は `"compare":{"images":["A002","A005"],"labels":["…","…"]}`。start/end/subtitle は G4 で実測値を記入する。
+「前と同じ」「台帳参照」「以下同様」の省略は禁止。1場面のナレーションは縦型で2〜4秒(約10〜20字)を目安にし、
+同じ画像は1本につき3回まで(使い回すときは切り抜きと動きを変える)。
+
+## 表紙画像(Canva)
+テンプレート `DAHatUQFKSI` を copy-design → 写真を create-upload-url でアップロード → 文字・写真を差し替え → commit → export。
+テンプレート本体は変更しない。赤は使わない。

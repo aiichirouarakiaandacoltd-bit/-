@@ -18,16 +18,17 @@ import numpy as np
 from .common import Job, get_logger, load_json, save_json
 
 
-def check(job: Job, step_sec: float = 0.5) -> dict:
-    log = get_logger(job)
-    out = job.output / "frames"
-    out.mkdir(exist_ok=True)
-    cap = cv2.VideoCapture(str(job.video))
+def check(job: Job | None, step_sec: float = 0.5, video: str | None = None, out_dir: str | None = None) -> dict:
+    from pathlib import Path
+    out = Path(out_dir) if out_dir else job.output / "frames"
+    out.mkdir(parents=True, exist_ok=True)
+    video = video or str(job.video)
+    cap = cv2.VideoCapture(video)
     fps = cap.get(cv2.CAP_PROP_FPS) or 30
     n = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
     W, H = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH)), int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
     casc = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-    chunks = load_json(job.subs / "chunks.json", []) or []
+    chunks = (load_json(job.subs / "chunks.json", []) or []) if job else []
     sub_y0, sub_y1 = int(H * 0.53), int(H * 0.70)
     issues, thumbs, prev = [], [], None
     flick = []
@@ -56,7 +57,7 @@ def check(job: Job, step_sec: float = 0.5) -> dict:
                     issues.append({"t": round(t, 2), "kind": "字幕が顔に重なる", "detail": f"face y={cy0}-{cy1}"})
         thumbs.append((t, cv2.resize(f, (180, 320))))
     # ちらつき: 直前10コマの中央値の4倍以上の急変(カット点は除く)
-    shots = load_json(job.output / "shots.json", []) or []
+    shots = (load_json(job.output / "shots.json", []) or []) if job else (load_json(Path(video).parent / "shots.json", []) or [])
     cuts = {round(s["start"] * fps) for s in shots}
     for k in range(10, len(flick)):
         base = np.median(flick[k - 10:k]) + 0.5
@@ -73,16 +74,18 @@ def check(job: Job, step_sec: float = 0.5) -> dict:
             tiles.append(np.zeros_like(tiles[0]))
         rows = [np.hstack(tiles[r:r + 10]) for r in range(0, len(tiles), 10)]
         cv2.imwrite(str(out / f"sheet_{s // 60 + 1}.jpg"), np.vstack(rows), [cv2.IMWRITE_JPEG_QUALITY, 85])
-    rep = {"video": str(job.video), "frames": n, "issues": issues, "passed": not issues,
+    rep = {"video": video, "frames": n, "issues": issues, "passed": not issues,
            "sheets": sorted(str(p) for p in out.glob("sheet_*.jpg"))}
     save_json(out / "report.json", rep)
-    log.info(f"コマ点検: {len(issues)}件 → {out / 'report.json'}")
+    print(f"コマ点検: {len(issues)}件 → {out / 'report.json'}")
     return rep
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--job", required=True)
+    ap.add_argument("--job")
+    ap.add_argument("--video")
+    ap.add_argument("--out")
     a = ap.parse_args()
-    r = check(Job(a.job))
+    r = check(Job(a.job) if a.job else None, video=a.video, out_dir=a.out)
     print(json.dumps({"passed": r["passed"], "issues": r["issues"][:20], "sheets": r["sheets"]}, ensure_ascii=False, indent=1))
