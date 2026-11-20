@@ -82,6 +82,11 @@ def make_plate(path: str, variant: str, Z: float, rules: dict) -> dict:
         ch = cw / target_ar
     fits = (x1 - x0) <= cw * 0.85
     mode = "crop" if (fits or iw / ih <= target_ar * 1.35) else "blur_bg"
+    # 字幕帯(画面高53%〜)に顔がかからないこと: 切り抜き後の顔の下端が 0.50 を超えるなら引いて配置する
+    if faces and mode == "crop":
+        fy_bottom = (max(f[1] + f[3] for f in faces) - max(min(fcy - fy_t * ch, ih - ch), 0)) / ch
+        if fy_bottom > 0.50:
+            mode = "blur_bg"
     if mode == "crop":
         cx = min(max(fcx, cw / 2), iw - cw / 2)
         top = fcy - fy_t * ch
@@ -97,15 +102,18 @@ def make_plate(path: str, variant: str, Z: float, rules: dict) -> dict:
         bg = bg.crop((bx, 0, bx + PW, PH)).filter(ImageFilter.GaussianBlur(28))
         bg = Image.eval(bg, lambda v: int(v * 0.55))
         fw = PW
+        if faces:  # 顔の大きさを画面高の18%以下に(字幕帯にかからないように)
+            fw = int(min(PW, PW * (0.18 * PH) / (max(f[3] for f in faces) * PW / iw)))
         fh2 = int(ih * fw / iw)
         fg = im.resize((fw, fh2), Image.LANCZOS)
         top = int(PH * 0.36 - fh2 / 2)
         top = max(int(PH * 0.06), top)
-        bg.paste(fg, (0, top))
+        bg.paste(fg, ((PW - fw) // 2, top))
         plate = bg
         sx = fw / iw
-        focus = (fcx * sx, fcy * sx + top)
-        fboxes = [(f[0] * sx, f[1] * sx + top, f[2] * sx, f[3] * sx) for f in faces]
+        ox = (PW - fw) // 2
+        focus = (fcx * sx + ox, fcy * sx + top)
+        fboxes = [(f[0] * sx + ox, f[1] * sx + top, f[2] * sx, f[3] * sx) for f in faces]
     return {"img": plate, "focus": focus, "faces": fboxes, "mode": mode, "upscale": PW / (cw if mode == "crop" else iw)}
 
 
