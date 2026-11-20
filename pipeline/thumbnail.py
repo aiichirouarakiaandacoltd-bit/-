@@ -72,13 +72,15 @@ def extract(job: Job, subjects: list[str], n: int = 5) -> dict:
                           "credit": sh.get("credit", ""), "_img": f})
     cands.sort(key=lambda c: c["score"], reverse=True)
     picked, used = [], set()
-    for c in cands:
-        if c["shot"] in used:
-            continue
-        used.add(c["shot"])
-        picked.append(c)
-        if len(picked) >= n:
-            break
+    groups = [[c for c in cands if p and p in c["subject"]] for p in subjects] + [cands]
+    while len(picked) < n and any(groups):
+        for g in groups:
+            while g and (g[0]["shot"] in used or g[0]["score"] < 0):
+                g.pop(0)
+            if g and len(picked) < n:
+                c = g.pop(0)
+                used.add(c["shot"])
+                picked.append(c)
     tiles = []
     for i, c in enumerate(picked, 1):
         p = out / f"cand{i}.png"
@@ -146,11 +148,14 @@ def _draw_text(d, lines, size, color, y, stroke=0):
     return y + lh * len(lines)
 
 
-def crop_for_frame(img_path: str, fw: int, fh: int, face_y=0.36) -> Image.Image:
-    """枠の比率で切り抜く(変形なし)。顔が複数あれば全員が入る位置、なければ中央。"""
-    img = cv2.imread(img_path)
+def crop_for_frame(img_path: str, fw: int, fh: int, face_y=0.36, face_index=None, top_margin=210) -> Image.Image:
+    """枠の比率で切り抜く(変形なし)。顔が複数あれば全員(face_index 指定時はその顔)が入る位置、なければ中央。
+    動画フレームの上部(資料写真ラベル・クレジット)は使わない。"""
+    img = cv2.imread(img_path)[top_margin:]
     h, w = img.shape[:2]
-    faces = _faces(img)
+    faces = sorted(_faces(img), key=lambda f: f[0])
+    if face_index is not None and faces:
+        faces = [faces[min(face_index, len(faces) - 1)]]
     ar = fw / fh
     if w / h > ar:
         ch, cw = h, int(h * ar)
@@ -192,9 +197,10 @@ def render_variant(job: Job, v: dict, texts: dict, cands: dict, outdir: Path, id
     _draw_text(d, up_lines, up_size, WHITE, y_up)
     photos = []
     for k, (fx, fy, fw, fh) in enumerate(frames):
-        cid = v["photos"][k]
+        spec = str(v["photos"][k])
+        cid, _, fi = spec.partition("@")  # 例: cand2@1 = 左から2番目の顔に寄る
         c = cands[cid]
-        ph = crop_for_frame(str(ROOT / c["png"]), fw, fh)
+        ph = crop_for_frame(str(ROOT / c["png"]), fw, fh, face_index=int(fi) if fi else None)
         p = outdir / f"v{idx}_photo{k + 1}.png"
         ph.save(p)
         im.paste(ph.resize((fw, fh), Image.LANCZOS), (fx, fy))

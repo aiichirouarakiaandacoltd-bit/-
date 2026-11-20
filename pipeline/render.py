@@ -153,8 +153,11 @@ def make_card(text: str, sub: str, Z: float, seed: int = 0) -> dict:
         x0 = k * PW * 0.12
         d.line([(x0, PH), (x0 + PH * 0.5, 0)], fill=(255, 255, 255, 10), width=2)
     font = find_font()
-    fs = int(PW * 0.13) if len(text) <= 6 else int(PW * 0.95 / max(1, len(text)))
+    fs = int(PW * 0.13)
     f1 = ImageFont.truetype(font, fs)
+    while f1.getlength(text) + fs * 0.12 > PW * 0.80 / Z * 1.0 and fs > 24:  # 画面幅の8割に収める(ズーム分も考慮)
+        fs -= 4
+        f1 = ImageFont.truetype(font, fs)
     f2 = ImageFont.truetype(find_font(("NotoSansCJK-Bold.ttc", "ipag.ttf")), int(PW * 0.05))
     ty = PH * 0.30
     d.line([(PW * 0.12, ty - fs * 0.9), (PW * 0.88, ty - fs * 0.9)], fill=gold + (220,), width=4)
@@ -270,6 +273,10 @@ def _plan_reference(script, timeline, manifest, rules, ref_analysis) -> list[dic
         p = list(picks.get(sc["id"], []))
         if p:
             p.sort(key=lambda f: usage.get(f, 0))
+            if k == 0:  # フックの赤丸は最も大きい顔に付くので、主役が1人で写る写真を優先
+                solo = [f for f in p if len(detect_faces(_load(str(ROOT / f)))) == 1]
+                if solo:
+                    p = solo + [f for f in p if f not in solo]
             f = p[0]
             usage[f] = usage.get(f, 0) + 1
             rec = files.get(f, {})
