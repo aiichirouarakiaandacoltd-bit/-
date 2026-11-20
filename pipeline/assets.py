@@ -38,6 +38,9 @@ PERSON_ARTICLES = {
     "紀子さま": "文仁親王妃紀子",
     "悠仁さま": "悠仁親王",
     "上皇さま": "明仁", "上皇后美智子さま": "上皇后美智子",
+    "久子さま": "憲仁親王妃久子", "高円宮妃久子さま": "憲仁親王妃久子", "高円宮妃": "憲仁親王妃久子",
+    "信子さま": "寬仁親王妃信子", "彬子さま": "彬子女王", "瑶子さま": "瑶子女王", "承子さま": "承子女王",
+    "華子さま": "正仁親王妃華子", "眞子さん": "小室眞子",
 }
 EXCLUDE_FILE = re.compile(r"(WC|toilet|restroom|トイレ|\.svg|\.gif|\.tif|seal|crest|emblem|flag|logo|signature|map|coat_of_arms|紋|旗|地図|Imperial_Seal|Commons-logo|Wiki)", re.I)
 
