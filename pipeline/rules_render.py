@@ -145,14 +145,20 @@ def faces(img):
 
 
 def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: float = 0.70,
-          keep_all: bool = False) -> tuple[np.ndarray, tuple]:
+          keep_all: bool = False, main=None) -> tuple[np.ndarray, tuple]:
     """変形なしで W*Z x H*Z の素材を作る。顔は字幕帯より上に置く。全体が入らない横長写真はぼかし背景+全体表示。"""
     img = cv2.imread(img_path)
     ih, iw = img.shape[:2]
     PW, PH = int(W * Z), int(H * Z)
     fs = faces(img)
     ar = PW / PH
-    if fs:
+    if main:  # 主役の位置(focus.json・目視登録)を基準にする
+        cx, cy = main[0] * iw, main[1] * ih
+        hit = [f for f in fs if f[0] <= cx <= f[0] + f[2] and f[1] <= cy <= f[1] + f[3]]
+        fh = hit[0][3] if hit else ih * 0.10
+        x0 = x1 = cx; y0 = y1 = cy
+        fs = fs or [(int(cx), int(cy), 1, 1)]
+    elif fs:
         x0 = min(f[0] for f in fs); x1 = max(f[0] + f[2] for f in fs)
         y0 = min(f[1] for f in fs); y1 = max(f[1] + f[3] for f in fs)
         fh = max(f[3] for f in fs)
@@ -185,33 +191,37 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         fg = cv2.resize(img, (fw, fh2), interpolation=cv2.INTER_LANCZOS4)
         top = max(int(PH * (0.40 if W < H else 0.45) - fh2 / 2), 0)
         out = bg.astype(np.uint8)
-        out[top:top + fh2] = fg[:PH - top]
-        focus = (cx * fw / iw, cy * fw / iw + top)
+        # 主役が画面の中央に来るよう写真を左右にずらす(はみ出した側はぼかし背景)
+        sx = int(round(PW / 2 - cx * fw / iw)) if main else 0
+        sx = max(-fw // 3, min(fw // 3, sx))
+        a0, a1 = max(0, sx), min(PW, sx + fw)
+        out[top:top + fh2, a0:a1] = fg[:PH - top, a0 - sx:a1 - sx]
+        focus = (cx * fw / iw + sx, cy * fw / iw + top)
     return out, focus
 
 
 def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str):
+    """主役(focus)を画面の中央に置いた状態から、ゆっくり拡大・縮小・パンする。"""
     PH, PW = pl.shape[:2]
     Z = PW / W
     for k in range(n):
         u = k / max(1, n - 1)
         e = 0.5 - 0.5 * math.cos(math.pi * u)
         if motion == "ゆっくり縮小":
-            z = 1.08 - 0.08 * e
+            z = 1.10 - 0.08 * e
         elif motion in ("左へパン", "右へパン"):
-            z = 1.04
+            z = 1.06
         else:
-            z = 1.0 + 0.08 * e
+            z = 1.02 + 0.08 * e
         ww = PW / Z / z
         wh = PH / Z / z
-        cx = PW / 2 + (focus[0] - PW / 2) * 0.25 * e
-        cy = PH / 2 + (focus[1] - PH / 2) * 0.15 * e
+        cx, cy = focus[0], focus[1] + wh * 0.0
         if motion == "左へパン":
-            cx = PW / 2 + (PW - ww) * (0.5 - e) * 0.9
+            cx = focus[0] - ww * 0.07 * e
         elif motion == "右へパン":
-            cx = PW / 2 - (PW - ww) * (0.5 - e) * 0.9
+            cx = focus[0] + ww * 0.07 * e
+        cy = min(max(focus[1] + wh * 0.12, wh / 2), PH - wh / 2)  # 顔を字幕より上・画面の中央寄りに
         cx = min(max(cx, ww / 2), PW - ww / 2)
-        cy = min(max(cy, wh / 2), PH - wh / 2)
         a = ww / W
         M = np.float32([[1 / a, 0, -(cx - ww / 2) / a], [0, 1 / a, -(cy - wh / 2) / a]])
         yield cv2.warpAffine(pl, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
@@ -294,6 +304,7 @@ def build(project: str, kind: str = "縦型") -> Path:
     ledger = {r["番号"]: r for r in csv.DictReader(open(pdir / "ledger.csv", encoding="utf-8"))}
     readings = {k: v for k, v in (load_json(ROOT / "config" / "reading_dict.json", {}) or {}).items() if not k.startswith("_")}
     readings.update(load_json(pdir / "readings.json", {}) or {})
+    mains = {k: v for k, v in (load_json(pdir / "focus.json", {}) or {}).items() if not k.startswith("_")}
     sid = speaker_id()
     out_dir = pdir / "output"
     out_dir.mkdir(exist_ok=True)
@@ -361,7 +372,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             half = W // 2 - 6
             subs = []
             for j, iid in enumerate(ids[:2]):
-                pl, fo = plate(str(ROOT / ledger[iid]["ファイル名"]), sh["crop"], half, H)
+                pl, fo = plate(str(ROOT / ledger[iid]["ファイル名"]), sh["crop"], half, H, main=mains.get(iid))
                 subs.append(list(frames_for(pl, fo, n, half, H, sh["motion"])))
             sh["media"] = "写真"
             ov = overlay(W, H, [(labs[0], W // 4), (labs[1], 3 * W // 4)], sh["caption"], credit)
@@ -382,7 +393,7 @@ def build(project: str, kind: str = "縦型") -> Path:
                 gen = video_frames(src, sh["clip_start"], n, W, H)
             else:
                 sh["media"] = "写真"
-                pl, fo = plate(src, sh["crop"], W, H, keep_all=multi)
+                pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=mains.get(sh["image"]))
                 gen = frames_for(pl, fo, n, W, H, sh["motion"])
             for fr in gen:
                 ff.stdin.write(blend(fr, ov).tobytes())
@@ -411,9 +422,9 @@ def build(project: str, kind: str = "縦型") -> Path:
     final = out_dir / f"{project}_{kind}_internal.mp4"
     assp = str(ass).replace(":", "\\:")
     fc = (f"[0:v]ass='{assp}':fontsdir={FONT_DIR},format=yuv420p[v];"
-          f"[1:a]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[n];"
-          f"[2:a]aresample=48000,loudnorm=I=-37:TP=-9:LRA=11,afade=t=in:d=1,afade=t=out:st={max(0, total - 2):.2f}:d=2[b];"
-          f"[n][b]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.70:level=disabled[a]")
+          f"[1:a]aresample=48000,apad=pad_dur=4,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[n];"
+          f"[2:a]aresample=48000,atrim=0:{total + 4:.2f},loudnorm=I=-37:TP=-9:LRA=11,aresample=48000,afade=t=in:d=1,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5[b];"
+          f"[n][b]amix=inputs=2:duration=shortest:normalize=0,alimiter=limit=0.70:level=disabled,atrim=0:{total:.3f}[a]")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-i", str(wav), "-stream_loop", "-1", "-i", str(bgm),
                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
                     "-r", "30", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", "-movflags", "+faststart", str(final)],

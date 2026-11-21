@@ -128,6 +128,13 @@ def check(project: str, kind: str = "縦型") -> bool:
     sil = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", ff(["-i", str(video), "-af", "silencedetect=n=-45dB:d=1.5", "-vn", "-f", "null", "-"])) if float(x) < dur - 1.5]
     vol = ff(["-i", str(video), "-af", "volumedetect", "-vn", "-f", "null", "-"])
     peak = float(re.search(r"max_volume: (-?[0-9.]+)", vol).group(1))
+    adur = float(a.get("duration") or 0) if a else 0.0
+    if not adur:
+        adur = float(probe(video)["format"]["duration"])
+    vdur = float(v.get("duration") or dur)
+    short = vdur - adur
+    if short > 0.2:
+        sil.append(f"音声が映像より{short:.2f}秒短い(終盤が無音)")
     add("黒画面・無音・音割れ・BGM音量", not blk and not sil and peak < -0.1,
         f"黒画面 {blk or 'なし'} / 無音 {sil or 'なし'} / ピーク {peak}dB / BGM はナレーションより約21dB低く(-16 vs -37 LUFS)(不自然なカットは要目視)")
     # 9 冒頭の疑問に回答
