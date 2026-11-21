@@ -96,8 +96,8 @@ def build(project: str) -> bool:
         errs.append("表紙の中心画像(center_image)が未確定")
     tags = spec["hashtags"]
     errs += check_hashtags(tags)
-    refs = "\n\n".join(f"**{r['title']}**\n\n{r['note']}\n\n{r['url']}" for r in spec["references"])
-    body = "\n\n".join(spec["body"])
+    refs = "\n\n".join(f"{r['title']}\n\n{r['note']}\n\n{r['url']}" for r in spec["references"])
+    body = "\n\n".join(b.replace("**", "") for b in spec["body"])  # YouTubeでは装飾にならないので記号は入れない
     tpl = (ROOT / "templates" / "description_template.md").read_text(encoding="utf-8")
     desc = (tpl.replace("{{TITLE}}", title)
                .replace("{{BODY}}", body)
@@ -108,6 +108,8 @@ def build(project: str) -> bool:
                .replace("{{RELATED_ORGS}}", spec["related_orgs"])
                .replace("{{UNCONFIRMED_NOTE}}", spec.get("unconfirmed_note") or DEFAULT_UNCONFIRMED)
                .replace("{{HASHTAGS}}", ", ".join(tags) + ","))  # 最後のハッシュタグにもカンマ
+    if "**" in desc or re.search(r"(?m)^#{1,6} ", desc):
+        errs.append("説明文にマークダウン記号(** や 見出しの#)が残っている")
     if "{{" in desc:
         errs.append("説明文に未置換の項目がある")
     if not desc.rstrip().endswith(","):
