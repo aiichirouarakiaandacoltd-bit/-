@@ -6,6 +6,9 @@
 
 使い方:
   python -m pipeline.collect_images --project P001 --pages URL1 URL2 ... [--commons "Empress Masako" ...]
+  python -m pipeline.collect_images --project P001 --auto 愛子 --months 202610 202611   # ページ選びを自動化(宮内庁の月別ご日程から人物名で選ぶ)
+  ページ末尾に説明文が1つだけ(写真個別の説明なし)の写真は「確認方法=ページ説明文（要目視）」で台帳に入れる。
+  当てっこ係が写真を見て照合したら「ページ説明文＋目視確認済」に書き換える(要目視のまま使うとG5で不合格)。
   --pages: 宮内庁などの写真ページ(キャプション付き)
 出力: assets/<制作番号>/A001.jpg ... と projects/<制作番号>/ledger.csv
 """
@@ -27,7 +30,7 @@ from .common import ROOT
 
 UA = {"User-Agent": "Mozilla/5.0 (internal study material; contact: none)"}
 LEDGER_COLS = ["番号", "ファイル名", "取得元URL", "掲載サイト名", "取得日", "写っている人物", "撮影日・場所・行事",
-               "確認したキャプション", "使用する場面", "素材種別", "長辺px"]
+               "確認したキャプション", "確認方法", "使用する場面", "素材種別", "長辺px"]
 
 # キャプション中の表記 → 画面に出す人物名(宮内庁の表記に合わせた短い呼び方)
 PERSONS = [
@@ -79,8 +82,49 @@ def scrape_kunaicho(url: str) -> list[dict]:
         p = re.search(r"<p[^>]*>(.*?)</p>", sec, re.S)
         cap = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", p.group(1)))).strip() if p else ""
         out.append({"src": urllib.parse.urljoin(url, m.group(1)), "site": "宮内庁", "page": url,
-                    "caption": cap[:160], "event": f"{date} {title}".strip()})
+                    "caption": cap[:160], "event": f"{date} {title}".strip(), "method": "キャプション"})
+    # ページ末尾に説明文が1つだけの形式: 説明文の無い写真にページの説明文を当て、要目視とする
+    caps = [o["caption"] for o in out if persons_in(o["caption"])]
+    if len(set(caps)) == 1:
+        for o in out:
+            if not o["caption"] or not persons_in(o["caption"]):
+                o["caption"] = caps[0] + "(同ページ末尾の説明文。写真個別の説明なし)"
+                o["method"] = "ページ説明文（要目視）"
     return out
+
+
+SCHEDULE_DIRS = ["schedule01", "schedule03", "schedule04050607"]  # 天皇ご一家 / 秋篠宮家 / その他の皇族方
+
+
+def auto_pages(person: str, months: list[str], dirs: list[str] | None = None) -> list[str]:
+    """宮内庁の月別ご日程から、ページ本文に人物名(例: 愛子)が出る行事ページを選ぶ。"""
+    pages = []
+    for d in dirs or SCHEDULE_DIRS:
+        for ym in months:
+            idx = f"https://www.kunaicho.go.jp/watch/activity/{d}/{ym}/index.html"
+            try:
+                r = requests.get(idx, headers=UA, timeout=30)
+            except Exception:
+                continue
+            if r.status_code != 200:
+                continue
+            r.encoding = "utf-8"
+            links = sorted(set(re.findall(rf'href="(/watch/activity/{d}/{ym}/[^"#]+\.html)"', r.text)))
+            time.sleep(1.0)
+            for l in links:
+                u = "https://www.kunaicho.go.jp" + l
+                try:
+                    s = requests.get(u, headers=UA, timeout=30)
+                    s.encoding = "utf-8"
+                except Exception:
+                    continue
+                main = re.search(r"<main.*?</main>", s.text, re.S)
+                body = html.unescape(re.sub(r"<[^>]+>", " ", main.group(0) if main else s.text))
+                if person in body and "/wp-content/uploads/" in s.text:
+                    pages.append(u)
+                time.sleep(0.8)
+    print(f"自動選択: {person} が載る写真ページ {len(pages)}件")
+    return pages
 
 
 def commons(query: str, n=8) -> list[dict]:
@@ -104,7 +148,10 @@ def commons(query: str, n=8) -> list[dict]:
     return out
 
 
-def collect(project: str, pages: list[str], queries: list[str], scene_hint: str = "") -> Path:
+def collect(project: str, pages: list[str], queries: list[str], scene_hint: str = "",
+            auto: str = "", months: list[str] | None = None) -> Path:
+    if auto:
+        pages = list(dict.fromkeys(list(pages) + auto_pages(auto, months or [])))
     adir = ROOT / "assets" / project
     adir.mkdir(parents=True, exist_ok=True)
     pdir = ROOT / "projects" / project
@@ -143,7 +190,8 @@ def collect(project: str, pages: list[str], queries: list[str], scene_hint: str 
         im.save(adir / fn, quality=93)
         rows.append({"番号": no, "ファイル名": f"assets/{project}/{fn}", "取得元URL": c["src"], "掲載サイト名": c["site"],
                      "取得日": dt.date.today().isoformat(), "写っている人物": "・".join(who),
-                     "撮影日・場所・行事": c["event"], "確認したキャプション": c["caption"], "使用する場面": scene_hint, "素材種別": "写真",
+                     "撮影日・場所・行事": c["event"], "確認したキャプション": c["caption"],
+                     "確認方法": c.get("method", "キャプション"), "使用する場面": scene_hint, "素材種別": "写真",
                      "長辺px": max(im.size)})
         seen.add(c["src"])
         time.sleep(0.8)
@@ -166,5 +214,7 @@ if __name__ == "__main__":
     ap.add_argument("--pages", nargs="*", default=[])
     ap.add_argument("--commons", nargs="*", default=[])
     ap.add_argument("--scene", default="")
+    ap.add_argument("--auto", default="", help="人物名(例: 愛子)。宮内庁の月別ご日程から写真ページを自動で選ぶ")
+    ap.add_argument("--months", nargs="*", default=[], help="YYYYMM を並べる(例: 202610 202611)")
     a = ap.parse_args()
-    collect(a.project, a.pages, a.commons, a.scene)
+    collect(a.project, a.pages, a.commons, a.scene, a.auto, a.months)

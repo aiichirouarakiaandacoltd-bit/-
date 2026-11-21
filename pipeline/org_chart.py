@@ -11,18 +11,18 @@ STYLE = {'tool': (NAVY, WHITE, None), 'agent': (WHITE, NAVY, NAVY), 'plan': (CRE
          'human': (MID, WHITE, None), 'dept': (NAVY, WHITE, None), 'deptnew': (GOLD, NAVY, None), 'ext': (WHITE, NAVY, GRAY)}
 DEPTS = [
     ('企画部', 'dept', [('棚調べ係', 'R1 ニュース収集（自動）', 'tool'), ('企画係', 'R1 最新の皇室の動向', 'agent'), ('企画係', 'R2 競合の伸びている動画', 'agent'), ('企画係', 'G0 題材確定・タイトル・概要', 'agent')]),
-    ('制作部（まとめ：制作係）', 'dept', [('事実確認係', 'G1 facts.md', 'agent'), ('制作係', 'G2 写真収集：ページ選びを自動化', 'plan'),
+    ('制作部（まとめ：制作係）', 'dept', [('事実確認係', 'G1 facts.md', 'agent'), ('制作係', 'G2 写真収集（ページ自動選択）', 'agent'),
                                ('台本係', 'G3 台本・場面設計（承認なし）', 'agent'), ('書き出し係', 'G4 音声・字幕・映像（自動）', 'tool'),
                                ('直し係', '検査の指摘を修正', 'agent'), ('画面割り係', '旧方式', 'idle'), ('デザイナー(通常)', '旧方式', 'idle')]),
-    ('採点の係', 'dept', [('決まりの確認係', '本書で採点', 'agent'), ('当てっこ係', 'コマ点検＋主役位置の登録', 'plan'),
+    ('採点の係', 'dept', [('決まりの確認係', '本書で採点', 'agent'), ('当てっこ係', '主役位置・要目視の照合／コマ点検', 'agent'),
                       ('確認係', 'G5・G6 自動検査（自動）', 'tool'), ('通りすがり係', 'タイトル候補の順位', 'agent'), ('動画の確認係', '旧方式', 'idle')]),
-    ('発信部', 'deptnew', [('タイトル係', 'G6① 承認済みタイトル／② 表紙3段', 'agent'), ('デザイナー(重要)', '表紙：Canva操作を手順化', 'plan'),
+    ('発信部', 'deptnew', [('タイトル係', 'G6① 承認済みタイトル／② 表紙3段', 'agent'), ('デザイナー(重要)', '表紙：操作計画→Canva', 'agent'),
                         ('説明文係', 'G6③ 本文＋組立（自動）', 'agent'), ('ショート係', '旧方式', 'idle')]),
-    ('分析部', 'dept', [('分析係', '公開後のCTR実測（vidIQ）', 'plan'), ('型の分析係', 'タイトル・表紙の型の見直し', 'agent')]),
+    ('分析部', 'dept', [('分析係', 'G7 公開後のCTR実測・記録', 'agent'), ('型の分析係', 'タイトル・表紙の型の見直し', 'agent')]),
 ]
 EXT = [('VOICEVOX（青山龍星）', '自動で導入・起動 ✓', 'ext'), ('BGM UNL1337', '自動で取得 ✓', 'ext'), ('宮内庁サイト', '写真・記録 ✓', 'ext'),
        ('Canva', '表紙の作成 ✓', 'ext'), ('報道写真サイト・YouTube', '許可ドメイン未設定 ×', 'plan'), ('vidIQ', '残高0（11/22 8:55に補充）', 'plan')]
-FLOW = [('R1 最新動向', 'agent'), ('R2 競合調査', 'agent'), ('G0 承認★', 'human'), ('G1 事実', 'agent'), ('G2 素材', 'plan'), ('G3 台本', 'agent'),
+FLOW = [('R1 最新動向', 'agent'), ('R2 競合調査', 'agent'), ('G0 承認★', 'human'), ('G1 事実', 'agent'), ('G2 素材', 'agent'), ('G3 台本', 'agent'),
         ('G4 生成', 'tool'), ('G5 検査', 'tool'), ('G6 表紙・説明文', 'agent')]
 
 
@@ -45,7 +45,7 @@ def draw(path=ROOT / 'docs' / 'org_chart.png', date='2026-11-21'):
     d.text((60, 36), f'組織図と自動化の状況（{date} 時点）', fill=NAVY, font=fb(48))
     d.text((60, 104), '「全て自動」に向けて、各係が今どこまで自動で動くかを色で示しています', fill=GRAY, font=fr(26))
     lx = 60
-    for st, label in [('tool', '道具で自動（完成）'), ('agent', 'Claudeの係が判断して実行'), ('plan', '改善予定（全自動化の残り）'),
+    for st, label in [('tool', '道具で自動（完成）'), ('agent', 'Claudeの係が判断して実行'), ('plan', '未解決（外部要因）'),
                       ('human', '荒木さんの判断（G0承認・公開）'), ('idle', '現行の流れでは未使用')]:
         box(lx, 160, 60, 40, '', style=st)
         d.text((lx + 72, 164), label, fill=NAVY, font=fr(24))
@@ -79,7 +79,7 @@ def draw(path=ROOT / 'docs' / 'org_chart.png', date='2026-11-21'):
         if k < len(FLOW) - 1:
             d.polygon([(sx + sw + 8, fy + 30), (sx + sw + 26, fy + 40), (sx + sw + 8, fy + 50)], fill=NAVY)
         sx += sw + 33
-    d.text((60, 1690), '全自動の判定条件：/kabu を1回実行し、★G0の承認1回以外に人やメインが手を入れずに完成まで流れること（通し試験）',
+    d.text((60, 1690), '改善4か所は完了（金色の残りは外部要因のみ）。全自動の判定：/kabu を1回実行し、★G0承認以外に手を入れず完成まで流れること（通し試験）',
            fill=NAVY, font=fb(26))
     im.save(path)
     return path

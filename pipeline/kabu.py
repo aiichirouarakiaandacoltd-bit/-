@@ -42,6 +42,7 @@ STEPS = [
     ("images", "制作係", "agent", "G2 素材: 人物画像をキャプションで特定して収集 → ledger.csv(目標の70%未満なら停止)", "plan"),
     ("script", "台本係", "agent", "G3 台本: 完成ナレーション script.md と場面設計 scenes.json(画像・切り抜き・動き・人物名・撮影情報)", "facts"),
     ("rules_script", "決まりの確認係", "check", "本書の禁止事項・第4章・第6章(省略禁止)で台本と場面設計を採点", "script"),
+    ("focus", "当てっこ係", "agent", "主役位置と要目視の照合: bin/kabu run focus で点検シート→写真を見て focus_sheet --set/--verify → --check 合格で次へ", "script"),
     ("render", "書き出し係", "tool", "G4 生成: 音声(青山龍星0.90)・字幕(Noto Sans JP)・映像・BGM → output/<番号>_<縦型|横型>_internal.mp4", None),
     ("frames", "当てっこ係", "check", "コマごとの点検(人物の取り違え・崩れ・字幕・ラベル)", "script"),
     ("qa", "確認係", "tool", "G5 検査: 第8章の自動検査 → qa_report.md(全合格のみ完成)", "script"),
@@ -192,8 +193,16 @@ def cmd_run(a):
         _py("pipeline.env_check", "--project", j)
     elif step == "research":
         _py("pipeline.research", "--job", j, "--topic", st["topic"], "--days", str(a.days or 60))
-    elif step == "images":  # 例: bin/kabu run images --pages URL... --commons "Princess Aiko"
-        _py("pipeline.collect_images", "--project", j, "--pages", *(a.pages or []), "--commons", *(a.commons or []))
+    elif step == "images":  # 例: bin/kabu run images --auto 愛子 --months 202610 202611 [--pages URL...] [--commons "Princess Aiko"]
+        _py("pipeline.collect_images", "--project", j, "--pages", *(a.pages or []), "--commons", *(a.commons or []),
+            *(["--auto", a.auto, "--months", *(a.months or [])] if a.auto else []))
+    elif step == "focus":
+        _py("pipeline.focus_sheet", "--project", j, "--sheet", "--check")
+    elif step == "thumb_render":
+        _py("pipeline.thumb_canva", "--project", j, "--prepare")
+    elif step == "ctr":  # 公開後(G7): bin/kabu run ctr --video-id XXX --ctr 12.3 --impressions 1000 --views 500
+        _py("pipeline.ctr_log", "--project", j, "--video-id", a.video_id, "--ctr", str(a.ctr),
+            "--impressions", str(a.impressions or 0), "--views", str(a.views or 0))
     elif step == "render":
         _py("pipeline.rules_render", "--project", j, "--kind", kind)
     elif step == "qa":
@@ -203,8 +212,6 @@ def cmd_run(a):
             "--out", str(ROOT / "projects" / j / "output" / "frames"))
     elif step == "pub_check":
         _py("pipeline.publish_text", "--project", j)
-    elif step == "thumb_render":
-        _py("pipeline.thumbnail", "--job", j, "--render")
     else:
         sys.exit(f"{step} は機械処理ではありません(係が判断する工程)")
 
@@ -230,6 +237,8 @@ def main(argv=None):
     p = sp.add_parser("approve"); p.add_argument("gate"); p.add_argument("--note"); p.add_argument("--job")
     p = sp.add_parser("run"); p.add_argument("step"); p.add_argument("--job"); p.add_argument("--days", type=int)
     p.add_argument("--pages", nargs="*"); p.add_argument("--commons", nargs="*")
+    p.add_argument("--auto"); p.add_argument("--months", nargs="*")
+    p.add_argument("--video-id"); p.add_argument("--ctr", type=float); p.add_argument("--impressions", type=int); p.add_argument("--views", type=int)
     a = ap.parse_args(argv)
     {"new": cmd_new, "status": cmd_status, "next": cmd_next, "done": cmd_done, "fail": cmd_fail,
      "approve": cmd_approve, "run": cmd_run, "measure": cmd_measure}[a.cmd](a)

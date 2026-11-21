@@ -23,15 +23,16 @@ description: 皇室物語の動画を、係(サブエージェント)で制作�
 | competitors(R2) | kikaku | research/<番号>/competitors.md(伸びている競合動画・再生数は実測) |
 | plan(G0) | kikaku | plan.md(題材と理由・タイトル・概要・100点評価)→ 荒木さん承認(唯一) |
 | facts(G1) | jijitsu | facts.md(F1…の表。公式事実/報道/分析・出典URL) |
-| images(G2) | seisaku → `bin/kabu run images --pages <宮内庁等の写真ページ> --commons <検索語>` | ledger.csv(キャプションで人物・行事を確認できたものだけ) |
+| images(G2) | seisaku → `bin/kabu run images --auto <人物名> --months <YYYYMM…>`(必要なら --pages/--commons) | ledger.csv(キャプション確認済み+要目視) |
 | script(G3) | daihon | script.md(章ごとの完成ナレーション全文)+ scenes.json(第6章の項目を省略なく・fact_ids・role=question/body/answer) |
 | rules_script | kimari | 本書で採点 |
+| focus | atekko(当てっこ係) | 点検シート→ focus.json(主役位置)・要目視写真の照合(focus_sheet --check 合格) |
 | render(G4) | (tool)kakidashi | output/<番号>_<縦型|横型>_internal.mp4 |
 | frames | atekko | 人物の取り違え・崩れの点検 |
 | qa(G5) | (tool)→ kakunin が qa_report.md を読んで直し指示 | qa_report.md |
 | pub_title(G6①) | thumb-title(タイトル係) | publish.yaml の title(CTR20%以上を狙う99文字以内・ハッシュタグ付き) |
 | thumb_title(G6②) | thumb-title(タイトル係) | タイトルから3段見出しを流用・中心画像を確定(publish.yaml の thumb, thumb.yaml) |
-| thumb_render | designer-key | 表紙画像(人物1〜2人・濃紺/金/白・赤なし)、Canva デザイン |
+| thumb_render | designer-key | `bin/kabu run thumb_render` の canva_plan.json どおりに Canva を操作 → thumb_canva --fetch |
 | pub_desc(G6③) | gaiyou(説明文係) | publish.yaml の本文・参考資料・ハッシュタグ |
 | pub_check | (tool) | publish/title.txt・description.txt・check.md |
 
@@ -53,3 +54,6 @@ description: 皇室物語の動画を、係(サブエージェント)で制作�
 ## 表紙画像(Canva)
 テンプレート `DAHatUQFKSI` を copy-design → 写真を create-upload-url でアップロード → 文字・写真を差し替え → commit → export。
 テンプレート本体は変更しない。赤は使わない。
+
+## 公開後(G7)
+分析係(bunseki)が CTR を実測し `bin/kabu run ctr --video-id <ID> --ctr <CTR%> --impressions <数> --views <数>` で記録する。

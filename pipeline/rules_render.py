@@ -152,6 +152,9 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
     PW, PH = int(W * Z), int(H * Z)
     fs = faces(img)
     ar = PW / PH
+    if main is None and fs and not keep_all:  # focus.json 未登録: 最大の顔を主役とみなす(当てっこ係の登録が優先)
+        x, y, w, h = max(fs, key=lambda f: f[2] * f[3])
+        main = ((x + w / 2) / iw, (y + h / 2) / ih)
     if main:  # 主役の位置(focus.json・目視登録)を基準にする
         cx, cy = main[0] * iw, main[1] * ih
         hit = [f for f in fs if f[0] <= cx <= f[0] + f[2] and f[1] <= cy <= f[1] + f[3]]

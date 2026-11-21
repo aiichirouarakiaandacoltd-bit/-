@@ -69,6 +69,10 @@ def check(project: str, kind: str = "縦型") -> bool:
                 bad.append(f"{s['scene']}:{lab}≠{names}")
             if s.get("caption") and r["撮影日・場所・行事"][:4] not in re.sub(r"年.*", "", s["caption"]) + s["caption"]:
                 bad.append(f"{s['scene']}:撮影年 {s['caption']}≠{r['撮影日・場所・行事'][:10]}")
+    for s in scenes:
+        for iid in ((s.get("compare") or {}).get("images") or s.get("images") or [s.get("image")]):
+            if iid and "要目視" in (ledger.get(iid) or {}).get("確認方法", ""):
+                bad.append(f"{s['scene']}:{iid} 要目視のまま(当てっこ係が照合していない)")
     add("画像の人物名・撮影情報が ledger.csv と一致", not bad, bad or "全場面一致(写真に写る人物そのものは要目視)",
         "人物名・キャプションを ledger の確認済みキャプションに合わせる")
     # 3 ナレーション全文と字幕
@@ -111,6 +115,11 @@ def check(project: str, kind: str = "縦型") -> bool:
     if len(shots) < sp["cuts"][0] or n_img < sp["images"]:
         res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)} / 画像 {n_img}枚",
                     "目標の70%未満なら第7章により生成停止"))
+    # 7-1 主役を中央に置いてから動かす(focus.json の登録)
+    fj = load_json(pdir / "focus.json", {}) or {}
+    nofocus = sorted({s.get("image") for s in shots if s.get("image") and not s.get("compare") and s.get("image") not in fj})
+    add("主役の位置が登録済み(ズーム・パンの開始位置)", not nofocus, f"未登録 {nofocus or 'なし'}",
+        "当てっこ係が bin/kabu run focus の点検シートを見て focus_sheet --set で登録する")
     # 7-2 第4-2章 素材の豊富さと画面の華やかさ
     seq = [None if s.get("compare") else s.get("image") for s in shots]
     adj = [f"{shots[i]['scene']}:{seq[i]}" for i in range(1, len(seq)) if seq[i] and seq[i] == seq[i - 1]]

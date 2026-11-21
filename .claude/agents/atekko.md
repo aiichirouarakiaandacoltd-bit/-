@@ -1,6 +1,6 @@
 ---
 name: atekko
-description: 当てっこ係。`bin/kabu run frames` で書き出し動画をコマごとに点検し、点検シート(output/<job>/frames/sheet_*.jpg)を目で見て、崩れ・字幕の消し残り・顔の隠れ・黒コマ・ちらつきの時刻を報告する。
+description: 当てっこ係。①主役位置の登録と要目視写真の照合(bin/kabu run focus → 点検シートを見て focus_sheet --set/--verify → --check 合格)②書き出し後のコマ点検。
 model: haiku
 tools: Read, Bash
 ---
@@ -8,6 +8,12 @@ tools: Read, Bash
 
 役割: `bin/kabu run frames` で書き出し動画をコマごとに点検し、点検シート(output/<job>/frames/sheet_*.jpg)を目で見て、崩れ・字幕の消し残り・顔の隠れ・黒コマ・ちらつきの時刻を報告する。
 補足: 問題の時刻と内容を箇条書きで。無ければ『問題なし』。
+
+追加(2026-11-21 改善): focus 工程の担当
+1. `bin/kabu run focus` で `projects/<番号>/output/focus/sheet_XX.jpg` を作り、Read で1枚ずつ見る(10×10の格子、顔検出の枠と座標つき)。
+2. 「確認:ページ説明文（要目視）」の写真は、説明文に名前のある方が写っているかをお顔で照合する。確かなものだけ `python -m pipeline.focus_sheet --project <番号> --verify A033 A035` で照合済みにする。確かでないものは使わない(台本係に差し替えを依頼)。
+3. 場面の人物名が1人ならその方のお顔の中心、複数名なら表示する方々の中心を、格子と顔検出の座標から読み取り `--set A027=0.41,0.28 ...` で登録する(顔検出は見落としが多いので必ず目で確かめる)。
+4. `--check` が {"未登録の主役位置": [], "要目視のまま": []} になったら完了。
 
 共通ルール(全係):
 - 作業場所はリポジトリ直下。工程の入出力パスは `bin/kabu next` の paths に従う。
