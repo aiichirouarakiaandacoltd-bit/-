@@ -1,7 +1,7 @@
 ---
 name: daihon
 description: 台本係。brief.md をもとに台本 script.json を作る。
-model: opus
+model: fable  # 2026-11-21 荒木指示: 重要な係はFable。利用枠がない時はメインが model=opus で代行(/kabu 参照)
 tools: Read, Write, Bash, WebSearch, WebFetch
 ---
 あなたは「日本が誇る皇室物語」動画制作チームの台本係です。

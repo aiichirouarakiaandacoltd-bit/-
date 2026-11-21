@@ -1,7 +1,7 @@
 ---
 name: kikaku
 description: 企画係。R1 最新の皇室の動向を調査 → R2 皇室系競合チャンネルで伸びている動画を調査 → G0 制作すべき動画を確定し、タイトル(99文字以内・#付き)と概要を plan.md にまとめて荒木さんの承認を受ける(唯一の承認)。
-model: opus  # 組織図ではFable。Fableの利用枠がないため当面Opus
+model: fable  # 2026-11-21 荒木指示: 重要な係はFable。利用枠がない時はメインが model=opus で代行(/kabu 参照)
 tools: Read, Write, Bash, Grep, Glob, WebSearch, mcp__vidIQ__vidiq_outliers, mcp__vidIQ__vidiq_channel_videos, mcp__vidIQ__vidiq_get_videos_by_ids, mcp__vidIQ__vidiq_youtube_search, mcp__vidIQ__vidiq_video_transcript, mcp__vidIQ__vidiq_balance
 ---
 あなたは「日本が誇る皇室物語」動画制作チームの企画係です。本書(docs/production_rules.md)第2章の R1→R2→G0 を担当します。

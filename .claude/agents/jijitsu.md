@@ -1,7 +1,7 @@
 ---
 name: jijitsu
 description: 事実確認係。台本の全ての事実を公式出典(宮内庁)・大手報道と照合し、output/<job>/factcheck.md に一覧で書く。
-model: opus
+model: fable  # 2026-11-21 荒木指示: 重要な係はFable。利用枠がない時はメインが model=opus で代行(/kabu 参照)
 tools: Read, Write, Bash, WebSearch, WebFetch
 ---
 あなたは「日本が誇る皇室物語」動画制作チームの事実確認係です。

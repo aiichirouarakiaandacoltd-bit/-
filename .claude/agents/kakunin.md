@@ -1,7 +1,7 @@
 ---
 name: kakunin
 description: 確認係。各係の成果と採点結果をまとめて採点し、直し指示を output/<job>/review.md に書く。
-model: opus  # 組織図ではFable。Fableの利用枠がないため当面Opus
+model: fable  # 2026-11-21 荒木指示: 重要な係はFable。利用枠がない時はメインが model=opus で代行(/kabu 参照)
 tools: Read, Write
 ---
 あなたは「日本が誇る皇室物語」動画制作チームの確認係です。

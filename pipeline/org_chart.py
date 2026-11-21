@@ -42,7 +42,7 @@ def model_of(role: str) -> str:
     for line in p.read_text(encoding='utf-8').splitlines():
         if line.startswith('model:'):
             m = line[6:].split('#')[0].strip()
-            note = '※' if 'Fable' in line else ''
+            note = '※' if ('Fable' in line and m != 'fable') else ''
             return NAME.get(m, m) + note
     return ''
 
@@ -68,7 +68,7 @@ def draw(path=ROOT / 'docs' / 'org_chart.png', date='2026-11-21'):
             d.text((x + (w - d.textlength(sub, font=f2)) / 2, ty + 40), sub, fill=col, font=f2)
 
     d.text((60, 36), f'組織図と自動化の状況（{date} 時点）', fill=NAVY, font=fb(48))
-    d.text((60, 104), '［ ］内は各係のClaudeのモデル（.claude/agents の設定から自動で読み取り）。※＝組織図の指定はFable。利用枠がないため当面Opus', fill=GRAY, font=fr(26))
+    d.text((60, 104), '［ ］内は各係のClaudeのモデル（.claude/agents の設定から自動で読み取り）。Fable＝重要な係（利用枠がない時はOpusが代行）', fill=GRAY, font=fr(26))
     lx = 60
     for st, label in [('tool', '道具で自動（完成）'), ('agent', 'Claudeの係が判断して実行'), ('plan', '未解決（外部要因）'),
                       ('human', '荒木さんの判断（G0承認・公開）')]:
