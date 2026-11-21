@@ -37,9 +37,9 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 9, "sub_size": 108,
-             "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
-    "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 16, "sub_size": 104,
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 7, "sub_size": 140,
+             "sub_y": 0.66, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
+    "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
 }
 NAVY, GOLD, WHITE = (22, 36, 58), (216, 188, 114), (255, 255, 255)
@@ -77,34 +77,43 @@ def tts(text: str, sid: int, readings: dict) -> np.ndarray:
 
 # ---------------- 字幕 ----------------
 def split_sub(text: str, line: int) -> list[list[str]]:
-    """全文を、1行 line 字・最大2行の塊に分ける(文節の切れ目を優先)。"""
+    """全文を、1行 line 字以内・最大2行の字幕に分ける。
+    文節(言葉のまとまり)の途中では改行しない。数字と単位(「11月17日」など)も分けない。
+    1つの文節が line 字を超える時だけ、その行は書き出し時に自動で縮小される。"""
     from .subtitles import bunsetsu
-    parts = bunsetsu(text) if text else []
-    chunks, cur = [], ""
-    for p in parts:
-        if len(re.sub(r"[。]", "", cur + p)) > line * 2 and cur:  # 読点も1字として数える(はみ出し防止)
-            chunks.append(cur)
-            cur = p
+    units = []
+    for u in (bunsetsu(text) if text else []):
+        if units and ((units[-1][-1:].isdigit() and (u[:1].isdigit() or u[:1] in "月日年時分歳回人周%％"))
+                      or u[:1] in "、。ぁぃぅぇぉっゃゅょァィゥェォッャュョー」』）"):
+            units[-1] += u  # 数字の途中・単位・句読点・小書き文字の前では切らない
         else:
-            cur += p
+            units.append(u)
+    fixed = []
+    for u in units:  # 「そして11月17日、」のように長くなった塊は、数字の前の言葉を切り離す
+        m = re.match(r"^(\D{2,}?)(\d.*)$", u)
+        if len(u) > line and m:
+            fixed += [m.group(1), m.group(2)]
+        else:
+            fixed.append(u)
+    units = fixed
+    lines, cur = [], ""
+    for u in units:
+        if cur and (len(cur + u) > line or cur.endswith("。")):
+            lines.append(cur)
+            cur = u
+        else:
+            cur += u
     if cur:
-        chunks.append(cur)
-    out = []
-    for c in chunks:
-        c = re.sub(r"。$", "", c)
-        if len(c) <= line:
-            out.append([c])
-            continue
-        best = None
-        acc = 0
-        for p in bunsetsu(c):
-            acc += len(p)
-            if 0 < acc < len(c):
-                key = (max(acc, len(c) - acc) <= line, -abs(acc - len(c) / 2))
-                if best is None or key > best[0]:
-                    best = (key, acc)
-        i = best[1] if best else len(c) // 2
-        out.append([c[:i], c[i:]])
+        lines.append(cur)
+    out, i = [], 0
+    while i < len(lines):
+        a = re.sub(r"。$", "", lines[i])
+        if i + 1 < len(lines) and not lines[i].endswith("。"):
+            out.append([a, re.sub(r"。$", "", lines[i + 1])])
+            i += 2
+        else:
+            out.append([a])
+            i += 1
     return out
 
 
@@ -123,7 +132,7 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Sub,Noto Sans JP,{sp['sub_size']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,8,2,5,30,30,0,1
+Style: Sub,Noto Sans JP,{sp['sub_size']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,9,2,5,30,30,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
