@@ -14,6 +14,7 @@ description: 皇室物語の内部学習教材動画を、係(サブエージェ
    - kind=gate(G0・G3)→ 成果物(plan.md / script.md・scenes.json)を荒木さんに示して承認を待つ。承認を得たら `bin/kabu approve G0|G3 --note "荒木さん承認 <日時>"`
 3. 停止条件(本書第7章)に当たったら生成を止め、不足事項・理由・必要な対応を報告する。
 4. G5 の qa_report.md が全項目合格のときだけ「完成」と報告する。
+5. 完成後は G6(本書第9章): タイトル→表紙3段・中心画像→説明文。**タイトルと説明文はそれぞれコードブロックで荒木さんに提示し、一括コピーできる形にする。** 投稿はしない。
 
 | 工程 | 係(subagent_type) | 出力 |
 |---|---|---|
@@ -27,7 +28,11 @@ description: 皇室物語の内部学習教材動画を、係(サブエージェ
 | render(G4) | (tool)kakidashi | output/<番号>_<縦型|横型>_internal.mp4 |
 | frames | atekko | 人物の取り違え・崩れの点検 |
 | qa(G5) | (tool)→ kakunin が qa_report.md を読んで直し指示 | qa_report.md |
-| thumb_* | thumb-title / designer-key | 表紙画像(人物1〜2人・短い疑問文・濃紺/金/白・赤なし)、Canva デザイン |
+| pub_title(G6①) | thumb-title(タイトル係) | publish.yaml の title(CTR20%以上を狙う99文字以内・ハッシュタグ付き) |
+| thumb_title(G6②) | thumb-title(タイトル係) | タイトルから3段見出しを流用・中心画像を確定(publish.yaml の thumb, thumb.yaml) |
+| thumb_render | designer-key | 表紙画像(人物1〜2人・濃紺/金/白・赤なし)、Canva デザイン |
+| pub_desc(G6③) | gaiyou(説明文係) | publish.yaml の本文・参考資料・ハッシュタグ |
+| pub_check | (tool) | publish/title.txt・description.txt・check.md |
 
 ## scenes.json の場面(本書第6章)
 `{"scene":"03-2","chapter":"…","role":"question|body|answer","narration":"完成ナレーション","fact_ids":["F3"],

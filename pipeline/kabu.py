@@ -44,9 +44,11 @@ STEPS = [
     ("render", "書き出し係", "tool", "G4 生成: 音声(青山龍星0.90)・字幕(Noto Sans JP)・映像・BGM → output/<番号>_<縦型|横型>_internal.mp4", None),
     ("frames", "当てっこ係", "check", "コマごとの点検(人物の取り違え・崩れ・字幕・ラベル)", "script"),
     ("qa", "確認係", "tool", "G5 検査: 第8章の自動検査 → qa_report.md(全合格のみ完成)", "script"),
-    ("thumb_frames", "サムネ・タイトル係", "tool", "表紙画像の候補フレーム抽出", None),
-    ("thumb_title", "サムネ・タイトル係", "agent", "表紙画像の文言(短い疑問文)と型 → thumb.yaml(赤は使わない)", None),
+    ("pub_title", "タイトル係", "agent", "G6① タイトル: CTR20%以上を狙う99文字以内・ハッシュタグ付き → publish.yaml の title(本書第9章)", "script"),
+    ("thumb_title", "タイトル係", "agent", "G6② 表紙: タイトルから3段見出しを流用し中心画像(台帳番号)を確定 → publish.yaml の thumb・thumb.yaml(赤は使わない)", "pub_title"),
     ("thumb_render", "デザイナー(重要)", "tool", "表紙画像PNGとCanvaの編集可能デザイン", "thumb_title"),
+    ("pub_desc", "説明文係", "agent", "G6③ 説明文: タイトルから本文・参考資料を書き、templates/description_template.md でフルバージョンに組み立て → publish/description.txt", "pub_title"),
+    ("pub_check", "確認係", "tool", "G6 検査: python -m pipeline.publish_text(99文字・3段の流用・末尾カンマ・5000文字)→ publish/check.md", "pub_desc"),
 ]
 STEP_IDS = [s[0] for s in STEPS]
 GATES = {"G0": "gate_G0", "企画": "gate_G0", "G3": "gate_G3", "台本": "gate_G3"}
@@ -194,8 +196,8 @@ def cmd_run(a):
     elif step == "frames":
         _py("pipeline.frame_check", "--video", str(ROOT / "projects" / j / "output" / f"{j}_{kind}_internal.mp4"),
             "--out", str(ROOT / "projects" / j / "output" / "frames"))
-    elif step == "thumb_frames":
-        _py("pipeline.thumbnail", "--job", j, "--extract")
+    elif step == "pub_check":
+        _py("pipeline.publish_text", "--project", j)
     elif step == "thumb_render":
         _py("pipeline.thumbnail", "--job", j, "--render")
     else:
