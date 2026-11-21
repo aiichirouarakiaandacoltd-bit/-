@@ -331,11 +331,18 @@ def build(project: str, kind: str = "縦型") -> Path:
             off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない
         for k in range(n):
             img = imgs[(k + off) % len(imgs)] if imgs else None
-            crop = s.get("crop", "全身") if k == 0 else crops[(crops.index(s.get("crop", "全身")) + k) % 3]
+            c0 = s.get("crop", "全身")
+            if k == 0 or c0 not in crops:
+                crop = c0  # 「全体」は人物名と画面を一致させるため切り替えない
+            elif len(imgs) > 1 and img != imgs[off % len(imgs)]:
+                crop = c0  # 別の画像に切り替わるときは指定どおりの切り抜き
+            else:
+                crop = crops[(crops.index(c0) + k) % 3]
             motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
             shots.append({"scene": s["scene"], "start": a + (b - a) * k / n, "end": a + (b - a) * (k + 1) / n,
                           "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
-                          "person_label": s.get("person_label", ""), "caption": s.get("caption", ""),
+                          "person_label": s.get("person_label", ""),
+                          "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
                           "clip_start": float((s.get("clip") or {}).get("start", 0)) + (b - a) * k / n,
                           "diagram": bool(s.get("diagram"))})
     # 3) 映像
@@ -406,7 +413,7 @@ def build(project: str, kind: str = "縦型") -> Path:
     fc = (f"[0:v]ass='{assp}':fontsdir={FONT_DIR},format=yuv420p[v];"
           f"[1:a]aresample=48000,loudnorm=I=-16:TP=-1.5:LRA=11[n];"
           f"[2:a]aresample=48000,loudnorm=I=-37:TP=-9:LRA=11,afade=t=in:d=1,afade=t=out:st={max(0, total - 2):.2f}:d=2[b];"
-          f"[n][b]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.70[a]")
+          f"[n][b]amix=inputs=2:duration=first:normalize=0,alimiter=limit=0.70:level=disabled[a]")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-i", str(wav), "-stream_loop", "-1", "-i", str(bgm),
                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
                     "-r", "30", "-c:a", "aac", "-b:a", "192k", "-t", f"{total:.3f}", "-movflags", "+faststart", str(final)],
