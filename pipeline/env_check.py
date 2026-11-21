@@ -62,6 +62,14 @@ def _vv_up():
         return None
 
 
+def ensure_voicevox() -> bool:
+    """エンジンが止まっていれば起動し直す(書き出しの直前に呼ぶ)。"""
+    if _vv_up():
+        return True
+    check_voicevox([], Path("/tmp"))
+    return bool(_vv_up())
+
+
 def check_voicevox(rep, out_dir: Path):
     import requests
     ver = _vv_up()
@@ -76,8 +84,9 @@ def check_voicevox(rep, out_dir: Path):
                 sh("apt-get update -qq && apt-get install -y -qq p7zip-full", 1200)
             sh(f"cd {VV_DIR} && 7z x -y {f} >/dev/null && rm -f {f}", 3600)
         if run.exists():
-            subprocess.Popen(f"chmod +x {run} && nohup {run} --host 127.0.0.1 --port 50021 > {VV_DIR}/engine.log 2>&1 &",
-                             shell=True)
+            # setsid で呼び出し元の終了から切り離す(作業の合間にエンジンが止まるのを防ぐ)
+            subprocess.Popen(f"chmod +x {run} && setsid nohup {run} --host 127.0.0.1 --port 50021 > {VV_DIR}/engine.log 2>&1 < /dev/null &",
+                             shell=True, start_new_session=True)
             for _ in range(60):
                 time.sleep(3)
                 ver = _vv_up()

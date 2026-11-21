@@ -37,10 +37,10 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 14, "sub_size": 70,
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 9, "sub_size": 108,
              "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
-    "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 24, "sub_size": 64,
-             "sub_y": 0.86, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
+    "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 16, "sub_size": 104,
+             "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
 }
 NAVY, GOLD, WHITE = (22, 36, 58), (216, 188, 114), (255, 255, 255)
 
@@ -51,6 +51,9 @@ def font(path, size):
 
 # ---------------- 音声(VOICEVOX エンジン・青山龍星・0.90) ----------------
 def speaker_id() -> int:
+    from .env_check import ensure_voicevox
+    if not ensure_voicevox():
+        raise RuntimeError("VOICEVOX エンジンを起動できません(python -m pipeline.env_check で確認)")
     sp = requests.get(VV + "/speakers", timeout=10).json()
     return next(s["id"] for p in sp if p["name"] == "青山龍星" for s in p["styles"] if s["name"] == "ノーマル")
 
@@ -79,7 +82,7 @@ def split_sub(text: str, line: int) -> list[list[str]]:
     parts = bunsetsu(text) if text else []
     chunks, cur = [], ""
     for p in parts:
-        if len(re.sub(r"[、。]", "", cur + p)) > line * 2 and cur:
+        if len(re.sub(r"[。]", "", cur + p)) > line * 2 and cur:  # 読点も1字として数える(はみ出し防止)
             chunks.append(cur)
             cur = p
         else:
@@ -120,13 +123,18 @@ ScaledBorderAndShadow: yes
 
 [V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
-Style: Sub,Noto Sans JP,{sp['sub_size']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,1,0,1,7,2,5,40,40,0,1
+Style: Sub,Noto Sans JP,{sp['sub_size']},&H00FFFFFF,&H00FFFFFF,&H00000000,&H80000000,-1,0,0,0,100,100,0,0,1,8,2,5,30,30,0,1
 
 [Events]
 Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 """
-    ev = [f"Dialogue: 0,{ass_time(s['start'])},{ass_time(s['end'])},Sub,,0,0,0,,"
-          f"{{\\an5\\pos({W // 2},{int(H * sp['sub_y'])})}}" + "\\N".join(s["lines"]) for s in subs]
+    ev = []
+    for s in subs:
+        # 文字は最大限大きく。ただし最長の行が画面幅(左右30pxと縁取りを除く)に収まらない時だけ縮める
+        longest = max(len(l) for l in s["lines"])
+        fs = min(sp["sub_size"], int((W - 76) / max(1, longest)))
+        ev.append(f"Dialogue: 0,{ass_time(s['start'])},{ass_time(s['end'])},Sub,,0,0,0,,"
+                  f"{{\\an5\\pos({W // 2},{int(H * sp['sub_y'])})\\fs{fs}}}" + "\\N".join(s["lines"]))
     path.write_text(hdr + "\n".join(ev) + "\n", encoding="utf-8")
 
 
