@@ -1,17 +1,16 @@
 ---
-description: 皇室物語の内部学習教材動画を、係(サブエージェント)で制作ルール(docs/production_rules.md)どおりに制作する指揮。引数「テーマ | 主役 | 縦型/横型」(例: /kabu 愛子さまの園遊会 | 愛子内親王殿下 | 縦型)
+description: 皇室物語の動画を、係(サブエージェント)で制作ルール(docs/production_rules.md)どおりに制作する指揮。企画係が最新動向→競合調査→題材確定し、タイトルと概要の承認(1回だけ)後は完成まで自動。引数は任意「縦型/横型」(例: /kabu 縦型)
 ---
 あなたはメイン(/kabu の指揮)です。**docs/production_rules.md(2026-11-21版)を正とし、旧版は参照しない。**
 成果物は Claude塾の内部学習教材専用。外部への公開・配布・共有は一切しない。
-荒木さんの承認は **G0(企画)と G3(台本)** の2か所。承認がない限り次へ進まない(代行しない)。
+荒木さんの承認は **G0(タイトルと概要)の1回だけ**(2026-11-21 荒木指示)。G0の承認がない限り次へ進まない(代行しない)。**G0の承認後は、荒木さんに承認を求めず、G6まで完成させる。** 停止条件(本書第7章)に当たった時だけ止めて報告する。
 
 ## 手順
-1. 引数 `$ARGUMENTS` を「テーマ | 主役 | 縦型/横型(省略時 縦型)」に分け、
-   `bin/kabu new --topic "<テーマ>" --subject "<主役>" --kind <縦型|横型> --job <制作番号>` で案件を作る(制作番号は例 KB-YYYYMMDD-01)。
+1. 引数 `$ARGUMENTS` から縦型/横型(省略時 縦型)を読み、`bin/kabu new --kind <縦型|横型> --job <制作番号>` で案件を作る(制作番号は例 KB-YYYYMMDD-01。テーマは企画係が決める。荒木さんがテーマを指定した場合は --topic に入れ、企画係はそれを優先する)。
 2. 以後くり返す: `bin/kabu next` を見て、
    - kind=tool → `bin/kabu run <工程>` → 成功なら `bin/kabu done <工程>`
    - kind=agent / check → 担当の係を Agent ツールで呼ぶ(下表)。check で「判定: 不合格」なら `bin/kabu fail <工程> --note "<直し指示>"`
-   - kind=gate(G0・G3)→ 成果物(plan.md / script.md・scenes.json)を荒木さんに示して承認を待つ。承認を得たら `bin/kabu approve G0|G3 --note "荒木さん承認 <日時>"`
+   - kind=gate(G0のみ)→ plan.md の**タイトル(コードブロック)と概要**を荒木さんに示して承認を待つ。承認を得たら `bin/kabu approve G0 --note "荒木さん承認 <日時>"`。以後、承認は求めない
 3. 停止条件(本書第7章)に当たったら生成を止め、不足事項・理由・必要な対応を報告する。
 4. G5 の qa_report.md が全項目合格のときだけ「完成」と報告する。
 5. 完成後は G6(本書第9章): タイトル→表紙3段・中心画像→説明文。**タイトルと説明文はそれぞれコードブロックで荒木さんに提示し、一括コピーできる形にする。** 投稿はしない。
@@ -19,8 +18,10 @@ description: 皇室物語の内部学習教材動画を、係(サブエージェ
 | 工程 | 係(subagent_type) | 出力 |
 |---|---|---|
 | env_check | (tool) | env_check.md(不合格なら停止) |
-| research | tanashirabe | research/<番号>/candidates.json |
-| plan(G0) | kikaku | plan.md(型A/B/C・疑問・回答の要旨・100点評価。80点以上で候補) |
+| research(R1) | (tool)tanashirabe | research/<番号>/candidates.json |
+| trends(R1) | kikaku | research/<番号>/trends.md(直近の皇室の動向) |
+| competitors(R2) | kikaku | research/<番号>/competitors.md(伸びている競合動画・再生数は実測) |
+| plan(G0) | kikaku | plan.md(題材と理由・タイトル・概要・100点評価)→ 荒木さん承認(唯一) |
 | facts(G1) | jijitsu | facts.md(F1…の表。公式事実/報道/分析・出典URL) |
 | images(G2) | seisaku → `bin/kabu run images --pages <宮内庁等の写真ページ> --commons <検索語>` | ledger.csv(キャプションで人物・行事を確認できたものだけ) |
 | script(G3) | daihon | script.md(章ごとの完成ナレーション全文)+ scenes.json(第6章の項目を省略なく・fact_ids・role=question/body/answer) |

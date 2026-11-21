@@ -30,28 +30,29 @@ CURRENT = STATE_DIR / "current"
 
 # 工程の定義: (工程ID, 担当係, 種類, 説明, 差し戻し先)
 # 種類: agent=係(サブエージェント)が判断する / tool=機械処理 / gate=荒木さんの承認 / check=採点の係
-# 制作ルール(docs/production_rules.md 2026-11-21版)の G0〜G5。荒木さんの承認は G0(企画)と G3(台本)の2か所。
+# 制作ルール(docs/production_rules.md 2026-11-21版)の G0〜G5。荒木さんの承認は G0(タイトルと概要)の1か所だけ。以後は承認を求めず完成まで進める(2026-11-21 荒木指示)。
 STEPS = [
     ("env_check", "書き出し係", "tool", "第0-2章 作業前チェック(ツール・VOICEVOX・BGM・Noto Sans JP)→ env_check.md", None),
-    ("research", "棚調べ係", "tool", "ニュース・題材候補の収集(宮内庁+報道)", None),
-    ("plan", "企画係", "agent", "G0 企画: 題材・型(A比較/B人物物語/C一場面)・疑問・回答の要旨・100点評価 → plan.md", None),
-    ("gate_G0", "荒木さん", "gate", "G0 企画の承認", "plan"),
+    ("research", "棚調べ係", "tool", "R1 最新動向: 宮内庁の新着・ご日程と主要報道を収集 → research/<番号>/candidates.json", None),
+    ("trends", "企画係", "agent", "R1 最新動向の読み取り: candidates.json と宮内庁ご日程から、直近の皇室の動向を整理 → research/<番号>/trends.md", None),
+    ("competitors", "企画係", "agent", "R2 競合調査: 皇室系競合チャンネルの伸びている動画(直近・時事性を優先、再生数は実測)→ research/<番号>/competitors.md", None),
+    ("plan", "企画係", "agent", "G0 企画: R1・R2から題材を確定し、タイトル(99文字以内・#付き)と概要・100点評価 → plan.md・publish.yaml の title", None),
+    ("gate_G0", "荒木さん", "gate", "G0 タイトルと概要の承認(唯一の承認。以後は承認を求めず完成まで進める)", "plan"),
     ("facts", "事実確認係", "check", "G1 事実: 宮内庁→官公庁→主催者→主要報道→史料で照合、公式事実/報道/分析を区別 → facts.md", "plan"),
     ("images", "制作係", "agent", "G2 素材: 人物画像をキャプションで特定して収集 → ledger.csv(目標の70%未満なら停止)", "plan"),
     ("script", "台本係", "agent", "G3 台本: 完成ナレーション script.md と場面設計 scenes.json(画像・切り抜き・動き・人物名・撮影情報)", "facts"),
     ("rules_script", "決まりの確認係", "check", "本書の禁止事項・第4章・第6章(省略禁止)で台本と場面設計を採点", "script"),
-    ("gate_G3", "荒木さん", "gate", "G3 台本の承認", "script"),
     ("render", "書き出し係", "tool", "G4 生成: 音声(青山龍星0.90)・字幕(Noto Sans JP)・映像・BGM → output/<番号>_<縦型|横型>_internal.mp4", None),
     ("frames", "当てっこ係", "check", "コマごとの点検(人物の取り違え・崩れ・字幕・ラベル)", "script"),
     ("qa", "確認係", "tool", "G5 検査: 第8章の自動検査 → qa_report.md(全合格のみ完成)", "script"),
-    ("pub_title", "タイトル係", "agent", "G6① タイトル: CTR20%以上を狙う99文字以内・ハッシュタグ付き → publish.yaml の title(本書第9章)", "script"),
+    ("pub_title", "タイトル係", "agent", "G6① タイトル: G0承認済みのタイトルを確定(事実と合わない所だけ最小限直し、完成報告で伝える)→ publish.yaml の title", "script"),
     ("thumb_title", "タイトル係", "agent", "G6② 表紙: タイトルから3段見出しを流用し中心画像(台帳番号)を確定 → publish.yaml の thumb・thumb.yaml(赤は使わない)", "pub_title"),
     ("thumb_render", "デザイナー(重要)", "tool", "表紙画像PNGとCanvaの編集可能デザイン", "thumb_title"),
     ("pub_desc", "説明文係", "agent", "G6③ 説明文: タイトルから本文・参考資料を書き、templates/description_template.md でフルバージョンに組み立て → publish/description.txt", "pub_title"),
     ("pub_check", "確認係", "tool", "G6 検査: python -m pipeline.publish_text(99文字・3段の流用・末尾カンマ・5000文字)→ publish/check.md", "pub_desc"),
 ]
 STEP_IDS = [s[0] for s in STEPS]
-GATES = {"G0": "gate_G0", "企画": "gate_G0", "G3": "gate_G3", "台本": "gate_G3"}
+GATES = {"G0": "gate_G0", "企画": "gate_G0", "タイトル": "gate_G0"}
 
 
 def _state_path(job_id: str) -> Path:
@@ -218,7 +219,7 @@ def cmd_measure(a):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="kabu")
     sp = ap.add_subparsers(dest="cmd", required=True)
-    p = sp.add_parser("new"); p.add_argument("--topic", required=True); p.add_argument("--job")
+    p = sp.add_parser("new"); p.add_argument("--topic", default="未定(企画係が最新動向と競合調査から決める)"); p.add_argument("--job")
     p.add_argument("--duration", type=float, default=60)
     p.add_argument("--subject", help="主役人物(例: 愛子内親王殿下)")
     p.add_argument("--kind", default="縦型", choices=["縦型", "横型"])
