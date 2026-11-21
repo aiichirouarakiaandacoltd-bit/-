@@ -96,6 +96,10 @@ def build(project: str) -> bool:
         errs.append("表紙の中心画像(center_image)が未確定")
     tags = spec["hashtags"]
     errs += check_hashtags(tags)
+    # YouTubeは1本に61個以上のハッシュタグがあると全て無視する → タイトル込み・重複除きで60個まで
+    total_tags = set(tags) | set(re.findall(r"#[^\s#,、]+", title))
+    if len(total_tags) > 60:
+        errs.append(f"ハッシュタグがタイトル込みで{len(total_tags)}個(上限60。超えるとYouTubeが全て無視する)")
     refs = "\n\n".join(f"{r['title']}\n\n{r['note']}\n\n{r['url']}" for r in spec["references"])
     body = "\n\n".join(b.replace("**", "") for b in spec["body"])  # YouTubeでは装飾にならないので記号は入れない
     tpl = (ROOT / "templates" / "description_template.md").read_text(encoding="utf-8")
@@ -116,7 +120,7 @@ def build(project: str) -> bool:
         errs.append("ハッシュタグの末尾にカンマがない")
     if len(desc) > 5000:
         errs.append(f"説明文が{len(desc)}文字(YouTubeの上限5000)")
-    notes.append(f"タイトル {len(title)}文字 / 説明文 {len(desc)}文字 / ハッシュタグ {len(tags)}個")
+    notes.append(f"タイトル {len(title)}文字 / 説明文 {len(desc)}文字(上限5000) / ハッシュタグ 説明文{len(tags)}個・タイトル込み{len(total_tags)}個(上限60)")
     (out / "title.txt").write_text(title + "\n", encoding="utf-8")
     (out / "description.txt").write_text(desc, encoding="utf-8")
     rep = ["# 公開用テキスト検査 " + project, "", f"判定: **{'合格' if not errs else '不合格'}**", ""]
