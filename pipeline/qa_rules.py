@@ -93,6 +93,19 @@ def check(project: str, kind: str = "縦型") -> bool:
     fonts = set(re.findall(r"Style: \w+,([^,]+),", ass))
     add("画面上の文字が Noto Sans JP", fonts == {"Noto Sans JP"} and "NotoSansJP" in info.get("font", ""),
         f"字幕 {fonts} / 表示文字 {Path(info.get('font', '')).name}")
+    # 5-2 字幕が画面からはみ出していない(Noto Sans JP Bold で各行の幅を実測。左右30pxの余白と縁取りを除く)
+    from PIL import ImageFont
+    fb = str(next(Path("/usr/local/share/fonts").rglob("NotoSansJP-Bold.ttf")))
+    over = []
+    for m in re.finditer(r"Dialogue: [^,]*,([^,]*),[^\n]*?\\fs(\d+)\}([^\n]*)", ass):
+        fsz = int(m.group(2))
+        f = ImageFont.truetype(fb, fsz)
+        for line in m.group(3).split("\\N"):
+            w = f.getlength(line) + 16  # 縁取り(8px×2)
+            if w > sp["W"] - 60:
+                over.append(f"{m.group(1)}「{line}」{w:.0f}px")
+    add("字幕が画面からはみ出していない(最大限の大きさで)", not over, f"はみ出し {over or 'なし'}(画面幅 {sp['W']}px・余白各30px)",
+        "書き出しの自動縮小を確認する。1行の字数(縦型9字・横型16字)を超える塊がないか字幕の分け方を見直す")
     # 6 音声
     add("ナレーションが青山龍星・速度0.90", info.get("speed") == 0.9, f"speaker_id={info.get('speaker_id')}(/speakers から取得) speedScale={info.get('speed')}")
     # 7 第4章

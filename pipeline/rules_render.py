@@ -277,23 +277,23 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
     im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(im)
     vert = W < H
-    fs_name = 56 if vert else 50
+    fs_name = 32 if vert else 30  # 荒木指示 2026-11-21: 人物名・撮影情報は極力小さく(字幕を主役にする)
     for text, cx in labels:
         f = font(FONT_B, fs_name)
         tw = d.textlength(text, font=f)
         x = min(max(cx - tw / 2, 24), W - tw - 24)
         y = int(H * (0.13 if vert else 0.06))
-        d.rounded_rectangle((x - 18, y - 10, x + tw + 18, y + fs_name + 18), 12, fill=NAVY + (215,), outline=GOLD + (255,), width=3)
+        d.rounded_rectangle((x - 10, y - 5, x + tw + 10, y + fs_name + 12), 8, fill=NAVY + (200,), outline=GOLD + (255,), width=2)
         d.text((x, y), text, font=f, fill=WHITE)
     if caption:
-        f = font(FONT_R, 30 if vert else 28)
+        f = font(FONT_R, 22 if vert else 20)
         tw = d.textlength(caption, font=f)
-        x, y = 28, int(H * (0.215 if vert else 0.16))
+        x, y = 24, int(H * (0.165 if vert else 0.16))
         if not vert:
             x, y = W - tw - 40, int(H * 0.06) + 10
-        d.rounded_rectangle((x - 10, y - 6, x + tw + 10, y + 42), 8, fill=(0, 0, 0, 150))
+        d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + 31), 6, fill=(0, 0, 0, 140))
         d.text((x, y), caption, font=f, fill=WHITE)
-    f = font(FONT_R, 24)
+    f = font(FONT_R, 20)
     tw = d.textlength(credit, font=f)
     d.text((W - tw - 24, int(H * 0.035) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),
            stroke_width=2, stroke_fill=(0, 0, 0, 180))
