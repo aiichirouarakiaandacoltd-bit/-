@@ -70,6 +70,10 @@ def load(job_id: str) -> dict:
     st = load_json(_state_path(job_id))
     if not st:
         sys.exit(f"state.json がありません: {job_id}")
+    # 工程の追加・改称に追従(古い案件にも新しい工程を足し、工程順に並べ直す)
+    old = st.get("steps", {})
+    st["steps"] = {sid: {**{"status": "pending"}, **old.get(sid, {}), "owner": owner, "kind": kind, "desc": desc}
+                   for sid, owner, kind, desc, _ in STEPS}
     return st
 
 
