@@ -1,0 +1,244 @@
+[
+  {
+    "scene": "01-1",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "この秋、愛子さまはどこを訪ねられたのか。",
+    "fact_ids": [
+      "F1",
+      "F10"
+    ],
+    "image": "A027",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり拡大",
+    "person_label": "愛子さま",
+    "caption": "2026年10月29日 園遊会(赤坂御苑)"
+  },
+  {
+    "scene": "01-2",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "宮内庁の記録から、たどります。",
+    "fact_ids": [
+      "F1"
+    ],
+    "image": "A003",
+    "crop": "顔の寄り",
+    "motion": "左へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月13日 フェンシング競技(青森県むつ市)"
+  },
+  {
+    "scene": "02-1",
+    "chapter": "青森",
+    "role": "body",
+    "narration": "10月12日、青森で野球をご覧に。",
+    "fact_ids": [
+      "F1"
+    ],
+    "image": "A001",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり拡大",
+    "person_label": "愛子さま",
+    "caption": "2026年10月12日 軟式野球競技(青森県六戸町)"
+  },
+  {
+    "scene": "02-2",
+    "chapter": "青森",
+    "role": "body",
+    "narration": "八戸や、むつの施設もご視察。",
+    "fact_ids": [
+      "F2",
+      "F4"
+    ],
+    "image": "A002",
+    "crop": "全身",
+    "motion": "右へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月12日・13日 八戸市・むつ市(青森県)",
+    "images": [
+      "A002",
+      "A004"
+    ]
+  },
+  {
+    "scene": "03-1",
+    "chapter": "鳥取",
+    "role": "body",
+    "narration": "17日からは鳥取県。防災の国民大会へ。",
+    "fact_ids": [
+      "F5",
+      "F7"
+    ],
+    "image": "A007",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月17日・18日 防災推進国民大会2026(鳥取県倉吉市)",
+    "images": [
+      "A007",
+      "A010"
+    ]
+  },
+  {
+    "scene": "03-2",
+    "chapter": "鳥取",
+    "role": "body",
+    "narration": "福祉施設や美術館、白壁土蔵群をご視察。",
+    "fact_ids": [
+      "F6",
+      "F7",
+      "F8"
+    ],
+    "image": "A008",
+    "crop": "全身",
+    "motion": "右へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月17日・18日 倉吉市(鳥取県)",
+    "images": [
+      "A008",
+      "A009",
+      "A011"
+    ]
+  },
+  {
+    "scene": "03-3",
+    "chapter": "鳥取",
+    "role": "body",
+    "narration": "19日は、佐治町や賀露へ。",
+    "fact_ids": [
+      "F9"
+    ],
+    "image": "A015",
+    "crop": "全身",
+    "motion": "ゆっくり拡大",
+    "person_label": "愛子さま",
+    "caption": "2026年10月19日 鳥取市(鳥取県)",
+    "images": [
+      "A015",
+      "A016"
+    ]
+  },
+  {
+    "scene": "03-4",
+    "chapter": "鳥取",
+    "role": "body",
+    "narration": "そして、鳥取砂丘をご視察。",
+    "fact_ids": [
+      "F9"
+    ],
+    "image": "A017",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月19日 鳥取砂丘(鳥取県鳥取市)"
+  },
+  {
+    "scene": "04-1",
+    "chapter": "東京",
+    "role": "body",
+    "narration": "29日は、園遊会でご歓談。",
+    "fact_ids": [
+      "F10"
+    ],
+    "image": "A027",
+    "crop": "全身",
+    "motion": "右へパン",
+    "person_label": "愛子さま",
+    "caption": "2026年10月29日 園遊会(赤坂御苑)"
+  },
+  {
+    "scene": "04-2",
+    "chapter": "東京",
+    "role": "body",
+    "narration": "11月4日は、ルーヴル美術館展へ。",
+    "fact_ids": [
+      "F11"
+    ],
+    "image": "A028",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・愛子さま",
+    "caption": "2026年11月4日 ルーヴル美術館展(国立新美術館)"
+  },
+  {
+    "scene": "04-3",
+    "chapter": "東京",
+    "role": "body",
+    "narration": "8日は、ソフトテニスの大会。",
+    "fact_ids": [
+      "F12"
+    ],
+    "image": "A029",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下・愛子さま",
+    "caption": "2026年11月8日 全日本ソフトテニス選手権大会(有明コロシアム)"
+  },
+  {
+    "scene": "04-4",
+    "chapter": "東京",
+    "role": "body",
+    "narration": "9日は、国民イベントにご臨席。",
+    "fact_ids": [
+      "F13"
+    ],
+    "image": "A030",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり拡大",
+    "person_label": "愛子さま",
+    "caption": "2026年11月9日 こころをつなぐ国民イベント2026(有楽町朝日ホール)",
+    "images": [
+      "A030",
+      "A031"
+    ]
+  },
+  {
+    "scene": "04-5",
+    "chapter": "東京",
+    "role": "body",
+    "narration": "11日は、皇宮警察の武道大会へ。",
+    "fact_ids": [
+      "F14"
+    ],
+    "image": "A032",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下・愛子さま",
+    "caption": "2026年11月11日 皇宮警察創立140周年記念武道大会(済寧館)"
+  },
+  {
+    "scene": "05-1",
+    "chapter": "回答",
+    "role": "answer",
+    "narration": "答えは、青森、鳥取、そして東京です。",
+    "fact_ids": [
+      "F1",
+      "F9",
+      "F14"
+    ],
+    "image": "A001",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり縮小",
+    "person_label": "愛子さま",
+    "caption": "2026年10月 青森県・鳥取県",
+    "images": [
+      "A001",
+      "A011"
+    ]
+  },
+  {
+    "scene": "05-2",
+    "chapter": "回答",
+    "role": "answer",
+    "narration": "そして11月17日、シンガポールへ。",
+    "fact_ids": [
+      "F15"
+    ],
+    "image": "A028",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり拡大",
+    "person_label": "愛子さま",
+    "caption": "2026年11月4日 ルーヴル美術館展(国立新美術館)"
+  }
+]

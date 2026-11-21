@@ -62,6 +62,9 @@ def check(project: str, kind: str = "縦型") -> bool:
                 continue
             names = r["写っている人物"]
             want = re.sub(r"(天皇皇后両陛下|両陛下)", "天皇陛下・皇后陛下", lab)
+            for short, full in (("愛子さま", "愛子内親王殿下"), ("雅子さま", "皇后陛下"), ("佳子さま", "佳子内親王殿下"),
+                                ("信子さま", "寬仁親王妃殿下"), ("久子さま", "高円宮妃殿下"), ("紀子さま", "秋篠宮皇嗣妃殿下")):
+                want = want.replace(short, full)  # 字幕の呼び方(○○さま)を台帳の正式表記に合わせて照合
             if not all(n in names for n in re.split(r"[・、]", want) if n):
                 bad.append(f"{s['scene']}:{lab}≠{names}")
             if s.get("caption") and r["撮影日・場所・行事"][:4] not in re.sub(r"年.*", "", s["caption"]) + s["caption"]:
