@@ -55,7 +55,12 @@ def check(project: str, kind: str = "縦型") -> bool:
     for s in scenes:
         ids = (s.get("compare") or {}).get("images") or ([s["image"]] if s.get("image") else [])
         labs = (s.get("compare") or {}).get("labels") or ([s.get("person_label")] if s.get("person_label") else [])
+        if not s.get("compare"):
+            ids = s.get("images") or ids
+            labs = [(s.get("labels") or {}).get(i, s.get("person_label", "")) for i in ids]
         for iid, lab in zip(ids, labs):
+            if not lab:
+                continue  # 人物名を出さない写真(会場の様子など)
             r = ledger.get(iid)
             if not r:
                 bad.append(f"{s['scene']}:{iid}未登録")

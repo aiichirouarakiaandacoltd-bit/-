@@ -372,7 +372,8 @@ def build(project: str, kind: str = "縦型") -> Path:
             motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
             shots.append({"scene": s["scene"], "start": a + (b - a) * k / n, "end": a + (b - a) * (k + 1) / n,
                           "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
-                          "person_label": s.get("person_label", ""),
+                          # 写真ごとの人物名(例: 人物の写らない会場写真は "")。無ければ場面の人物名
+                          "person_label": (s.get("labels") or {}).get(img, s.get("person_label", "")),
                           "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
                           "clip_start": float((s.get("clip") or {}).get("start", 0)) + (b - a) * k / n,
                           "diagram": bool(s.get("diagram"))})
