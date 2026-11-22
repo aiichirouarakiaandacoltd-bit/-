@@ -48,6 +48,9 @@ PERSONS = [
 
 
 def persons_in(caption: str) -> list[str]:
+    # 「両陛下がご覧になられたねぶた」のように、人物ではなく物・様子を説明する文は人物写真にしない
+    if re.search(r"(陛下|殿下)(が|の)ご覧になら?れた", caption) or re.search(r"の様子$", caption):
+        return []
     found, rest = [], caption
     for key, names in PERSONS:
         if key in rest:
@@ -83,6 +86,25 @@ def scrape_kunaicho(url: str) -> list[dict]:
         cap = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", p.group(1)))).strip() if p else ""
         out.append({"src": urllib.parse.urljoin(url, m.group(1)), "site": "宮内庁", "page": url,
                     "caption": cap[:160], "event": f"{date} {title}".strip(), "method": "キャプション"})
+    # 報告ページ形式(<img class="c-image-frame__img" alt="写真ごとの説明">、日付は直前の【令和…】見出し)
+    marks = [(m.start(), reiwa_date(m.group(0))) for m in re.finditer(r"【令和[^】]*?\d+月\d+日[^】]*】", s)]
+    for m in re.finditer(r'<img[^>]+class="c-image-frame__img"[^>]*>', s):
+        src = re.search(r'src="([^"]+)"', m.group(0))
+        alt = re.search(r'alt="([^"]*)"', m.group(0))
+        if not src:
+            continue
+        u = urllib.parse.urljoin(url, src.group(1))
+        cap = html.unescape(alt.group(1)).strip() if alt else ""
+        method = "キャプション"
+        if not cap or cap == "お写真":
+            fig = s[m.end():s.find("</figure>", m.end()) if "</figure>" in s[m.end():] else m.end() + 600]
+            fc = re.search(r"<figcaption[^>]*>(.*?)</figcaption>", fig, re.S)
+            cap = re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", fc.group(1)))).strip() if fc else ""
+            method = "ページ説明文（要目視）"
+            cap = cap + "(写真の代替テキストは「お写真」。直後の説明文)" if cap else ""
+        d = ([x for pos, x in marks if pos < m.start() and x] or [date])[-1]
+        out = [o for o in out if o["src"] != u]
+        out.append({"src": u, "site": "宮内庁", "page": url, "caption": cap[:160], "event": f"{d} {title}".strip(), "method": method})
     # ページ末尾に説明文が1つだけの形式: 説明文の無い写真にページの説明文を当て、要目視とする
     caps = [o["caption"] for o in out if persons_in(o["caption"])]
     if len(set(caps)) == 1:
@@ -168,8 +190,14 @@ def collect(project: str, pages: list[str], queries: list[str], scene_hint: str 
     for q in queries:
         cands += commons(q)
         time.sleep(1.5)
+    byurl = {r["取得元URL"]: r for r in rows}
     for c in cands:
         if c["src"] in seen:
+            # 既に台帳にある写真: 写真ごとの説明(キャプション)が新たに見つかれば、要目視から格上げする
+            r = byurl.get(c["src"])
+            if r and "要目視" in r.get("確認方法", "") and c.get("method") == "キャプション" and persons_in(c["caption"]):
+                r.update({"確認したキャプション": c["caption"], "確認方法": "キャプション",
+                          "写っている人物": "・".join(persons_in(c["caption"]))})
             continue
         who = persons_in(c["caption"])
         if not who:
