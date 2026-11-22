@@ -6,3 +6,9 @@ photos:
 - ledger: A011
 note: 右端に第三者の肩がわずかに写るためトリミングで外す。背景のテント奥に赤茶色の幕があり、文字・装飾色には赤を使わない(濃紺#16243A/金#D8BC72/白#FFFFFF)。中段は1行の文字サイズで。
 layout: S-A
+canva:
+  design_id: DAHbntXd45A
+  edit_url: https://www.canva.com/d/NIcwC4lgupaQMwV
+  png: projects/KB-20261122-01/thumb/thumb_canva.png
+  photo_used: projects/KB-20261122-01/thumb/A011_S-A_trim.jpg
+  memo: 右端の第三者の肩を除くため元写真を右から78px切り落とし(655x476→936x680に拡大、比率936:680を維持)。上段は82pxだと2行になり写真に重なるため74px・幅980・(50,428)に調整。
