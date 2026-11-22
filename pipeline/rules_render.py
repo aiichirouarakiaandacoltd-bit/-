@@ -214,8 +214,7 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         top = max(int(PH * (0.40 if W < H else 0.45) - fh2 / 2), 0)
         out = bg.astype(np.uint8)
         # 主役が画面の中央に来るよう写真を左右にずらす(はみ出した側はぼかし背景)
-        sx = int(round(PW / 2 - cx * fw / iw)) if main else 0
-        sx = max(-fw // 3, min(fw // 3, sx))
+        sx = 0  # 荒木指示 2026-11-22: 写真を横にずらさない(隙間を作らない)
         a0, a1 = max(0, sx), min(PW, sx + fw)
         out[top:top + fh2, a0:a1] = fg[:PH - top, a0 - sx:a1 - sx]
         focus = (cx * fw / iw + sx, cy * fw / iw + top)
@@ -223,27 +222,29 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
 
 
 def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str):
-    """主役(focus)を画面の中央に置いた状態から、ゆっくり拡大・縮小・パンする。"""
+    """控えめな動き(荒木指示 2026-11-22): 少しのズーム(2〜7%)とごく小さなパン。
+    窓は常に素材の内側に収め、写真の外(隙間・引き伸ばし)を見せない。主役の位置を基準にする。"""
     PH, PW = pl.shape[:2]
     Z = PW / W
     for k in range(n):
         u = k / max(1, n - 1)
         e = 0.5 - 0.5 * math.cos(math.pi * u)
         if motion == "ゆっくり縮小":
-            z = 1.10 - 0.08 * e
+            z = 1.07 - 0.05 * e
         elif motion in ("左へパン", "右へパン"):
-            z = 1.06
+            z = 1.05
         else:
-            z = 1.02 + 0.08 * e
+            z = 1.02 + 0.05 * e
         ww = PW / Z / z
         wh = PH / Z / z
-        cx, cy = focus[0], focus[1] + wh * 0.0
+        cx = focus[0]
         if motion == "左へパン":
-            cx = focus[0] - ww * 0.07 * e
+            cx = focus[0] - ww * 0.03 * e
         elif motion == "右へパン":
-            cx = focus[0] + ww * 0.07 * e
-        cy = min(max(focus[1] + wh * 0.12, wh / 2), PH - wh / 2)  # 顔を字幕より上・画面の中央寄りに
+            cx = focus[0] + ww * 0.03 * e
+        cy = focus[1] + wh * 0.12
         cx = min(max(cx, ww / 2), PW - ww / 2)
+        cy = min(max(cy, wh / 2), PH - wh / 2)
         a = ww / W
         M = np.float32([[1 / a, 0, -(cx - ww / 2) / a], [0, 1 / a, -(cy - wh / 2) / a]])
         yield cv2.warpAffine(pl, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
@@ -357,8 +358,11 @@ def build(project: str, kind: str = "縦型") -> Path:
     for i, s in enumerate(scenes):
         a = 0.0 if i == 0 else s["start_sec"]
         b = scenes[i + 1]["start_sec"] if i + 1 < len(scenes) else total
-        n = max(1, math.ceil((b - a) / sp["cut"][1]))
         imgs = s.get("images") or ([s["image"]] if s.get("image") else [])
+        n = max(1, math.ceil((b - a) / sp["cut"][1]))
+        if kind == "縦型" and imgs and len(imgs) < n:
+            # ショートは同じ写真を2回使わない: 写真の枚数までカットを減らす(1カットは最長 max_show 秒)
+            n = max(len(imgs), math.ceil((b - a) / sp["max_show"]))
         off = 0
         if imgs and shots and len(imgs) > 1 and imgs[0] == shots[-1]["image"]:
             off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない

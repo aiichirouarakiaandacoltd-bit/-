@@ -122,13 +122,14 @@ def check(project: str, kind: str = "縦型") -> bool:
         for iid in ((s.get("compare") or {}).get("images") or [s.get("image")]):
             if iid:
                 used[iid] += 1
-    over3 = {k: c for k, c in used.items() if c > 3}
+    limit = 1 if kind == "縦型" else 3  # 荒木指示 2026-11-22: ショートは同じ写真を2回使わない
+    over3 = {k: c for k, c in used.items() if c > limit}
     person = sum(d for s, d in zip(shots, durs) if s.get("person_label") or s.get("compare")) / max(1e-9, sum(durs))
     n_img = len(used)
     ok7 = (not out_range and max(durs) <= sp["max_show"] and person >= sp["person_ratio"] and not over3)
     add("第4章 切替間隔・最長表示・人物の割合・同一画像の回数", ok7,
         f"カット {len(shots)}(目標{sp['cuts'][0]}〜{sp['cuts'][1]}) / 平均 {sum(durs) / len(durs):.2f}秒 / 最長 {max(durs):.2f}秒(上限{sp['max_show']}) / "
-        f"範囲外 {out_range or 'なし'} / 人物が映る割合 {person:.0%}(目標{sp['person_ratio']:.0%}) / 異なる画像 {n_img}枚(目標{sp['images']}) / 4回以上の画像 {over3 or 'なし'}",
+        f"範囲外 {out_range or 'なし'} / 人物が映る割合 {person:.0%}(目標{sp['person_ratio']:.0%}) / 異なる画像 {n_img}枚(目標{sp['images']}) / 上限({'1' if kind == '縦型' else '3'}回)を超えた画像 {over3 or 'なし'}",
         "画像を追加収集する(第3章)、場面の分け方を見直す")
     if len(shots) < sp["cuts"][0] or n_img < sp["images"]:
         res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)} / 画像 {n_img}枚",
