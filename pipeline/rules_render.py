@@ -408,7 +408,9 @@ def build(project: str, kind: str = "縦型") -> Path:
             # 人物名が複数(「両陛下」「・」区切り)の場面は写真全体を見せ、名前と画面を一致させる
             # 写真全体を見せるのは「全体」指定の時と、複数名を「全身」で見せる時だけ(「顔の寄り」は主役の位置を中心に寄る)
             many = ("両" in sh["person_label"] or "・" in sh["person_label"] or "、" in sh["person_label"])
-            multi = sh["crop"] == "全体" or (many and sh["crop"] == "全身")
+            # 複数名の場面は、お一人ずつのお顔が切れないよう常に写真全体を見せる(主役の中心を画面中央へ)。
+            # 引きすぎてお顔が見分けられない写真は、当てっこ係のコマ点検で差し替える
+            multi = sh["crop"] == "全体" or many
             src = str(ROOT / ledger[sh["image"]]["ファイル名"])
             labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
             ov = overlay(W, H, labels, sh["caption"], credit)
