@@ -187,6 +187,8 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         x0 = x1 = cx = iw / 2; cy = ih * 0.4; fh = ih * 0.15; y0 = y1 = cy
     if crop == "顔の寄り" and fs:
         ch = min(ih, fh / 0.18)
+        if main is not None:  # 主役の位置が登録済み(複数名なら中心): 写真の高さの55%まで寄る(拡大しすぎて粗くしない)
+            ch = max(ch, ih * 0.55)
     elif crop == "手元・装い" and fs:
         ch = min(ih, fh / 0.10)
         cy = cy + fh * 2.2
@@ -404,8 +406,9 @@ def build(project: str, kind: str = "縦型") -> Path:
                 ff.stdin.write(blend(fr, ov).tobytes())
         else:
             # 人物名が複数(「両陛下」「・」区切り)の場面は写真全体を見せ、名前と画面を一致させる
-            multi = ("両" in sh["person_label"] or "・" in sh["person_label"] or "、" in sh["person_label"]
-                     or sh["crop"] == "全体")
+            # 写真全体を見せるのは「全体」指定の時と、複数名を「全身」で見せる時だけ(「顔の寄り」は主役の位置を中心に寄る)
+            many = ("両" in sh["person_label"] or "・" in sh["person_label"] or "、" in sh["person_label"])
+            multi = sh["crop"] == "全体" or (many and sh["crop"] == "全身")
             src = str(ROOT / ledger[sh["image"]]["ファイル名"])
             labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
             ov = overlay(W, H, labels, sh["caption"], credit)
