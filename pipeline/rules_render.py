@@ -434,7 +434,10 @@ def build(project: str, kind: str = "縦型") -> Path:
     subs = []
     from .tts import mora_count
     for s in scenes:
-        chunks = split_sub(s["narration"], sp["line"])
+        chunks = s.get("subtitle_lines") or split_sub(s["narration"], sp["line"])  # 指定があれば手動の改行を優先
+        if s.get("subtitle_lines"):
+            flat = re.sub(r"[。\s]", "", "".join("".join(c) for c in chunks))
+            assert flat == re.sub(r"[。\s]", "", s["narration"]), f"{s['scene']}: subtitle_lines がナレーションと一致しない"
         ms = [max(1, mora_count("".join(c))) for c in chunks]
         a, b = s["start_sec"], s["end_sec"] - 0.06
         acc = a
