@@ -96,10 +96,61 @@ def cmd_new(a):
           "steps": {sid: {"status": "pending", "owner": owner, "kind": kind, "desc": desc}
                     for sid, owner, kind, desc, _ in STEPS}}
     log_event(st, f"案件作成 topic={a.topic}")
+    if getattr(a, "from_batch", None):
+        _new_from_batch(st, a.from_batch)
     save(st)
     STATE_DIR.mkdir(exist_ok=True)
     CURRENT.write_text(job_id)
     print(job_id)
+
+
+BATCH_DIR = ROOT / "research" / "batches"
+
+
+def _load_batch(bid: str) -> tuple[Path, dict]:
+    import yaml
+    path = BATCH_DIR / f"{bid}.yaml"
+    if not path.exists():
+        sys.exit(f"企画の一括承認ファイルがありません: {path}")
+    return path, yaml.safe_load(path.read_text(encoding="utf-8"))
+
+
+def cmd_batch_approve(a):
+    """本書第2章(2026-11-23 荒木承認): 企画リストの複数本を一度に承認する(G0の一括承認)。"""
+    import yaml
+    path, b = _load_batch(a.batch)
+    at = now_jst().isoformat(timespec="seconds")
+    ids = set(a.items or [it["id"] for it in b["items"]])
+    for it in b["items"]:
+        if it["id"] in ids:
+            it.update(status="承認済", approved_at=at, approved_by="荒木さん", note=a.note or "")
+    b["approved_at"] = at
+    path.write_text(yaml.safe_dump(b, allow_unicode=True, sort_keys=False), encoding="utf-8")
+    print(f"一括承認 {a.batch}: {sorted(ids)}")
+
+
+def _new_from_batch(st, spec: str):
+    """--from-batch BATCH-ID:ITEM 一括承認済みの企画から案件を作る。R1/R2/G0 は一括承認で済んでいるので完了扱い。"""
+    bid, item = spec.split(":")
+    _, b = _load_batch(bid)
+    it = next((x for x in b["items"] if x["id"] == item), None)
+    if not it:
+        sys.exit(f"{bid} に {item} がありません")
+    if it.get("status") != "承認済":
+        sys.exit(f"{bid}:{item} は荒木さんの承認前です(bin/kabu batch-approve {bid})")
+    pdir = ROOT / "projects" / st["job_id"]
+    pdir.mkdir(parents=True, exist_ok=True)
+    (pdir / "plan.md").write_text(
+        f"# G0 企画書 {st['job_id']}(一括承認 {bid}:{item})\n\n## タイトル\n```\n{it['title']}\n```\n\n## 概要\n{it.get('summary', '')}\n\n"
+        f"- 型: {it.get('type', '')} / 伸びる要因: {it.get('factors', '')} / 裏付け: {it.get('evidence', '')} / 写真: {it.get('photos', '')}\n"
+        f"- 承認: {it.get('approved_by')} {it.get('approved_at')}(一括承認。以後は承認を求めず完成まで進める)\n", encoding="utf-8")
+    (pdir / "publish.yaml").write_text(f"title: \"{it['title']}\"\n", encoding="utf-8")
+    note = f"一括承認 {bid}:{item}({it.get('approved_at')})"
+    for sid in ("research", "trends", "competitors", "plan", "gate_G0"):
+        st["steps"][sid].update(status="done", note=note, at=now_jst().isoformat(timespec="seconds"))
+    st["topic"] = it["title"]
+    st["batch"] = f"{bid}:{item}"
+    log_event(st, f"一括承認から作成 {bid}:{item}")
 
 
 def next_step(st):
@@ -230,18 +281,20 @@ def main(argv=None):
     p.add_argument("--duration", type=float, default=60)
     p.add_argument("--subject", help="主役人物(例: 愛子内親王殿下)")
     p.add_argument("--kind", default="縦型", choices=["縦型", "横型"])
+    p.add_argument("--from-batch", dest="from_batch", help="一括承認済みの企画から作る(例: BATCH-20261123:K3)")
     for n in ("status", "next", "measure"):
         p = sp.add_parser(n); p.add_argument("--job")
     p = sp.add_parser("done"); p.add_argument("step", choices=STEP_IDS); p.add_argument("--note"); p.add_argument("--job")
     p = sp.add_parser("fail"); p.add_argument("step", choices=STEP_IDS); p.add_argument("--note", required=True); p.add_argument("--job")
     p = sp.add_parser("approve"); p.add_argument("gate"); p.add_argument("--note"); p.add_argument("--job")
+    p = sp.add_parser("batch-approve"); p.add_argument("batch"); p.add_argument("--items", nargs="*"); p.add_argument("--note")
     p = sp.add_parser("run"); p.add_argument("step"); p.add_argument("--job"); p.add_argument("--days", type=int)
     p.add_argument("--pages", nargs="*"); p.add_argument("--commons", nargs="*")
     p.add_argument("--auto"); p.add_argument("--months", nargs="*")
     p.add_argument("--video-id"); p.add_argument("--ctr", type=float); p.add_argument("--impressions", type=int); p.add_argument("--views", type=int)
     a = ap.parse_args(argv)
     {"new": cmd_new, "status": cmd_status, "next": cmd_next, "done": cmd_done, "fail": cmd_fail,
-     "approve": cmd_approve, "run": cmd_run, "measure": cmd_measure}[a.cmd](a)
+     "approve": cmd_approve, "run": cmd_run, "measure": cmd_measure, "batch-approve": cmd_batch_approve}[a.cmd](a)
 
 
 if __name__ == "__main__":
