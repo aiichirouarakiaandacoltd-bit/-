@@ -90,6 +90,8 @@ def build(project: str) -> bool:
     plain = re.sub(r"[【】「」『』\s]", "", title)
     for k in ("upper", "middle", "lower"):
         v = re.sub(r"[【】「」『』\s]", "", th.get(k, ""))
+        if th.get("override") and v:  # 荒木の明示指示で3段を指定した時(本書第0章7 優先順位①)
+            continue
         if not v or v not in plain:
             errs.append(f"表紙の{k}「{th.get(k)}」がタイトルに含まれていない")
     # 揶揄・対立のNG(本書第1-2章): タイトル・表紙3段・説明文本文
@@ -131,6 +133,8 @@ def build(project: str) -> bool:
     rep = ["# 公開用テキスト検査 " + project, "", f"判定: **{'合格' if not errs else '不合格'}**", ""]
     rep += [f"- {n}" for n in notes] + [f"- 不合格: {e}" for e in errs]
     rep += ["", f"表紙3段: 上「{th.get('upper')}」/ 中「{th.get('middle')}」/ 下「{th.get('lower')}」/ 中心画像 {th.get('center_image')}"]
+    if th.get("override"):
+        rep.append(f"表紙3段の例外: {th['override']}")
     (out / "check.md").write_text("\n".join(rep) + "\n", encoding="utf-8")
     print("\n".join(rep))
     print("\n=== タイトル ===\n" + title + "\n\n=== 説明文 ===\n" + desc)

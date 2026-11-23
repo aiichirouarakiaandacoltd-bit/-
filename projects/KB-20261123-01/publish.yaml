@@ -1,36 +1,76 @@
 title: '【天皇陛下】即位後7回のお誕生日会見で、6回くり返された雅子さまについての言葉とは？宮内庁の会見記録から #天皇陛下 #雅子さま #皇室'
 thumb:
-  upper: 即位後7回のお誕生日会見で、
-  middle: 6回くり返された
-  lower: 雅子さまについての言葉とは？
+  upper: 【天皇陛下】即位後7回目のお誕生日で
+  middle: 雅子さまへ 6回繰り返された
+  lower: お言葉とは？
   center_image: A031
-# 説明文係 2026-11-23: 本文は facts.md の公式事実(F1〜F10・F16〜F19・F21・F22・F24・F25)だけ。引用は会見全文と一字一句同じ連続した一部(令和2年の読点「，」は原文どおり。省略記号は使わない)。
-#   要注意1(ご結婚30年を経た令和6年)・3(件数は「支え」で数える)・9(令和7年も雅子さまについて語られた)・10(「毎年」と言わず「4年続けて」は令和3〜6年の言い回しに限る)・11(写真は令和8年)を反映。答えの段落は当チャンネルの分析と明記
-#   固定文が約3000字あるため、5000字以内に収めるよう本文は短く、写真のページはご近影と会見当日のご日程の2本に絞った
-#   references の資料名は 2026-11-23 に curl で取得した各ページの見出し(会見ページの見出しは「天皇陛下お誕生日に際し（令和X年）」)
-#   未確認情報は動画で紹介していないので unconfirmed_note は省略(既定文)
-question_topic: "天皇陛下がお誕生日の記者会見で語られた雅子さまへの言葉"
-subject_area: "皇室、宮中行事"
-related_orgs: "宮内庁、皇室、その他の関係団体"
+  override: '荒木指示 2026-11-23: 表紙3段を指定の文言に変更(タイトルからの流用の例外)。「繰り返えされた」は送り仮名を「繰り返された」に直した'
+question_topic: 天皇陛下がお誕生日の記者会見で語られた雅子さまへの言葉
+subject_area: 皇室、宮中行事
+related_orgs: 宮内庁、皇室、その他の関係団体
 body:
-  - "天皇陛下は即位後、令和2年から令和8年までの7回、お誕生日を前に記者会見に臨まれました。"
-  - "その7回のうち6回でくり返された、雅子さまについての言葉とは何でしょうか。"
-  - "令和2年、即位後初めての会見では「支えてくれている皇后雅子に，感謝しております。」と述べられました。"
-  - "令和3年から令和6年までは4年続けて「私の日々の活動を支えてくれる大切な存在」と語られ、ご結婚30年を経た令和6年には「この先の人生も引き続きよろしく」と伝えたいとも述べられました。"
-  - "令和7年も英国ご訪問や全国赤十字大会など雅子さまについて語られましたが、「支え」という言い方はありませんでした。"
-  - "令和8年は「雅子に支えてもらっていることも多くあり、深く感謝しています。」と述べられ、令和2年と同じく「支え」と「感謝」が入っています。"
-  - "答えは「支え」。日々の生活でも公務の場でも、雅子さまは陛下の支えと言えそうだ、というのが当チャンネルの分析です。"
-  - "今回の動画では、宮内庁の7回の会見全文をもとに、陛下の言葉を年の順にたどります。写真はすべて令和8年のもので、各年の会見の写真ではありません。"
-  - "引用は会見全文と同じ文字で記し、宮内庁の記録で確認できない発言や逸話は含めていません。"
-  - "公式に確認できる出来事と、当チャンネルの解説を区別してご覧ください。"
+- 天皇陛下は即位後、令和2年から令和8年までの7回、お誕生日を前に記者会見に臨まれました。
+- その7回のうち6回でくり返された、雅子さまについての言葉とは何でしょうか。
+- 令和2年、即位後初めての会見では「支えてくれている皇后雅子に，感謝しております。」と述べられました。
+- 令和3年から令和6年までは4年続けて「私の日々の活動を支えてくれる大切な存在」と語られ、ご結婚30年を経た令和6年には「この先の人生も引き続きよろしく」と伝えたいとも述べられました。
+- 令和7年も英国ご訪問や全国赤十字大会など雅子さまについて語られましたが、「支え」という言い方はありませんでした。
+- 令和8年は「雅子に支えてもらっていることも多くあり、深く感謝しています。」と述べられ、令和2年と同じく「支え」と「感謝」が入っています。
+- 答えは「支え」。日々の生活でも公務の場でも、雅子さまは陛下の支えと言えそうだ、というのが当チャンネルの分析です。
+- 今回の動画では、宮内庁の7回の会見全文をもとに、陛下の言葉を年の順にたどります。写真はすべて令和8年のもので、各年の会見の写真ではありません。
+- 引用は会見全文と同じ文字で記し、宮内庁の記録で確認できない発言や逸話は含めていません。
+- 公式に確認できる出来事と、当チャンネルの解説を区別してご覧ください。
 references:
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和2年）」", note: "令和2年2月21日の会見全文(即位後初)。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2020.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和3年）」", note: "令和3年2月19日の会見全文。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2021.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和4年）」", note: "令和4年2月21日の会見全文。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2022.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和5年）」", note: "令和5年2月21日の会見全文。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2023.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和6年）」", note: "令和6年2月21日の会見全文(ご結婚30年の翌年)。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2024.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和7年）」", note: "令和7年2月20日の会見全文(英国ご訪問など)。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2025.html"}
-  - {title: "宮内庁「天皇陛下お誕生日に際し（令和8年）」", note: "令和8年2月19日の会見全文。", url: "https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2026.html"}
-  - {title: "宮内庁「令和8年天皇陛下お誕生日に際してのご近影（お写真）」", note: "御所でのご近影。", url: "https://www.kunaicho.go.jp/watch/gokinkyo/gokinkyo01/r08-0223-ph.html"}
-  - {title: "宮内庁「記者会見（お誕生日につき）（宮殿）」", note: "令和8年2月19日の記録と写真。", url: "https://www.kunaicho.go.jp/watch/activity/schedule01/202602/20260219-01.html"}
-hashtags: ["#天皇陛下", "#雅子さま", "#皇室", "#皇后陛下", "#天皇皇后両陛下", "#愛子さま", "#天皇ご一家", "#宮内庁", "#記者会見", "#お誕生日", "#天皇誕生日", "#お誕生日会見", "#おことば", "#感謝", "#支え", "#ご結婚30年", "#即位", "#令和", "#令和の皇室", "#御所", "#ご近影", "#英国ご訪問", "#全国赤十字大会", "#皇室ニュース", "#皇室物語", "#日本が誇る皇室物語"]
+- title: 宮内庁「天皇陛下お誕生日に際し（令和2年）」
+  note: 令和2年2月21日の会見全文(即位後初)。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2020.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和3年）」
+  note: 令和3年2月19日の会見全文。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2021.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和4年）」
+  note: 令和4年2月21日の会見全文。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2022.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和5年）」
+  note: 令和5年2月21日の会見全文。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2023.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和6年）」
+  note: 令和6年2月21日の会見全文(ご結婚30年の翌年)。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2024.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和7年）」
+  note: 令和7年2月20日の会見全文(英国ご訪問など)。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2025.html
+- title: 宮内庁「天皇陛下お誕生日に際し（令和8年）」
+  note: 令和8年2月19日の会見全文。
+  url: https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/emperor2026.html
+- title: 宮内庁「令和8年天皇陛下お誕生日に際してのご近影（お写真）」
+  note: 御所でのご近影。
+  url: https://www.kunaicho.go.jp/watch/gokinkyo/gokinkyo01/r08-0223-ph.html
+- title: 宮内庁「記者会見（お誕生日につき）（宮殿）」
+  note: 令和8年2月19日の記録と写真。
+  url: https://www.kunaicho.go.jp/watch/activity/schedule01/202602/20260219-01.html
+hashtags:
+- '#天皇陛下'
+- '#雅子さま'
+- '#皇室'
+- '#皇后陛下'
+- '#天皇皇后両陛下'
+- '#愛子さま'
+- '#天皇ご一家'
+- '#宮内庁'
+- '#記者会見'
+- '#お誕生日'
+- '#天皇誕生日'
+- '#お誕生日会見'
+- '#おことば'
+- '#感謝'
+- '#支え'
+- '#ご結婚30年'
+- '#即位'
+- '#令和'
+- '#令和の皇室'
+- '#御所'
+- '#ご近影'
+- '#英国ご訪問'
+- '#全国赤十字大会'
+- '#皇室ニュース'
+- '#皇室物語'
+- '#日本が誇る皇室物語'
