@@ -1,0 +1,41 @@
+{
+  "template": "DAHatUQFKSI",
+  "layout": "S-A",
+  "photos": [
+    {
+      "ledger": "A017",
+      "file": "projects/KB-20261123-06/thumb/A017_S-A.jpg",
+      "frame": {
+        "left": 72,
+        "top": 545,
+        "width": 936,
+        "height": 680
+      },
+      "alt": "天皇陛下・愛子内親王殿下 2026-05-31(宮内庁)"
+    }
+  ],
+  "texts": {
+    "upper": "娘・愛子さまについての",
+    "middle": "言葉とは？",
+    "lower": "天皇陛下が語る"
+  },
+  "middle": {
+    "font_size": 132,
+    "left": 50,
+    "top": 1260,
+    "width": 980
+  },
+  "lower": {
+    "left": 96,
+    "top": 1400
+  },
+  "steps": [
+    "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",
+    "read-design(open_transaction)で要素を特定: 文字『導入』=上段 / 『最大の訴求』=中段 / 『疑問・補足』=下段 / 画像 shape(left72)=左枠, (left542)=右枠",
+    "写真ごとに create-upload-url → curl -X POST -H 'Content-Type: application/octet-stream' --data-binary @file → mediaId",
+    "S-A: 右枠を delete_element、左枠を resize_element(936×680)・position_element(72,545)",
+    "update_fill(各枠, mediaId, alt)・replace_text(上段/中段/下段)・format_text(中段 font_size)・resize_element(中段 width)・position_element(中段・下段)",
+    "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
+    "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>"
+  ]
+}
