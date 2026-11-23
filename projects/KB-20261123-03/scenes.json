@@ -1,0 +1,359 @@
+[
+  {
+    "scene": "01-1",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "お別れの日、ラーケン宮で。",
+    "fact_ids": [
+      "F12",
+      "F17"
+    ],
+    "image": "A030",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月25日 お別れのご挨拶(ラーケン宮)"
+  },
+  {
+    "scene": "01-2",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "両陛下が国王ご夫妻と過ごされた時間とは？",
+    "fact_ids": [
+      "F12",
+      "F13",
+      "F15"
+    ],
+    "image": "A018",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月23日 晩餐会(ラーケン宮)"
+  },
+  {
+    "scene": "02-1",
+    "chapter": "6月23日 歓迎式典",
+    "role": "body",
+    "narration": "6月23日の歓迎式典では、国王ご夫妻がお出迎えになりました。",
+    "fact_ids": [
+      "F1",
+      "F6"
+    ],
+    "image": "A004",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月23日 歓迎式典(王宮前広場)"
+  },
+  {
+    "scene": "02-2",
+    "chapter": "6月23日 歓迎式典",
+    "role": "body",
+    "narration": "陛下は国王陛下と、儀仗隊の前をご閲兵になりました。",
+    "fact_ids": [
+      "F6"
+    ],
+    "image": "A005",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月23日 歓迎式典(王宮前広場)"
+  },
+  {
+    "scene": "02-3",
+    "chapter": "6月23日 歓迎式典",
+    "role": "body",
+    "narration": "ブリュッセル王宮では、ゲストブックにご記帳になりました。",
+    "fact_ids": [
+      "F6"
+    ],
+    "image": "A007",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年6月23日 歓迎式典(ブリュッセル王宮)"
+  },
+  {
+    "scene": "02-4",
+    "chapter": "6月23日 歓迎式典",
+    "role": "body",
+    "narration": "市庁舎のバルコニーでは、集まった人々にお手をお振りになりました。",
+    "fact_ids": [
+      "F7"
+    ],
+    "image": "A008",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月23日 ブリュッセル市庁舎"
+  },
+  {
+    "scene": "03-1",
+    "chapter": "晩餐会(ラーケン宮)",
+    "role": "body",
+    "narration": "その夜は、国王ご一家のお住まい、ラーケン宮での晩餐会です。",
+    "fact_ids": [
+      "F5",
+      "F8"
+    ],
+    "image": "A019",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下・ベルギー王室の方々",
+    "caption": "2026年6月23日 晩餐会(ラーケン宮)"
+  },
+  {
+    "scene": "03-2",
+    "chapter": "晩餐会(ラーケン宮)",
+    "role": "body",
+    "narration": "日本古謡の「さくらさくら」も演奏されました。",
+    "fact_ids": [
+      "F9"
+    ],
+    "image": "A020",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月23日 晩餐会(ラーケン宮)"
+  },
+  {
+    "scene": "03-3",
+    "chapter": "晩餐会(ラーケン宮)",
+    "role": "body",
+    "narration": "宮内庁が掲載したおことばで、陛下は、",
+    "fact_ids": [
+      "F20"
+    ],
+    "image": "A021",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇陛下",
+    "caption": "2026年6月23日 晩餐会(ラーケン宮)"
+  },
+  {
+    "scene": "03-4",
+    "chapter": "晩餐会(ラーケン宮)",
+    "role": "body",
+    "narration": "1984年に、このラーケン宮に招かれたことを、",
+    "fact_ids": [
+      "F20"
+    ],
+    "image": "A022",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月24日 ナミュール市ご視察"
+  },
+  {
+    "scene": "03-5",
+    "chapter": "晩餐会(ラーケン宮)",
+    "role": "body",
+    "narration": "「忘れ得ぬ思い出です。」と述べられています。",
+    "fact_ids": [
+      "F20"
+    ],
+    "image": "A024",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月24日 imecご視察"
+  },
+  {
+    "scene": "04-1",
+    "chapter": "比較 1984年と今回",
+    "role": "body",
+    "narration": "42年後の今回は、国賓としてラーケン宮にお泊まりになりました。",
+    "fact_ids": [
+      "F10",
+      "F20"
+    ],
+    "image": "A006",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月23日 歓迎式典(ブリュッセル)"
+  },
+  {
+    "scene": "05-1",
+    "chapter": "6月25日 ご散策",
+    "role": "answer",
+    "narration": "そして6月25日、ベルギーをご出発の日です。",
+    "fact_ids": [
+      "F12",
+      "F17"
+    ],
+    "image": "A034",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年6月25日 在留邦人代表ご接見(大使公邸)"
+  },
+  {
+    "scene": "05-2",
+    "chapter": "6月25日 ご散策",
+    "role": "answer",
+    "narration": "両陛下は国王ご夫妻と、ラーケン宮の庭園をご散策になりました。",
+    "fact_ids": [
+      "F13"
+    ],
+    "image": "A029",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・ベルギー国王王妃両陛下",
+    "caption": "2026年6月25日 ラーケン宮の庭園"
+  },
+  {
+    "scene": "05-3",
+    "chapter": "6月25日 ご散策",
+    "role": "answer",
+    "narration": "「日本の塔」と呼ばれる五重塔や、様々な植物をご覧になりました。",
+    "fact_ids": [
+      "F13",
+      "F16"
+    ],
+    "image": "A032",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年6月25日 ベルギー人ご接見(大使公邸)"
+  },
+  {
+    "scene": "06-1",
+    "chapter": "お別れのご挨拶",
+    "role": "answer",
+    "narration": "ご散策の後、国王ご夫妻と、お別れのご挨拶をされました。",
+    "fact_ids": [
+      "F15"
+    ],
+    "image": "A026",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月24日 ルーヴェン・カトリック大学"
+  },
+  {
+    "scene": "06-2",
+    "chapter": "記録で言えること",
+    "role": "answer",
+    "narration": "宮内庁の記録で分かるのは、ここまでです。",
+    "fact_ids": [
+      "F15"
+    ],
+    "image": "A011",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "皇后陛下・ベルギー王妃陛下",
+    "caption": "2026年6月23日 ブリュッセル市庁舎"
+  },
+  {
+    "scene": "06-3",
+    "chapter": "記録で言えること",
+    "role": "answer",
+    "narration": "交わされた言葉の中身は、記されていません。",
+    "fact_ids": [
+      "F15"
+    ],
+    "image": "A010",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月23日 ブリュッセル市庁舎"
+  },
+  {
+    "scene": "07-1",
+    "chapter": "解説(分析)",
+    "role": "body",
+    "narration": "陛下は、国王ご夫妻と「親しくおつきあいを重ねてきました」と述べられています。",
+    "fact_ids": [
+      "F21"
+    ],
+    "image": "A025",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇陛下・ベルギー国王陛下",
+    "caption": "2026年6月24日 imecご視察"
+  },
+  {
+    "scene": "07-2",
+    "chapter": "解説(分析)",
+    "role": "body",
+    "narration": "お住まいの庭を共に歩かれた時間は、",
+    "fact_ids": [
+      "F13",
+      "F5"
+    ],
+    "image": "A009",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇陛下",
+    "caption": "2026年6月23日 ブリュッセル市庁舎"
+  },
+  {
+    "scene": "07-3",
+    "chapter": "解説(分析)",
+    "role": "body",
+    "narration": "そのおつきあいの表れかもしれません。",
+    "fact_ids": [
+      "F21"
+    ],
+    "image": "A028",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下",
+    "caption": "2026年6月24日 ルーヴェン・カトリック大学"
+  },
+  {
+    "scene": "08-1",
+    "chapter": "締めくくり",
+    "role": "closing",
+    "narration": "答えは、庭園のご散策と、お別れのご挨拶です。",
+    "fact_ids": [
+      "F13",
+      "F15"
+    ],
+    "image": "A035",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年6月26日 東京国際空港ご到着"
+  },
+  {
+    "scene": "08-2",
+    "chapter": "締めくくり",
+    "role": "closing",
+    "narration": "長く続くご縁を感じさせる、一場面かもしれません。",
+    "fact_ids": [
+      "F20",
+      "F21"
+    ],
+    "image": "A027",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇陛下",
+    "caption": "2026年6月24日 ルーヴェン・カトリック大学"
+  },
+  {
+    "scene": "08-3",
+    "chapter": "締めくくり",
+    "role": "closing",
+    "narration": "皆さまの心に残ったのは、晩餐会と庭園、どちらの場面ですか？",
+    "fact_ids": [],
+    "image": "A023",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇陛下",
+    "caption": "2026年6月24日 ナミュール市ご視察"
+  },
+  {
+    "scene": "08-4",
+    "chapter": "締めくくり",
+    "role": "closing",
+    "narration": "ぜひコメントで、お聞かせください。",
+    "fact_ids": [],
+    "image": "A003",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年6月20日 メルスブルク軍用空港ご到着"
+  }
+]
