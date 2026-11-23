@@ -16,6 +16,8 @@ tools: Read, Write, Bash, mcp__Canva__copy-design, mcp__Canva__read-design, mcp_
 4. edit-design の返すサムネイルで、顔が枠内・中段が1行・文字の重なりなしを確認してから commit。export-design(png 1080×1920)の URL を `python -m pipeline.thumb_canva --project <番号> --fetch <URL>` に渡す(寸法・赤の検査つき)。
 5. design_id と編集URLを thumb.yaml の canva に記録する。人物の顔・表情は加工しない(切り抜きのみ)。
 
+表紙の文字(本書第1-5章): 表記はタイトル・字幕とそろえる(迷う語は漢字)。55歳以上の女性がスマホで見るため、文字はできる限り大きく。
+
 共通ルール(全係):
 - 作業場所はリポジトリ直下。工程の入出力パスは `bin/kabu next` の paths に従う。
 - 実在しない発言・出来事を作らない。発言(かぎかっこ)は出典記事と一字一句同じものだけ。

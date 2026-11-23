@@ -194,6 +194,12 @@ def check(project: str, kind: str = "縦型") -> bool:
     add("締めくくり(まとめ→問いかけ→コメントのお願い)と余韻(第1-4章)", bool(closing) and has_q and tail_sil >= 1.2,
         f"締めくくりの場面 {closing or 'なし'} / 最後の4場面に問いかけ{'あり' if has_q else 'なし'} / 最後の言葉のあとの余韻 {tail_sil:.1f}秒(1.2秒以上)",
         "台本係が role=closing の場面(まとめ・意味づけ・問いかけ・コメントのお願い)を最後に加える")
+    # 第1-5章1(荒木指示 2026-11-23・KB-20261124 以降に適用): ナレーションの文末は「です・ます」調
+    if project >= "KB-20261124":
+        plain = [(s_["scene"], re.sub(r"「[^」]*」|『[^』]*』", "", s_["narration"]).rstrip()) for s_ in scenes]
+        bad_tone = [f"{sc_}:{t[-8:]}" for sc_, t in plain if t.endswith("。") and not re.search(r"(です|ます|ません|でした|ました|ましょう)。$", t)]
+        add("ナレーションが「です・ます」調(第1-5章)", not bad_tone, bad_tone or "すべて です・ます調",
+            "台本係が文末を「です・ます」調に直す(引用内は原文のまま)")
     add("冒頭の疑問に本編で回答", qa, f"question={roles.index('question') if 'question' in roles else 'なし'} answer={'あり' if 'answer' in roles else 'なし'}(回答内容の妥当性は要目視)")
     passed = all(r[1] for r in res)
     lines = [f"# qa_report — {project}({kind})", "", f"判定: **{'完成' if passed else '未完成(不足事項あり)'}**", "",

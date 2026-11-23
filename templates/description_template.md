@@ -2,7 +2,7 @@
 
 {{BODY}}
 
-皆さまは、{{QUESTION_TOPIC}}について、どのように感じられましたか。
+{{CLOSING_QUESTION}}
 
 ぜひコメント欄でご意見をお聞かせください。
 

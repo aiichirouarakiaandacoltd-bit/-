@@ -4,6 +4,7 @@
   title: "【…】…？… #愛子さま #皇室"
   thumb: {upper: "…", middle: "…", lower: "…", center_image: "A027"}
   question_topic: "この秋の愛子さまのご活動"
+  closing_question: "皆さまの心に残ったのは、どの年のお言葉ですか。"(任意。動画の締めくくりの問いと同じにする。省略時は既定文)
   subject_area: "皇室、歴史、国際親善"
   related_orgs: "宮内庁、皇室、政府機関、…その他の関係団体"
   body: ["段落1", "段落2", ...]
@@ -112,6 +113,8 @@ def build(project: str) -> bool:
     tpl = (ROOT / "templates" / "description_template.md").read_text(encoding="utf-8")
     desc = (tpl.replace("{{TITLE}}", title)
                .replace("{{BODY}}", body)
+               .replace("{{CLOSING_QUESTION}}", spec.get("closing_question")
+                        or f"皆さまは、{spec['question_topic']}について、どのように感じられましたか。")  # 本書第1-5章4: 動画の締めくくりの問いとそろえる
                .replace("{{QUESTION_TOPIC}}", spec["question_topic"])
                .replace("{{REFERENCES}}", refs)
                .replace("{{IMAGE_CREDITS}}", image_credits(pdir))
