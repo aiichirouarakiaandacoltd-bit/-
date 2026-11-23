@@ -1,0 +1,268 @@
+[
+  {
+    "scene": "01-1",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "7回の会見で、6回くり返された",
+    "fact_ids": [
+      "F9",
+      "F21"
+    ],
+    "image": "A031",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年2月公表 ご近影(御所)"
+  },
+  {
+    "scene": "01-2",
+    "chapter": "疑問",
+    "role": "question",
+    "narration": "雅子さまについての言葉とは。",
+    "fact_ids": [
+      "F21"
+    ],
+    "image": "A032",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年2月公表 ご近影(御所)"
+  },
+  {
+    "scene": "02-1",
+    "chapter": "令和8年の会見",
+    "role": "body",
+    "narration": "天皇陛下の、お誕生日を前にした会見。",
+    "fact_ids": [
+      "F7",
+      "F8"
+    ],
+    "image": "A034",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇陛下",
+    "caption": "2026年2月19日 記者会見(宮殿)"
+  },
+  {
+    "scene": "03-1",
+    "chapter": "令和2年 即位後初めて",
+    "role": "body",
+    "narration": "即位後初めての令和2年。",
+    "fact_ids": [
+      "F9",
+      "F1"
+    ],
+    "image": "A028",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年4月29日 昭和100年記念式典(日本武道館)"
+  },
+  {
+    "scene": "03-2",
+    "chapter": "令和2年 即位後初めて",
+    "role": "body",
+    "narration": "「常に私の傍らに寄り添い…",
+    "fact_ids": [
+      "F10"
+    ],
+    "image": "A012",
+    "crop": "全身",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年5月17日 全国植樹祭(愛媛県松山市)"
+  },
+  {
+    "scene": "03-3",
+    "chapter": "令和2年 即位後初めて",
+    "role": "body",
+    "narration": "支えてくれている皇后雅子に，感謝しております」",
+    "fact_ids": [
+      "F10"
+    ],
+    "image": "A013",
+    "crop": "全身",
+    "motion": "左へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年5月17日 全国植樹祭(愛媛県松山市)"
+  },
+  {
+    "scene": "04-1",
+    "chapter": "令和3〜6年 4年続けて",
+    "role": "body",
+    "narration": "令和3年から4年続けて同じ言葉。",
+    "fact_ids": [
+      "F22"
+    ],
+    "image": "A014",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年9月30日 被災者お見舞(熊本県八代市)"
+  },
+  {
+    "scene": "04-2",
+    "chapter": "令和3〜6年 4年続けて",
+    "role": "body",
+    "narration": "「私の日々の活動を支えてくれる大切な存在」",
+    "fact_ids": [
+      "F12",
+      "F13",
+      "F14",
+      "F16",
+      "F22"
+    ],
+    "image": "A016",
+    "crop": "全身",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年9月30日 被災者お見舞(熊本県氷川町)"
+  },
+  {
+    "scene": "05-1",
+    "chapter": "結婚30年を経た令和6年",
+    "role": "body",
+    "narration": "結婚30年を経た令和6年には、",
+    "fact_ids": [
+      "F25",
+      "F5"
+    ],
+    "image": "A018",
+    "crop": "全体",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年4月17日 園遊会(赤坂御苑)"
+  },
+  {
+    "scene": "05-2",
+    "chapter": "結婚30年を経た令和6年",
+    "role": "body",
+    "narration": "「この先の人生も引き続きよろしく」とも。",
+    "fact_ids": [
+      "F17"
+    ],
+    "image": "A023",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年4月2日 ご会見(御所)"
+  },
+  {
+    "scene": "06-1",
+    "chapter": "令和7年",
+    "role": "body",
+    "narration": "令和7年は「支え」の言い方がなかった。",
+    "fact_ids": [
+      "F18",
+      "F21"
+    ],
+    "image": "A008",
+    "crop": "全身",
+    "motion": "ゆっくり拡大",
+    "person_label": "皇后陛下",
+    "caption": "2026年5月12日 全国赤十字大会(明治神宮会館)"
+  },
+  {
+    "scene": "07-1",
+    "chapter": "比較 令和8年",
+    "role": "body",
+    "narration": "令和8年は「雅子に支えてもらっていることも多くあり、",
+    "fact_ids": [
+      "F7",
+      "F19"
+    ],
+    "image": "A002",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年4月6日 ご供花(福島県双葉町)"
+  },
+  {
+    "scene": "07-2",
+    "chapter": "比較 令和8年",
+    "role": "body",
+    "narration": "深く感謝しています」と。",
+    "fact_ids": [
+      "F19"
+    ],
+    "image": "A004",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年4月6日 被災者等とのご懇談(福島県双葉町)"
+  },
+  {
+    "scene": "07-3",
+    "chapter": "比較 令和8年",
+    "role": "body",
+    "narration": "令和2年と同じ「支え」と「感謝」だ。",
+    "fact_ids": [
+      "F24",
+      "F10",
+      "F19"
+    ],
+    "image": "A005",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年4月7日 ご視察(福島県大熊町)"
+  },
+  {
+    "scene": "08-1",
+    "chapter": "答えと解説",
+    "role": "answer",
+    "narration": "答えは「支え」。公務でも日々の生活でも、",
+    "fact_ids": [
+      "F21",
+      "F19"
+    ],
+    "image": "A010",
+    "crop": "全身",
+    "motion": "ゆっくり拡大",
+    "person_label": "皇后陛下",
+    "caption": "2026年7月9日 ご養蚕(紅葉山御養蚕所)"
+  },
+  {
+    "scene": "08-2",
+    "chapter": "答えと解説",
+    "role": "answer",
+    "narration": "雅子さまは陛下の支え、と言えそうだ。",
+    "fact_ids": [
+      "F21",
+      "F24"
+    ],
+    "image": "A015",
+    "crop": "全体",
+    "motion": "右へパン",
+    "person_label": "天皇皇后両陛下",
+    "caption": "2026年9月30日 災害対応尽力者お労い(熊本県八代市)"
+  },
+  {
+    "scene": "09-1",
+    "chapter": "結び 令和8年",
+    "role": "answer",
+    "narration": "令和8年は、ご一家について",
+    "fact_ids": [
+      "F20"
+    ],
+    "image": "A030",
+    "crop": "顔の寄り",
+    "motion": "ゆっくり縮小",
+    "person_label": "天皇陛下",
+    "caption": "2026年2月公表 ご近影(御所)"
+  },
+  {
+    "scene": "09-2",
+    "chapter": "結び 令和8年",
+    "role": "answer",
+    "narration": "「お互いへの感謝と家族の絆」と語られた。",
+    "fact_ids": [
+      "F20"
+    ],
+    "image": "A033",
+    "crop": "全体",
+    "motion": "ゆっくり拡大",
+    "person_label": "天皇皇后両陛下・愛子内親王殿下",
+    "caption": "2026年2月公表 ご近影(御所)"
+  }
+]
