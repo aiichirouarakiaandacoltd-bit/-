@@ -91,13 +91,14 @@ def _split_long(u: str, line: int) -> list[str]:
         pos += n
     if pos < len(u):
         words.append(u[pos:])
-    if len(u) <= line + 1:
+    if len(u) <= line + 2:  # 言葉を切らないため、1行8字(縦型)までは分けずに少し縮めて出す
         return [u]
     cuts, acc = [], 0
     for k in range(1, len(words)):
         acc += len(words[k - 1])
         a, b = u[:acc], u[acc:]
         bad = (b[:1] in "」』…、，。ぁぃぅぇぉっゃゅょァィゥェォッャュョー" or a[-1:] in "「『っッ"
+               or b.startswith(("ます", "まし", "ませ", "です", "でし", "られ", "れる", "れた", "せる", "ない", "なか"))
                or (a[-1:].isdigit() and b[:1].isdigit()) or (a.endswith(("令和", "平成", "昭和")) and b[:1].isdigit()))
         if not bad:
             cuts.append(acc)
@@ -167,7 +168,7 @@ def split_sub(text: str, line: int) -> list[list[str]]:
             fixed.append(u)
     units = []
     for u in fixed:  # 1つの文節が1行に収まらない時は、単語の切れ目で分ける(字幕を縮めないため)
-        units += _split_long(u, line) if len(u) > line + 1 else [u]
+        units += _split_long(u, line) if len(u) > line + 2 else [u]
     lines, cur = [], ""
     for u in units:
         if cur and (len(cur + u) > line or cur.endswith("。")) and not (len(u) <= 1 and len(cur + u) <= line + 1 and not cur.endswith("。")):
