@@ -37,8 +37,8 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 90.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 7, "sub_size": 140,
-             "sub_y": 0.66, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 90.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 160,
+             "sub_y": 0.67, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
 }
@@ -77,7 +77,8 @@ def tts(text: str, sid: int, readings: dict) -> np.ndarray:
 
 # ---------------- 字幕 ----------------
 def _split_long(u: str, line: int) -> list[str]:
-    """長い文節を単語の切れ目で line 字以内に分ける。かっこ・句読点・小書き文字・数字の途中では切らない。"""
+    """長い文節を単語の切れ目で分ける。左右がなるべく同じ長さになる切れ目を選ぶ(1〜2字だけの行をつくらない)。
+    かっこ・句読点・小書き文字・「っ」のあと・数字の途中・元号と数字の間では切らない。"""
     import pyopenjtalk
     import unicodedata
     words, pos = [], 0
@@ -90,24 +91,23 @@ def _split_long(u: str, line: int) -> list[str]:
         pos += n
     if pos < len(u):
         words.append(u[pos:])
-    out, cur = [], ""
-    for w in words:
-        stick = w[:1] in "」』…、，。ぁぃぅぇぉっゃゅょァィゥェォッャュョー" or (cur[-1:] in "「『") or (cur[-1:].isdigit() and w[:1].isdigit())
-        if cur and not stick and len(cur + w) > line:
-            out.append(cur)
-            cur = w
-        else:
-            cur += w
-    if cur:
-        out.append(cur)
-    # 1〜2字だけの断片は前につなぐ
-    merged = []
-    for x in out:
-        if merged and len(x) <= 2:
-            merged[-1] += x
-        else:
-            merged.append(x)
-    return merged
+    if len(u) <= line + 1:
+        return [u]
+    cuts, acc = [], 0
+    for k in range(1, len(words)):
+        acc += len(words[k - 1])
+        a, b = u[:acc], u[acc:]
+        bad = (b[:1] in "」』…、，。ぁぃぅぇぉっゃゅょァィゥェォッャュョー" or a[-1:] in "「『っッ"
+               or (a[-1:].isdigit() and b[:1].isdigit()) or (a.endswith(("令和", "平成", "昭和")) and b[:1].isdigit()))
+        if not bad:
+            cuts.append(acc)
+    if not cuts:
+        return [u]
+    best = min(cuts, key=lambda c: (max(c, len(u) - c), abs(c - (len(u) - c))))
+    if min(best, len(u) - best) <= 1:
+        return [u]
+    left, right = u[:best], u[best:]
+    return (_split_long(left, line) if len(left) > line + 1 else [left]) + (_split_long(right, line) if len(right) > line + 1 else [right])
 
 
 def _bunsetsu_q(text: str) -> list[str]:
@@ -161,7 +161,7 @@ def split_sub(text: str, line: int) -> list[list[str]]:
     fixed = []
     for u in units:  # 「そして11月17日、」のように長くなった塊は、数字の前の言葉を切り離す
         m = re.match(r"^(\D{2,}?)(\d.*)$", u)
-        if len(u) > line and m:
+        if len(u) > line and m and not m.group(1).endswith(("令和", "平成", "昭和")):
             fixed += [m.group(1), m.group(2)]
         else:
             fixed.append(u)
@@ -170,7 +170,7 @@ def split_sub(text: str, line: int) -> list[list[str]]:
         units += _split_long(u, line) if len(u) > line + 1 else [u]
     lines, cur = [], ""
     for u in units:
-        if cur and (len(cur + u) > line or cur.endswith("。")):
+        if cur and (len(cur + u) > line or cur.endswith("。")) and not (len(u) <= 1 and len(cur + u) <= line + 1 and not cur.endswith("。")):
             lines.append(cur)
             cur = u
         else:
