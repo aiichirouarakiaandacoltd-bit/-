@@ -1,318 +1,318 @@
 [
-  {
-    "scene": "01-1",
-    "chapter": "疑問",
-    "role": "question",
-    "narration": "20年前に、ご一家で過ごした夏。",
-    "fact_ids": [
-      "F3",
-      "F5"
-    ],
-    "image": "A017",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
-    "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
-  },
-  {
-    "scene": "01-2",
-    "chapter": "疑問",
-    "role": "question",
-    "narration": "陛下が会見で語られた思い出とは？",
-    "fact_ids": [
-      "F1",
-      "F2"
-    ],
-    "image": "A007",
-    "crop": "全体",
-    "motion": "ゆっくり縮小",
-    "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
-    "caption": "2026年6月17日 歓迎式典(アムステルダム)"
-  },
-  {
-    "scene": "02-1",
-    "chapter": "会見で語られた平成18年の夏",
-    "role": "answer",
-    "narration": "会見で語られたのは、平成18年の夏です。",
-    "fact_ids": [
-      "F1",
-      "F2",
-      "F3"
-    ],
-    "image": "A001",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "天皇陛下",
-    "caption": "2026年6月11日 記者会見(宮殿)"
-  },
-  {
-    "scene": "02-2",
-    "chapter": "会見で語られた平成18年の夏",
-    "role": "answer",
-    "narration": "「4歳の愛子を伴って家族揃って」",
-    "fact_ids": [
-      "F3"
-    ],
-    "image": "A037",
-    "crop": "全体",
-    "motion": "左へパン",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月19日 桜植樹(アムステルダムの森公園)"
-  },
-  {
-    "scene": "02-3",
-    "chapter": "会見で語られた平成18年の夏",
-    "role": "answer",
-    "narration": "「ヘッド・アウデ・ロー城に滞在させていただきました。」",
-    "fact_ids": [
-      "F3"
-    ],
-    "image": "A042",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月19日 在留邦人代表ご接見(アムステルダム)"
-  },
-  {
-    "scene": "03-1",
-    "chapter": "家族ぐるみの交流",
-    "role": "answer",
-    "narration": "当時のオランダ皇太子ご一家とも、「家族ぐるみで」過ごされました。",
-    "fact_ids": [
-      "F6"
-    ],
-    "image": "A032",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
-    "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
-  },
-  {
-    "scene": "04-1",
-    "chapter": "4歳の愛子さまの思い出",
-    "role": "answer",
-    "narration": "愛子さまは、お堀の黒鳥に餌をやったことなど、",
-    "fact_ids": [
-      "F8",
-      "F9"
-    ],
-    "image": "A035",
-    "crop": "全体",
-    "motion": "ゆっくり縮小",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
-  },
-  {
-    "scene": "04-2",
-    "chapter": "4歳の愛子さまの思い出",
-    "role": "answer",
-    "narration": "「今でも非常にその当時のことを鮮明に覚えているようです。」",
-    "fact_ids": [
-      "F9"
-    ],
-    "image": "A039",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月19日 オランダ人ご接見(アムステルダム)"
-  },
-  {
-    "scene": "05-1",
-    "chapter": "20年後 同じ城へ",
-    "role": "body",
-    "narration": "20年後、両陛下は再び、",
-    "fact_ids": [
-      "F5",
-      "F13"
-    ],
-    "image": "A004",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "天皇陛下・オランダ国王陛下",
-    "caption": "2026年6月17日 歓迎式典(アムステルダム)"
-  },
-  {
-    "scene": "05-2",
-    "chapter": "20年後 同じ城へ",
-    "role": "body",
-    "narration": "ヘット・アウデ・ロー城に滞在されました。",
-    "fact_ids": [
-      "F13"
-    ],
-    "image": "A006",
-    "crop": "全体",
-    "motion": "ゆっくり縮小",
-    "person_label": "皇后陛下",
-    "caption": "2026年6月17日 歓迎式典(アムステルダム)"
-  },
-  {
-    "scene": "05-3",
-    "chapter": "20年後 同じ城へ",
-    "role": "body",
-    "narration": "非常に懐かしく思われたそうです。",
-    "fact_ids": [
-      "F5"
-    ],
-    "image": "A031",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇陛下・オランダ王妃陛下",
-    "caption": "2026年6月18日 アムステルダム国立博物館"
-  },
-  {
-    "scene": "06-1",
-    "chapter": "晩餐会のおことば",
-    "role": "body",
-    "narration": "晩餐会のおことばの和訳では、",
-    "fact_ids": [
-      "F4",
-      "F17"
-    ],
-    "image": "A016",
-    "crop": "全体",
-    "motion": "ゆっくり縮小",
-    "person_label": "天皇陛下",
-    "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
-  },
-  {
-    "scene": "06-2",
-    "chapter": "晩餐会のおことば",
-    "role": "body",
-    "narration": "「20年前に愛子が毎日のようにパンを与えていた",
-    "fact_ids": [
-      "F15"
-    ],
-    "image": "A015",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下ほか王族方",
-    "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
-  },
-  {
-    "scene": "06-3",
-    "chapter": "晩餐会のおことば",
-    "role": "body",
-    "narration": "一羽の黒鳥とも再会しました。」",
-    "fact_ids": [
-      "F15"
-    ],
-    "image": "A014",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
-  },
-  {
-    "scene": "07-1",
-    "chapter": "比較 20年前と今回",
-    "role": "body",
-    "narration": "20年前は、ご一家での静養でした。",
-    "fact_ids": [
-      "F3"
-    ],
-    "image": "A013",
-    "crop": "全体",
-    "motion": "左へパン",
-    "person_label": "天皇陛下・オランダ国王陛下",
-    "caption": "2026年6月17日 デルタレスご視察"
-  },
-  {
-    "scene": "07-2",
-    "chapter": "比較 20年前と今回",
-    "role": "body",
-    "narration": "今回は、国賓としてのご訪問でした。",
-    "fact_ids": [
-      "F12",
-      "F13"
-    ],
-    "image": "A003",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月13日 東京ご出発(政府専用機)"
-  },
-  {
-    "scene": "08-1",
-    "chapter": "解説",
-    "role": "body",
-    "narration": "ご一家どうしの交流が、",
-    "fact_ids": [
-      "F6",
-      "F15"
-    ],
-    "image": "A026",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "天皇陛下・オランダ国王陛下",
-    "caption": "2026年6月18日 ライデン大学ご訪問"
-  },
-  {
-    "scene": "08-2",
-    "chapter": "解説",
-    "role": "body",
-    "narration": "両国の友好を支えているのかもしれません。",
-    "fact_ids": [
-      "F11",
-      "F12"
-    ],
-    "image": "A005",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇陛下",
-    "caption": "2026年6月17日 歓迎式典(アムステルダム)"
-  },
-  {
-    "scene": "09-1",
-    "chapter": "締めくくり",
-    "role": "closing",
-    "narration": "答えは、ご一家で過ごしたお城の夏の思い出です。",
-    "fact_ids": [
-      "F3",
-      "F9"
-    ],
-    "image": "A045",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月20日 スキポール空港ご出発"
-  },
-  {
-    "scene": "09-2",
-    "chapter": "締めくくり",
-    "role": "closing",
-    "narration": "今も続く、絆の証しかもしれません。",
-    "fact_ids": [
-      "F5",
-      "F15"
-    ],
-    "image": "A034",
-    "crop": "全体",
-    "motion": "右へパン",
-    "person_label": "皇后陛下",
-    "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
-  },
-  {
-    "scene": "09-3",
-    "chapter": "締めくくり",
-    "role": "closing",
-    "narration": "皆さまの心に残ったのは、どの場面ですか？",
-    "fact_ids": [],
-    "image": "A033",
-    "crop": "全体",
-    "motion": "ゆっくり縮小",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
-  },
-  {
-    "scene": "09-4",
-    "chapter": "締めくくり",
-    "role": "closing",
-    "narration": "ぜひコメントで、お聞かせください。",
-    "fact_ids": [],
-    "image": "A044",
-    "crop": "全体",
-    "motion": "ゆっくり拡大",
-    "person_label": "天皇皇后両陛下",
-    "caption": "2026年6月20日 スキポール空港ご出発"
-  }
+ {
+  "scene": "01-1",
+  "chapter": "疑問",
+  "role": "question",
+  "narration": "20年前に、ご一家で過ごした夏。",
+  "fact_ids": [
+   "F3",
+   "F5"
+  ],
+  "image": "A017",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
+  "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
+ },
+ {
+  "scene": "01-2",
+  "chapter": "疑問",
+  "role": "question",
+  "narration": "陛下が会見で語られた思い出とは？",
+  "fact_ids": [
+   "F1",
+   "F2"
+  ],
+  "image": "A007",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
+  "caption": "2026年6月17日 歓迎式典(アムステルダム)"
+ },
+ {
+  "scene": "02-1",
+  "chapter": "会見で語られた平成18年の夏",
+  "role": "answer",
+  "narration": "会見で語られたのは、平成18年の夏です。",
+  "fact_ids": [
+   "F1",
+   "F2",
+   "F3"
+  ],
+  "image": "A001",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "天皇陛下",
+  "caption": "2026年6月11日 記者会見(宮殿)"
+ },
+ {
+  "scene": "02-2",
+  "chapter": "会見で語られた平成18年の夏",
+  "role": "answer",
+  "narration": "「4歳の愛子を伴って家族揃って」",
+  "fact_ids": [
+   "F3"
+  ],
+  "image": "A037",
+  "crop": "全体",
+  "motion": "左へパン",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月19日 桜植樹(アムステルダムの森公園)"
+ },
+ {
+  "scene": "02-3",
+  "chapter": "会見で語られた平成18年の夏",
+  "role": "answer",
+  "narration": "「ヘッド・アウデ・ロー城に滞在させていただきました。」",
+  "fact_ids": [
+   "F3"
+  ],
+  "image": "A042",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月19日 在留邦人代表ご接見(アムステルダム)"
+ },
+ {
+  "scene": "03-1",
+  "chapter": "家族ぐるみの交流",
+  "role": "answer",
+  "narration": "当時のオランダ皇太子ご一家とも、「家族ぐるみで」過ごされました。",
+  "fact_ids": [
+   "F6"
+  ],
+  "image": "A032",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下",
+  "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
+ },
+ {
+  "scene": "04-1",
+  "chapter": "4歳の愛子さまの思い出",
+  "role": "answer",
+  "narration": "愛子さまは、お堀の黒鳥に餌をやったことなど、",
+  "fact_ids": [
+   "F8",
+   "F9"
+  ],
+  "image": "A035",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
+ },
+ {
+  "scene": "04-2",
+  "chapter": "4歳の愛子さまの思い出",
+  "role": "answer",
+  "narration": "「今でも非常にその当時のことを鮮明に覚えているようです。」",
+  "fact_ids": [
+   "F9"
+  ],
+  "image": "A039",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月19日 オランダ人ご接見(アムステルダム)"
+ },
+ {
+  "scene": "05-1",
+  "chapter": "20年後 同じ城へ",
+  "role": "body",
+  "narration": "20年後、両陛下は再び、",
+  "fact_ids": [
+   "F5",
+   "F13"
+  ],
+  "image": "A004",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "天皇陛下・オランダ国王陛下",
+  "caption": "2026年6月17日 歓迎式典(アムステルダム)"
+ },
+ {
+  "scene": "05-2",
+  "chapter": "20年後 同じ城へ",
+  "role": "body",
+  "narration": "ヘット・アウデ・ロー城に滞在されました。",
+  "fact_ids": [
+   "F13"
+  ],
+  "image": "A029",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇陛下",
+  "caption": "2026年6月18日 ライデン大学ご訪問"
+ },
+ {
+  "scene": "05-3",
+  "chapter": "20年後 同じ城へ",
+  "role": "body",
+  "narration": "非常に懐かしく思われたそうです。",
+  "fact_ids": [
+   "F5"
+  ],
+  "image": "A031",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇陛下・オランダ王妃陛下",
+  "caption": "2026年6月18日 アムステルダム国立博物館"
+ },
+ {
+  "scene": "06-1",
+  "chapter": "晩餐会のおことば",
+  "role": "body",
+  "narration": "晩餐会のおことばの和訳では、",
+  "fact_ids": [
+   "F4",
+   "F17"
+  ],
+  "image": "A016",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇陛下",
+  "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
+ },
+ {
+  "scene": "06-2",
+  "chapter": "晩餐会のおことば",
+  "role": "body",
+  "narration": "「20年前に愛子が毎日のようにパンを与えていた",
+  "fact_ids": [
+   "F15"
+  ],
+  "image": "A015",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "天皇皇后両陛下・オランダ国王王妃両陛下ほか王族方",
+  "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
+ },
+ {
+  "scene": "06-3",
+  "chapter": "晩餐会のおことば",
+  "role": "body",
+  "narration": "一羽の黒鳥とも再会しました。」",
+  "fact_ids": [
+   "F15"
+  ],
+  "image": "A014",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月17日 晩餐会(アムステルダム王宮)"
+ },
+ {
+  "scene": "07-1",
+  "chapter": "比較 20年前と今回",
+  "role": "body",
+  "narration": "20年前は、ご一家での静養でした。",
+  "fact_ids": [
+   "F3"
+  ],
+  "image": "A013",
+  "crop": "全体",
+  "motion": "左へパン",
+  "person_label": "天皇陛下・オランダ国王陛下",
+  "caption": "2026年6月17日 デルタレスご視察"
+ },
+ {
+  "scene": "07-2",
+  "chapter": "比較 20年前と今回",
+  "role": "body",
+  "narration": "今回は、国賓としてのご訪問でした。",
+  "fact_ids": [
+   "F12",
+   "F13"
+  ],
+  "image": "A003",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月13日 東京ご出発(政府専用機)"
+ },
+ {
+  "scene": "08-1",
+  "chapter": "解説",
+  "role": "body",
+  "narration": "ご一家どうしの交流が、",
+  "fact_ids": [
+   "F6",
+   "F15"
+  ],
+  "image": "A026",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "天皇陛下・オランダ国王陛下",
+  "caption": "2026年6月18日 ライデン大学ご訪問"
+ },
+ {
+  "scene": "08-2",
+  "chapter": "解説",
+  "role": "body",
+  "narration": "両国の友好を支えているのかもしれません。",
+  "fact_ids": [
+   "F11",
+   "F12"
+  ],
+  "image": "A005",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇陛下",
+  "caption": "2026年6月17日 歓迎式典(アムステルダム)"
+ },
+ {
+  "scene": "09-1",
+  "chapter": "締めくくり",
+  "role": "closing",
+  "narration": "答えは、ご一家で過ごしたお城の夏の思い出です。",
+  "fact_ids": [
+   "F3",
+   "F9"
+  ],
+  "image": "A045",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月20日 スキポール空港ご出発"
+ },
+ {
+  "scene": "09-2",
+  "chapter": "締めくくり",
+  "role": "closing",
+  "narration": "今も続く、絆の証しかもしれません。",
+  "fact_ids": [
+   "F5",
+   "F15"
+  ],
+  "image": "A034",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "皇后陛下",
+  "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
+ },
+ {
+  "scene": "09-3",
+  "chapter": "締めくくり",
+  "role": "closing",
+  "narration": "皆さまの心に残ったのは、どの場面ですか？",
+  "fact_ids": [],
+  "image": "A033",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月19日 プリンセス・マキシマ小児がんセンター"
+ },
+ {
+  "scene": "09-4",
+  "chapter": "締めくくり",
+  "role": "closing",
+  "narration": "ぜひコメントで、お聞かせください。",
+  "fact_ids": [],
+  "image": "A044",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下",
+  "caption": "2026年6月20日 スキポール空港ご出発"
+ }
 ]
