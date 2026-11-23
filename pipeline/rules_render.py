@@ -76,13 +76,83 @@ def tts(text: str, sid: int, readings: dict) -> np.ndarray:
 
 
 # ---------------- 字幕 ----------------
+def _split_long(u: str, line: int) -> list[str]:
+    """長い文節を単語の切れ目で line 字以内に分ける。かっこ・句読点・小書き文字・数字の途中では切らない。"""
+    import pyopenjtalk
+    import unicodedata
+    words, pos = [], 0
+    for w in pyopenjtalk.run_frontend(u):
+        t = w["string"]
+        n = len(t)
+        if unicodedata.normalize("NFKC", u[pos:pos + n]) != unicodedata.normalize("NFKC", t):
+            return [u]  # 原文と位置合わせできない時は分けない
+        words.append(u[pos:pos + n])
+        pos += n
+    if pos < len(u):
+        words.append(u[pos:])
+    out, cur = [], ""
+    for w in words:
+        stick = w[:1] in "」』…、，。ぁぃぅぇぉっゃゅょァィゥェォッャュョー" or (cur[-1:] in "「『") or (cur[-1:].isdigit() and w[:1].isdigit())
+        if cur and not stick and len(cur + w) > line:
+            out.append(cur)
+            cur = w
+        else:
+            cur += w
+    if cur:
+        out.append(cur)
+    # 1〜2字だけの断片は前につなぐ
+    merged = []
+    for x in out:
+        if merged and len(x) <= 2:
+            merged[-1] += x
+        else:
+            merged.append(x)
+    return merged
+
+
+def _bunsetsu_q(text: str) -> list[str]:
+    """かぎかっこ・省略記号を含む文も文節に分ける(解析器はかっこで始まる文を1つの塊にしてしまうため、
+    かっこを外して分けてから元の位置に戻す。開きかっこは次の文節、閉じかっこ・…は前の文節に付ける)。"""
+    from .subtitles import bunsetsu
+    if not text:
+        return []
+    marks = "「」『』…"
+    clean = "".join(c for c in text if c not in marks)
+    units = bunsetsu(clean) if clean else []
+    out, k, used = [], 0, 0
+    pending = ""
+    for c in text:
+        if c in "「『":
+            if used and out:  # 文節の途中のかっこはその文節に付ける
+                out[-1] += c
+            else:
+                pending += c
+            continue
+        if c in "」』…":
+            if out:
+                out[-1] += c
+            else:
+                pending += c
+            continue
+        if k < len(units) and used == 0:
+            out.append(pending)
+            pending = ""
+        out[-1] += c
+        used += 1
+        if k < len(units) and used >= len(units[k]):
+            k += 1
+            used = 0
+    if pending:
+        out.append(pending)
+    return [u for u in out if u]
+
+
 def split_sub(text: str, line: int) -> list[list[str]]:
     """全文を、1行 line 字以内・最大2行の字幕に分ける。
     文節(言葉のまとまり)の途中では改行しない。数字と単位(「11月17日」など)も分けない。
     1つの文節が line 字を超える時だけ、その行は書き出し時に自動で縮小される。"""
-    from .subtitles import bunsetsu
     units = []
-    for u in (bunsetsu(text) if text else []):
+    for u in _bunsetsu_q(text):
         if units and ((units[-1][-1:].isdigit() and (u[:1].isdigit() or u[:1] in "月日年時分歳回人周%％"))
                       or u[:1] in "、。ぁぃぅぇぉっゃゅょァィゥェォッャュョー」』）"):
             units[-1] += u  # 数字の途中・単位・句読点・小書き文字の前では切らない
@@ -95,7 +165,9 @@ def split_sub(text: str, line: int) -> list[list[str]]:
             fixed += [m.group(1), m.group(2)]
         else:
             fixed.append(u)
-    units = fixed
+    units = []
+    for u in fixed:  # 1つの文節が1行に収まらない時は、単語の切れ目で分ける(字幕を縮めないため)
+        units += _split_long(u, line) if len(u) > line + 1 else [u]
     lines, cur = [], ""
     for u in units:
         if cur and (len(cur + u) > line or cur.endswith("。")):
@@ -140,8 +212,11 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
     ev = []
     for s in subs:
         # 文字は最大限大きく。ただし最長の行が画面幅(左右30pxと縁取りを除く)に収まらない時だけ縮める
-        longest = max(len(l) for l in s["lines"])
-        fs = min(sp["sub_size"], int((W - 76) / max(1, longest)))
+        # 実際の文字幅で測り、はみ出す時だけ縮める(かっこ・読点は幅が狭いので字数より正確)
+        from PIL import ImageFont
+        _f = ImageFont.truetype(str(next(Path("/usr/local/share/fonts").rglob("NotoSansJP-Bold.ttf"))), sp["sub_size"])
+        widest = max(_f.getlength(l) for l in s["lines"])
+        fs = min(sp["sub_size"], int((W - 60 - 18) * sp["sub_size"] / max(1.0, widest)))
         ev.append(f"Dialogue: 0,{ass_time(s['start'])},{ass_time(s['end'])},Sub,,0,0,0,,"
                   f"{{\\an5\\pos({W // 2},{int(H * sp['sub_y'])})\\fs{fs}}}" + "\\N".join(s["lines"]))
     path.write_text(hdr + "\n".join(ev) + "\n", encoding="utf-8")

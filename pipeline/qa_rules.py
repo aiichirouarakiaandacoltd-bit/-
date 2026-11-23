@@ -113,6 +113,11 @@ def check(project: str, kind: str = "縦型") -> bool:
             w = f.getlength(line) + 18  # 縁取り(9px×2)
             if w > sp["W"] - 60:
                 over.append(f"{m.group(1)}「{line}」{w:.0f}px")
+    # 5-3 字幕が小さく縮んでいない(荒木指示: 55歳以上の女性向けに最大限の大きさ。規定の85%未満は不合格)
+    small = [f"{m.group(1)}「{m.group(3)}」{m.group(2)}px" for m in re.finditer(r"Dialogue: [^,]*,([^,]*),[^\n]*?\\fs(\d+)\}([^\n]*)", ass)
+             if int(m.group(2)) < sp["sub_size"] * 0.85]
+    add(f"字幕が小さく縮んでいない(規定{sp['sub_size']}pxの85%以上)", not small, small or "なし",
+        "長い文節・かぎかっこの引用を分けて1行の字数に収める(subtitle_lines で改行を指定してもよい)")
     add("字幕が画面からはみ出していない(最大限の大きさで)", not over, f"はみ出し {over or 'なし'}(画面幅 {sp['W']}px・余白各30px)",
         "書き出しの自動縮小を確認する。1行の字数(縦型7字・横型13字)を超える塊がないか字幕の分け方を見直す")
     # 6 音声
