@@ -48,7 +48,7 @@ def image_credits(pdir: Path) -> str:
     providers: set = set()
     for r in rows:
         by_site.setdefault(r["掲載サイト名"], set()).add(r["撮影日・場所・行事"][:10])
-        m = re.search(r"写真：([^）)]+)", r["確認したキャプション"])
+        m = re.search(r"写真(?:提供)?：([^）)]+)", r["確認したキャプション"])
         if m:
             providers.add(m.group(1).strip())
     lines = []
