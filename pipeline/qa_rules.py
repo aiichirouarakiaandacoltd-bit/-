@@ -46,7 +46,9 @@ def check(project: str, kind: str = "縦型") -> bool:
         for fid in s.get("fact_ids", []):
             if not re.search(rf"\b{re.escape(fid)}\b", facts):
                 miss.append(f"{s['scene']}:{fid}")
-    no_fid = [s["scene"] for s in scenes if not s.get("fact_ids")]
+    # 締めくくりの問いかけ・コメントのお願い(第1-4章③④)は事実を述べないので根拠IDは不要
+    no_fid = [s["scene"] for s in scenes if not s.get("fact_ids")
+              and not (s.get("role") == "closing" and re.search(r"[？?]|コメント", s["narration"]))]
     add("人物・日付・敬称・引用が facts.md と一致", bool(facts) and not miss and not no_fid,
         f"facts.md {'あり' if facts else 'なし'} / 未登録ID {miss or 'なし'} / 根拠IDの無い場面 {no_fid or 'なし'}",
         "台本係が各場面に fact_ids を付け、facts.md に記録する")
@@ -66,11 +68,16 @@ def check(project: str, kind: str = "縦型") -> bool:
                 bad.append(f"{s['scene']}:{iid}未登録")
                 continue
             names = r["写っている人物"]
-            want = re.sub(r"(天皇皇后両陛下|両陛下)", "天皇陛下・皇后陛下", lab)
+            want = re.sub(r"(^|・)(天皇皇后両陛下|両陛下)(?=$|・)", r"\1天皇陛下・皇后陛下", lab)
             for short, full in (("愛子さま", "愛子内親王殿下"), ("雅子さま", "皇后陛下"), ("佳子さま", "佳子内親王殿下"),
                                 ("信子さま", "寬仁親王妃殿下"), ("久子さま", "高円宮妃殿下"), ("紀子さま", "秋篠宮皇嗣妃殿下")):
                 want = want.replace(short, full)  # 字幕の呼び方(○○さま)を台帳の正式表記に合わせて照合
-            if not all(n in names for n in re.split(r"[・、]", want) if n):
+            def _ok(n):  # 皇族方は台帳の人物欄で、外国の王族・要人は確認したキャプションの記載で照合する
+                if n in names:
+                    return True
+                m = re.sub(r"^(オランダ|ベルギー|シンガポール|英国|イギリス|フランス|タイ|ベトナム)", "", n).replace("ほか王族方", "")
+                return bool(m) and not re.search(r"(天皇|皇后|殿下|さま)", m) and m in r.get("確認したキャプション", "")
+            if not all(_ok(n) for n in re.split(r"[・、]", want) if n):
                 bad.append(f"{s['scene']}:{lab}≠{names}")
             if s.get("caption") and r["撮影日・場所・行事"][:4] not in re.sub(r"年.*", "", s["caption"]) + s["caption"]:
                 bad.append(f"{s['scene']}:撮影年 {s['caption']}≠{r['撮影日・場所・行事'][:10]}")
@@ -197,7 +204,10 @@ def check(project: str, kind: str = "縦型") -> bool:
     # 第1-5章1(荒木指示 2026-11-23・KB-20261124 以降に適用): ナレーションの文末は「です・ます」調
     if project > "KB-20261123-01":  # 第1-5章の適用は KB-20261123-01 の次から
         plain = [(s_["scene"], re.sub(r"「[^」]*」|『[^』]*』", "", s_["narration"]).rstrip()) for s_ in scenes]
-        bad_tone = [f"{sc_}:{t[-8:]}" for sc_, t in plain if t.endswith("。") and not re.search(r"(です|ます|ません|でした|ました|ましょう)。$", t)]
+        # 「だ・である」調の文末だけを止める(体言止め・「ください。」は可)
+        bad_tone = [f"{sc_}:{t[-8:]}" for sc_, t in plain if t.endswith("。")
+                    and re.search(r"(だ|である|だった|であった|ない|なかった|た|る|う)。$", t)
+                    and not re.search(r"(です|ます|ません|でした|ました|ましょう|ください)。$", t)]
         add("ナレーションが「です・ます」調(第1-5章)", not bad_tone, bad_tone or "すべて です・ます調",
             "台本係が文末を「です・ます」調に直す(引用内は原文のまま)")
     add("冒頭の疑問に本編で回答", qa, f"question={roles.index('question') if 'question' in roles else 'なし'} answer={'あり' if 'answer' in roles else 'なし'}(回答内容の妥当性は要目視)")
