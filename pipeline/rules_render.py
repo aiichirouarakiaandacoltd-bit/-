@@ -37,7 +37,7 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 59.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 7, "sub_size": 140,
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 90.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 7, "sub_size": 140,
              "sub_y": 0.66, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
@@ -476,8 +476,9 @@ def build(project: str, kind: str = "縦型") -> Path:
         pieces += [x, np.zeros(int(sr * gap), np.float32)]
         t += gap
         s["end_sec"] = round(t, 3)
-    pieces.append(np.zeros(int(sr * 0.6), np.float32))
-    total = t + 0.6
+    TAIL = 2.0  # 第1-4章: 最後の言葉のあとに約2秒の余韻(途中で切れたように終わらせない)
+    pieces.append(np.zeros(int(sr * TAIL), np.float32))
+    total = t + TAIL
     narr = np.concatenate(pieces)
     narr = narr / (np.abs(narr).max() + 1e-9) * 0.89
     wav = out_dir / "narration.wav"
@@ -589,7 +590,7 @@ def build(project: str, kind: str = "縦型") -> Path:
     assp = str(ass).replace(":", "\\:")
     fc = (f"[0:v]ass='{assp}':fontsdir={FONT_DIR},format=yuv420p[v];"
           f"[1:a]aresample=48000,apad=pad_dur=4,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[n];"
-          f"[2:a]aresample=48000,atrim=0:{total + 4:.2f},loudnorm=I=-37:TP=-9:LRA=11,aresample=48000,afade=t=in:d=1,afade=t=out:st={max(0, total - 1.5):.2f}:d=1.5[b];"
+          f"[2:a]aresample=48000,atrim=0:{total + 4:.2f},loudnorm=I=-37:TP=-9:LRA=11,aresample=48000,afade=t=in:d=1,afade=t=out:st={max(0, total - 1.8):.2f}:d=1.8[b];"
           f"[n][b]amix=inputs=2:duration=shortest:normalize=0,alimiter=limit=0.70:level=disabled,atrim=0:{total:.3f}[a]")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-i", str(wav), "-stream_loop", "-1", "-i", str(bgm),
                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
