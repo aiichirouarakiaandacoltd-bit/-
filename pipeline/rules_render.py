@@ -236,9 +236,14 @@ def faces(img):
     return [tuple(int(v / sc) for v in x) for x in f]
 
 
+LAST_BAND = None  # 直前の plate がぼかし背景+帯の時: (帯の上端, 帯の高さ, 写真, 背景)
+
+
 def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: float = 0.70,
           keep_all: bool = False, main=None) -> tuple[np.ndarray, tuple]:
     """変形なしで W*Z x H*Z の素材を作る。顔は字幕帯より上に置く。全体が入らない横長写真はぼかし背景+全体表示。"""
+    global LAST_BAND
+    LAST_BAND = None
     img = cv2.imread(img_path)
     ih, iw = img.shape[:2]
     PW, PH = int(W * Z), int(H * Z)
@@ -293,12 +298,46 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         a0, a1 = max(0, sx), min(PW, sx + fw)
         out[top:top + fh2, a0:a1] = fg[:PH - top, a0 - sx:a1 - sx]
         focus = (cx * fw / iw + sx, cy * fw / iw + top)
+        LAST_BAND = (top, min(fh2, PH - top), fg[:PH - top], out.copy())
     return out, focus
 
 
-def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str):
+def _motion_z(motion: str, e: float) -> float:
+    if motion == "ゆっくり縮小":
+        return 1.07 - 0.05 * e
+    if motion in ("左へパン", "右へパン"):
+        return 1.05
+    return 1.02 + 0.05 * e
+
+
+def _band_frames(band, focus, n: int, W: int, H: int, motion: str):
+    top, bh, fg, bg = band
+    PH, PW = bg.shape[:2]
+    fw = fg.shape[1]
+    fx, fy = focus[0], focus[1] - top
+    for k in range(n):
+        u = k / max(1, n - 1)
+        e = 0.5 - 0.5 * math.cos(math.pi * u)
+        z = _motion_z(motion, e)
+        ww, wh = fw / z, bh / z
+        cx = fx + (-1 if motion == "左へパン" else 1 if motion == "右へパン" else 0) * ww * 0.03 * e
+        cx = min(max(cx, ww / 2), fw - ww / 2)
+        cy = min(max(fy, wh / 2), bh - wh / 2)
+        x0, y0 = cx - ww / 2, cy - wh / 2
+        M = np.float32([[z, 0, -x0 * z], [0, z, -y0 * z]])
+        inner = cv2.warpAffine(fg[:bh], M, (fw, bh), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
+        fr = bg.copy()
+        fr[top:top + bh, :fw] = inner
+        yield cv2.resize(fr, (W, H), interpolation=cv2.INTER_AREA)
+
+
+def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str, band=None):
     """控えめな動き(荒木指示 2026-11-22): 少しのズーム(2〜7%)とごく小さなパン。
-    窓は常に素材の内側に収め、写真の外(隙間・引き伸ばし)を見せない。主役の位置を基準にする。"""
+    窓は常に素材の内側に収め、写真の外(隙間・引き伸ばし)を見せない。主役の位置を基準にする。
+    ぼかし背景+写真の帯の時は、帯の位置と大きさを固定し、帯の内側だけを動かす(帯の端が動いて見えないように)。"""
+    if band is not None:
+        yield from _band_frames(band, focus, n, W, H, motion)
+        return
     PH, PW = pl.shape[:2]
     Z = PW / W
     for k in range(n):
@@ -494,7 +533,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             subs = []
             for j, iid in enumerate(ids[:2]):
                 pl, fo = plate(str(ROOT / ledger[iid]["ファイル名"]), sh["crop"], half, H, main=mains.get(iid))
-                subs.append(list(frames_for(pl, fo, n, half, H, sh["motion"])))
+                subs.append(list(frames_for(pl, fo, n, half, H, sh["motion"], band=LAST_BAND)))
             sh["media"] = "写真"
             ov = overlay(W, H, [(labs[0], W // 4), (labs[1], 3 * W // 4)], sh["caption"], credit)
             for k in range(n):
@@ -518,7 +557,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             else:
                 sh["media"] = "写真"
                 pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=mains.get(sh["image"]))
-                gen = frames_for(pl, fo, n, W, H, sh["motion"])
+                gen = frames_for(pl, fo, n, W, H, sh["motion"], band=LAST_BAND)
             for fr in gen:
                 ff.stdin.write(blend(fr, ov).tobytes())
         fcount += n
