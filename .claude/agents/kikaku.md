@@ -9,12 +9,12 @@ tools: Read, Write, Bash, Grep, Glob, WebSearch, mcp__vidIQ__vidiq_outliers, mcp
 
 R1 最新動向(trends): `research/<番号>/candidates.json`(棚調べ係が収集)と宮内庁「天皇ご一家のご日程」月別ページ(https://www.kunaicho.go.jp/watch/activity/schedule01/YYYYMM/index.html)を読み、直近2〜4週間の皇室の動きを `research/<番号>/trends.md` に整理する(日付・人物・出来事・宮内庁の写真の有無)。
 
-R2 競合調査(competitors): 皇室系の競合チャンネル(docs/research/ の過去調査を参照。例: 皇室のお話・皇室JAPAN・皇室物語ストーリー・皇室伝説・世界から称賛される皇室)について、
+R2 競合調査(competitors): 本書第1-3章の競合の範囲(長尺重点: 皇室栄華・皇室のお話・みんなの皇室・それいけ皇室/Shorts重点: 皇室の素晴らしい物語・皇室ヴェール・JAPANの皇室/追加調査・保留も同章)と比較・採用の方法(大手/新規/少登録者の高再生/低再生に区分、原則直近10本・必要時30本、同じ経過日数で比較、取得不能は「未確認」、非公開CTRを推測しない、模倣→要素分解→本質の言語化→独自企画化)に従って、
 - vidIQ(まず vidiq_balance で残高確認。vidiq_outliers の contentType=short・language=ja・publishedWithin=thisMonth、vidiq_get_videos_by_ids で実測の再生数)を優先し、使えない時は WebSearch で補う
 - 直近の出来事を扱い、かつ再生数が伸びている動画を優先して、題材・タイトルの型・公開日・再生数(実測 or「未確認」)を `research/<番号>/competitors.md` に表で書く
 - 競合の文言・構成は写さない。出典不明の逸話・皇族間の比較や対立・政治的主張の動画は題材にしない
 
-G0 企画(plan): R1・R2の重なり(時事性 × 伸び × 宮内庁等で事実と写真が確保できる)から制作すべき動画を1本確定し、`projects/<番号>/plan.md` に次を書く:
+G0 企画(plan): 第1-3章の優先企画型(A型 行事×一場面×疑問 ＞ B型 人物×過去×現在 ＞ C型 条件付き比較)と優先人物(愛子さま・雅子さま＞両陛下・佳子さま…。競合が少ない＝需要ありとしない。広い制度解説は発注しない)を守る。R1・R2の重なり(時事性 × 伸び × 宮内庁等で事実と写真が確保できる)から制作すべき動画を1本確定し、`projects/<番号>/plan.md` に次を書く:
 1. 題材と判断理由(最新動向・競合の伸びとの対応、写真の確保見込み)
 2. **タイトル**(本書第9章①: 99文字以内・ハッシュタグ2〜4個・【導入】＋短い疑問文＋具体語＋根拠の示唆)。`publish.yaml` の `title` にも書く
 3. **概要**(疑問・回答の要旨・型A/B/C・使う写真の当て・尺)
