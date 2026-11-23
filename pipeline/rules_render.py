@@ -99,6 +99,7 @@ def _split_long(u: str, line: int) -> list[str]:
         a, b = u[:acc], u[acc:]
         bad = (b[:1] in "」』…、，。ぁぃぅぇぉっゃゅょァィゥェォッャュョー" or a[-1:] in "「『っッ"
                or b.startswith(("ます", "まし", "ませ", "です", "でし", "られ", "れる", "れた", "せる", "ない", "なか"))
+               or (b[:1] in "てでただ" and a[-1:] in "れせけげめべえいしちきりびみにっんうくぐすつぬふむゆる")
                or (a[-1:].isdigit() and b[:1].isdigit()) or (a.endswith(("令和", "平成", "昭和")) and b[:1].isdigit()))
         if not bad:
             cuts.append(acc)
