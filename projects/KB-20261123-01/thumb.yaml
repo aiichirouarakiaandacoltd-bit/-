@@ -1,9 +1,14 @@
 texts:
-  upper: お誕生日会見で、6回くり返された
-  middle: 雅子さまについての言葉とは？
-  lower: 宮内庁の会見記録から
+  upper: 即位後7回のお誕生日会見で、
+  middle: 6回くり返された
+  lower: 雅子さまについての言葉とは？
 photos:
 - ledger: A031
 center_image: A031
 note: 3段はタイトルの文言から流用。中段は1行(14文字・目安より長いので1行に収まる文字サイズで)。A031は左の天皇皇后両陛下2人にトリミング(右の愛子さまは切る・第5章の人物1〜2人)。加工はトリミング・拡大縮小・明るさの軽い補正のみ。赤なし
 layout: S-A
+canva:
+  design_id: DAHbtkTnwYw
+  edit_url: https://www.canva.com/d/VZyqcQJba9Xh6JH
+  template: DAHatUQFKSI
+  png: projects/KB-20261123-01/thumb/thumb_canva.png
