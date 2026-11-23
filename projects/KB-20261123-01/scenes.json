@@ -32,7 +32,7 @@
     "scene": "02-1",
     "chapter": "令和8年の会見",
     "role": "body",
-    "narration": "天皇陛下の、お誕生日を前にした会見。",
+    "narration": "天皇陛下のお誕生日会見。",
     "fact_ids": [
       "F7",
       "F8"
@@ -90,7 +90,7 @@
     "scene": "04-1",
     "chapter": "令和3〜6年 4年続けて",
     "role": "body",
-    "narration": "令和3年から4年続けて同じ言葉。",
+    "narration": "令和3年から4年続けて、",
     "fact_ids": [
       "F22"
     ],
@@ -120,41 +120,40 @@
   },
   {
     "scene": "05-1",
-    "chapter": "結婚30年を経た令和6年",
+    "chapter": "ご結婚30年を経た令和6年",
     "role": "body",
-    "narration": "結婚30年を経た令和6年には、",
+    "narration": "ご結婚30年を経た令和6年には、",
     "fact_ids": [
       "F25",
       "F5"
     ],
-    "image": "A018",
+    "image": "A025",
     "crop": "全体",
     "motion": "ゆっくり縮小",
     "person_label": "天皇皇后両陛下",
-    "caption": "2026年4月17日 園遊会(赤坂御苑)"
+    "caption": "2026年8月15日 全国戦没者追悼式(日本武道館)"
   },
   {
     "scene": "05-2",
-    "chapter": "結婚30年を経た令和6年",
+    "chapter": "ご結婚30年を経た令和6年",
     "role": "body",
     "narration": "「この先の人生も引き続きよろしく」とも。",
     "fact_ids": [
       "F17"
     ],
-    "image": "A023",
+    "image": "A017",
     "crop": "全体",
     "motion": "左へパン",
     "person_label": "天皇皇后両陛下",
-    "caption": "2026年4月2日 ご会見(御所)"
+    "caption": "2026年9月30日 災害対応尽力者お労い(熊本県氷川町)"
   },
   {
     "scene": "06-1",
     "chapter": "令和7年",
     "role": "body",
-    "narration": "令和7年は「支え」の言い方がなかった。",
+    "narration": "令和7年も英国ご訪問や赤十字など、",
     "fact_ids": [
-      "F18",
-      "F21"
+      "F18"
     ],
     "image": "A008",
     "crop": "全身",
@@ -163,10 +162,25 @@
     "caption": "2026年5月12日 全国赤十字大会(明治神宮会館)"
   },
   {
+    "scene": "06-2",
+    "chapter": "令和7年",
+    "role": "body",
+    "narration": "雅子さまについて語られ、「支え」の語はなかった。",
+    "fact_ids": [
+      "F18",
+      "F21"
+    ],
+    "image": "A022",
+    "crop": "全体",
+    "motion": "左へパン",
+    "person_label": "天皇陛下",
+    "caption": "2026年9月19日 アジア競技大会開会式(名古屋市)"
+  },
+  {
     "scene": "07-1",
     "chapter": "比較 令和8年",
     "role": "body",
-    "narration": "令和8年は「雅子に支えてもらっていることも多くあり、",
+    "narration": "令和8年は「雅子に支えてもらっていることも",
     "fact_ids": [
       "F7",
       "F19"
@@ -181,7 +195,7 @@
     "scene": "07-2",
     "chapter": "比較 令和8年",
     "role": "body",
-    "narration": "深く感謝しています」と。",
+    "narration": "多くあり、深く感謝しています」と。",
     "fact_ids": [
       "F19"
     ],
@@ -211,7 +225,7 @@
     "scene": "08-1",
     "chapter": "答えと解説",
     "role": "answer",
-    "narration": "答えは「支え」。公務でも日々の生活でも、",
+    "narration": "答えは「支え」。公務でも生活でも、",
     "fact_ids": [
       "F21",
       "F19"
@@ -255,7 +269,7 @@
     "scene": "09-2",
     "chapter": "結び 令和8年",
     "role": "answer",
-    "narration": "「お互いへの感謝と家族の絆」と語られた。",
+    "narration": "「お互いへの感謝と家族の絆」とも。",
     "fact_ids": [
       "F20"
     ],
