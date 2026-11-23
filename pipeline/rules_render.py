@@ -180,6 +180,11 @@ def split_sub(text: str, line: int) -> list[list[str]]:
     if cur:
         lines.append(cur)
     out, i = [], 0
+    # 行数が奇数で最後の行が短い(語尾だけ)時は、1行だけの字幕を先頭に回し、語尾を直前の行と一緒に出す
+    if len(lines) >= 3 and len(lines) % 2 == 1 and len(re.sub(r"[。」』]+$", "", lines[-1])) <= 5 \
+            and not any(l.endswith("。") for l in lines[:-1]):
+        out.append([re.sub(r"。$", "", lines[0])])
+        i = 1
     while i < len(lines):
         a = re.sub(r"。$", "", lines[i])
         if i + 1 < len(lines) and not lines[i].endswith("。"):
