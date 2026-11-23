@@ -1,0 +1,312 @@
+[
+ {
+  "scene": "01-1",
+  "chapter": "疑問",
+  "role": "question",
+  "narration": "即位後7回のお誕生日会見。",
+  "fact_ids": [
+   "F8"
+  ],
+  "image": "A092",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年11月4日 ルーヴル美術館展(国立新美術館)"
+ },
+ {
+  "scene": "01-2",
+  "chapter": "疑問",
+  "role": "question",
+  "narration": "愛子さまについて毎回語られた2つの言葉とは？",
+  "fact_ids": [
+   "F9",
+   "F45"
+  ],
+  "image": "A090",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年10月29日 園遊会(赤坂御苑)"
+ },
+ {
+  "scene": "02-1",
+  "chapter": "令和2年 大学合格",
+  "role": "body",
+  "narration": "令和2年は、大学合格を「とても喜んでおります」。",
+  "fact_ids": [
+   "F1",
+   "F12",
+   "F13"
+  ],
+  "image": "A001",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年1月18日 大相撲一月場所(国技館)"
+ },
+ {
+  "scene": "03-1",
+  "chapter": "令和3年 オンライン授業",
+  "role": "body",
+  "narration": "令和3年は、オンライン授業の大学生活。",
+  "fact_ids": [
+   "F2",
+   "F15"
+  ],
+  "image": "A062",
+  "crop": "全身",
+  "motion": "右へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年10月12日 是川縄文館ご視察(青森県八戸市)"
+ },
+ {
+  "scene": "04-1",
+  "chapter": "令和4年 成年",
+  "role": "body",
+  "narration": "令和4年は成年。「小さかった愛子がもう二十歳になった」",
+  "fact_ids": [
+   "F3",
+   "F19",
+   "F22"
+  ],
+  "image": "A017",
+  "crop": "全体",
+  "motion": "左へパン",
+  "person_label": "天皇陛下・愛子内親王殿下",
+  "caption": "2026年5月31日 東京六大学野球(明治神宮野球場)"
+ },
+ {
+  "scene": "05-1",
+  "chapter": "令和5年 成年の記者会見",
+  "role": "body",
+  "narration": "令和5年は、成年後初めての記者会見に「安堵いたしました」。",
+  "fact_ids": [
+   "F4",
+   "F23"
+  ],
+  "image": "A059",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年10月6日 江戸絵画の展覧会(東京都美術館)"
+ },
+ {
+  "scene": "06-1",
+  "chapter": "令和6年 日本赤十字社へ",
+  "role": "body",
+  "narration": "令和6年は、日本赤十字社へ。",
+  "fact_ids": [
+   "F5",
+   "F28"
+  ],
+  "image": "A020",
+  "crop": "全身",
+  "motion": "右へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年6月22日 日本フィル特別演奏会(サントリーホール)"
+ },
+ {
+  "scene": "06-2",
+  "chapter": "令和6年 日本赤十字社へ",
+  "role": "body",
+  "narration": "「いずれ海外への訪問というものもあるのではないか」",
+  "fact_ids": [
+   "F30"
+  ],
+  "image": "A040",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年8月17日 半導体物理国際会議開会式(京王プラザホテル)"
+ },
+ {
+  "scene": "07-1",
+  "chapter": "令和7年 初めての単独の地方公務",
+  "role": "body",
+  "narration": "令和7年は、初めて単独での地方の公務。",
+  "fact_ids": [
+   "F6",
+   "F33"
+  ],
+  "image": "A023",
+  "crop": "全身",
+  "motion": "左へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年6月25日 森英恵展(国立新美術館)"
+ },
+ {
+  "scene": "08-1",
+  "chapter": "比較 令和6年と令和8年",
+  "role": "body",
+  "narration": "令和8年は「初めての公式外国訪問」。",
+  "fact_ids": [
+   "F7",
+   "F38"
+  ],
+  "image": "A095",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇陛下・愛子内親王殿下",
+  "caption": "2026年11月8日 全日本ソフトテニス選手権(有明コロシアム)"
+ },
+ {
+  "scene": "08-2",
+  "chapter": "比較 令和6年と令和8年",
+  "role": "body",
+  "narration": "2年前の「いずれ海外への訪問」が、",
+  "fact_ids": [
+   "F30",
+   "F48"
+  ],
+  "image": "A043",
+  "crop": "全身",
+  "motion": "右へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年8月20日 フェルメール展開会式(大阪中之島美術館)"
+ },
+ {
+  "scene": "08-3",
+  "chapter": "比較 令和6年と令和8年",
+  "role": "body",
+  "narration": "実際の訪問として語られたのです。",
+  "fact_ids": [
+   "F38",
+   "F48"
+  ],
+  "image": "A053",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年9月25日 世界医学検査学会開会式(幕張メッセ)"
+ },
+ {
+  "scene": "09-1",
+  "chapter": "答え 感謝と思いやり",
+  "role": "answer",
+  "narration": "答えは「感謝」と「思いやり」です。",
+  "fact_ids": [
+   "F45"
+  ],
+  "image": "A033",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年8月2日 豊受大神宮ご参拝(三重県伊勢市)"
+ },
+ {
+  "scene": "09-2",
+  "chapter": "答え 感謝と思いやり",
+  "role": "answer",
+  "narration": "語順は「感謝と思いやり」と「思いやりと感謝」の2通りです。",
+  "fact_ids": [
+   "F45"
+  ],
+  "image": "A052",
+  "crop": "全体",
+  "motion": "左へパン",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年9月1日 宮内庁防災訓練(宮内庁庁舎)"
+ },
+ {
+  "scene": "09-3",
+  "chapter": "答え 感謝と思いやり",
+  "role": "answer",
+  "narration": "令和2年は学びについて、その後は務めについての言葉です。",
+  "fact_ids": [
+   "F45",
+   "F14",
+   "F18"
+  ],
+  "image": "A039",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年8月2日 神宮徴古館ご視察(三重県伊勢市)"
+ },
+ {
+  "scene": "10-1",
+  "chapter": "解説(分析)",
+  "role": "answer",
+  "narration": "節目ごとに同じ願いを伝えてこられた、と言えそうです。",
+  "fact_ids": [
+   "F44",
+   "F45"
+  ],
+  "image": "A084",
+  "crop": "全身",
+  "motion": "右へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年10月19日 とっとり賀露かにっこ館ご視察(鳥取市)"
+ },
+ {
+  "scene": "11-1",
+  "chapter": "締めくくり(第1-4章)",
+  "role": "closing",
+  "narration": "7回すべてで語られた「感謝」と「思いやり」。",
+  "fact_ids": [
+   "F45"
+  ],
+  "image": "A012",
+  "crop": "全体",
+  "motion": "ゆっくり拡大",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年4月7日 被災者等とのご懇談(福島県大熊町)"
+ },
+ {
+  "scene": "11-2",
+  "chapter": "締めくくり(第1-4章)",
+  "role": "closing",
+  "narration": "娘の歩みを見守る、親としての願いなのかもしれません。",
+  "fact_ids": [
+   "F41",
+   "F43"
+  ],
+  "image": "A014",
+  "crop": "全体",
+  "motion": "左へパン",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年4月7日 道の駅なみえご視察(福島県浪江町)"
+ },
+ {
+  "scene": "11-3",
+  "chapter": "締めくくり(第1-4章)",
+  "role": "closing",
+  "narration": "合格、成年、初めての外国訪問。",
+  "fact_ids": [
+   "F12",
+   "F19",
+   "F38"
+  ],
+  "image": "A082",
+  "crop": "全体",
+  "motion": "右へパン",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年10月19日 さじアストロパークご視察(鳥取市)"
+ },
+ {
+  "scene": "11-4",
+  "chapter": "締めくくり(第1-4章)",
+  "role": "closing",
+  "narration": "皆さんの心に残ったのは、どの年のお言葉ですか？",
+  "fact_ids": [
+   "F44"
+  ],
+  "image": "A077",
+  "crop": "全身",
+  "motion": "ゆっくり拡大",
+  "person_label": "愛子内親王殿下",
+  "caption": "2026年10月18日 倉吉白壁土蔵群ご視察(鳥取県倉吉市)"
+ },
+ {
+  "scene": "11-5",
+  "chapter": "締めくくり(第1-4章)",
+  "role": "closing",
+  "narration": "ぜひコメントで教えてください。",
+  "fact_ids": [],
+  "image": "A011",
+  "crop": "全体",
+  "motion": "ゆっくり縮小",
+  "person_label": "天皇皇后両陛下・愛子内親王殿下",
+  "caption": "2026年4月7日 学び舎ゆめの森ご視察(福島県大熊町)"
+ }
+]
