@@ -298,13 +298,32 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
         d.rounded_rectangle((x - 10, y - 5, x + tw + 10, y + fs_name + 12), 8, fill=NAVY + (200,), outline=GOLD + (255,), width=2)
         d.text((x, y), text, font=f, fill=WHITE)
     if caption:
-        f = font(FONT_R, 22 if vert else 20)
-        tw = d.textlength(caption, font=f)
+        # 撮影情報: 画面からはみ出さないよう、長い時は少し縮め、それでも入らなければ2行に折り返す
+        size = 22 if vert else 20
+        maxw = W - 60
+        f = font(FONT_R, size)
+        while d.textlength(caption, font=f) > maxw and size > 18:
+            size -= 1
+            f = font(FONT_R, size)
+        lines = [caption]
+        if d.textlength(caption, font=f) > maxw:
+            lines, cur = [], ""
+            for ch in caption:
+                if d.textlength(cur + ch, font=f) > maxw:
+                    lines.append(cur)
+                    cur = ch
+                else:
+                    cur += ch
+            lines.append(cur)
+            lines = lines[:3]
+        tw = max(d.textlength(l, font=f) for l in lines)
+        lh = size + 9
         x, y = 24, int(H * (0.165 if vert else 0.16))
         if not vert:
             x, y = W - tw - 40, int(H * 0.06) + 10
-        d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + 31), 6, fill=(0, 0, 0, 140))
-        d.text((x, y), caption, font=f, fill=WHITE)
+        d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + lh * len(lines)), 6, fill=(0, 0, 0, 140))
+        for i, l in enumerate(lines):
+            d.text((x, y + i * lh), l, font=f, fill=WHITE)
     f = font(FONT_R, 20)
     tw = d.textlength(credit, font=f)
     d.text((W - tw - 24, int(H * 0.035) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),

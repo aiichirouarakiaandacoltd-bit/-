@@ -116,7 +116,9 @@ def check(project: str, kind: str = "縦型") -> bool:
     # 7 第4章
     durs = [s["end"] - s["start"] for s in shots]
     lo, hi = sp["cut"]
-    out_range = [round(d, 2) for d in durs[1:-1] if not (lo - 0.3 <= d <= hi + 0.3)]
+    # 切替間隔は目安2〜4秒。縦型は同じ写真を1回しか使えないため、写真が足りない場面は最長5秒まで認める(本書第4章)
+    upper = sp["max_show"] if kind == "縦型" else hi + 0.3
+    out_range = [round(d, 2) for d in durs[1:-1] if not (lo - 0.3 <= d <= upper)]
     used = Counter()
     for s in shots:
         for iid in ((s.get("compare") or {}).get("images") or [s.get("image")]):
