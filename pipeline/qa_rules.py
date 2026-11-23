@@ -195,7 +195,7 @@ def check(project: str, kind: str = "縦型") -> bool:
         f"締めくくりの場面 {closing or 'なし'} / 最後の4場面に問いかけ{'あり' if has_q else 'なし'} / 最後の言葉のあとの余韻 {tail_sil:.1f}秒(1.2秒以上)",
         "台本係が role=closing の場面(まとめ・意味づけ・問いかけ・コメントのお願い)を最後に加える")
     # 第1-5章1(荒木指示 2026-11-23・KB-20261124 以降に適用): ナレーションの文末は「です・ます」調
-    if project >= "KB-20261124":
+    if project > "KB-20261123-01":  # 第1-5章の適用は KB-20261123-01 の次から
         plain = [(s_["scene"], re.sub(r"「[^」]*」|『[^』]*』", "", s_["narration"]).rstrip()) for s_ in scenes]
         bad_tone = [f"{sc_}:{t[-8:]}" for sc_, t in plain if t.endswith("。") and not re.search(r"(です|ます|ません|でした|ました|ましょう)。$", t)]
         add("ナレーションが「です・ます」調(第1-5章)", not bad_tone, bad_tone or "すべて です・ます調",
