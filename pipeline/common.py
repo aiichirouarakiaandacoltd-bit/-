@@ -150,3 +150,17 @@ def find_font(prefer=("NotoSansJP-Black.ttf", "NotoSansJP-Bold.ttf")) -> str:
             if p.name in prefer:
                 return str(p)
     raise FileNotFoundError("Noto Sans JP が見つかりません: python -m pipeline.env_check --project <番号> で導入してください")
+
+
+# 本書第1-2章(荒木指示 2026-11-23): 揶揄・対立はNG。タイトル・表紙・説明文本文・ナレーションで自動検査する語。
+# 「比較」自体は可(事実×事実)。皇族同士の優劣・内心の読み取り・対立の描写に当たる言い方を止める。
+NG_WORDS = [
+    "格差", "格の違い", "決定的な違い", "対応の差", "扱いの差", "本心", "表情に注目", "視線に注目", "注目してください",
+    "激怒", "ブチギレ", "キレ", "怒り", "嫉妬", "確執", "不仲", "冷遇", "押しのけ", "見下", "目障り", "露呈", "残酷",
+    "屈辱", "論破", "鉄槌", "対立", "揶揄", "炎上", "波紋", "様子がおかしい", "とんでもない", "大失態", "🙄",
+]
+
+
+def ng_hits(text: str) -> list[str]:
+    """揶揄・対立のNG語を返す(本書第1-2章)。"""
+    return [w for w in NG_WORDS if w in (text or "")]

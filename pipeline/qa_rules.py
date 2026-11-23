@@ -13,7 +13,7 @@ import subprocess
 from collections import Counter
 from pathlib import Path
 
-from .common import ROOT, load_json
+from .common import ROOT, load_json, ng_hits
 from .rules_render import SPEC
 
 
@@ -83,6 +83,10 @@ def check(project: str, kind: str = "縦型") -> bool:
     # 3 ナレーション全文と字幕
     diff = [s["scene"] for s in scenes if re.sub(r"[、。\s]", "", s["narration"]) != re.sub(r"[、。\s]", "", "".join("".join(c) for c in s.get("subtitle", [])))]
     add("ナレーション全文と字幕が一致", not diff, diff or "全場面一致(誤字の有無は要目視)")
+    # 3-2 揶揄・対立のNG(本書第1-2章 荒木指示 2026-11-23)
+    ng = [f"{s['scene']}:{'、'.join(ng_hits(s['narration'] + ' ' + str(s.get('person_label', ''))))}" for s in scenes
+          if ng_hits(s["narration"] + " " + str(s.get("person_label", "")))]
+    add("揶揄・対立のNG語がない(第1-2章)", not ng, ng or "なし", "台本係が事実×事実の言い方に直す")
     # 4 仕様
     pr = probe(video)
     v = next(x for x in pr["streams"] if x["codec_type"] == "video")

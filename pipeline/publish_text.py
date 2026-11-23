@@ -22,7 +22,7 @@ from pathlib import Path
 
 import yaml
 
-from .common import ROOT
+from .common import ROOT, ng_hits
 
 TITLE_MAX = 99
 DEFAULT_UNCONFIRMED = ("本動画では、宮内庁などの公式記録で確認できた出来事のみを紹介しており、"
@@ -92,6 +92,11 @@ def build(project: str) -> bool:
         v = re.sub(r"[【】「」『』\s]", "", th.get(k, ""))
         if not v or v not in plain:
             errs.append(f"表紙の{k}「{th.get(k)}」がタイトルに含まれていない")
+    # 揶揄・対立のNG(本書第1-2章): タイトル・表紙3段・説明文本文
+    for name, txt in [("タイトル", title), ("表紙", " ".join(str(th.get(k, "")) for k in ("upper", "middle", "lower"))),
+                      ("説明文本文", " ".join(spec.get("body", [])))]:
+        if ng_hits(txt):
+            errs.append(f"{name}に揶揄・対立のNG語: {'、'.join(ng_hits(txt))}(本書第1-2章)")
     if not th.get("center_image"):
         errs.append("表紙の中心画像(center_image)が未確定")
     tags = spec["hashtags"]
