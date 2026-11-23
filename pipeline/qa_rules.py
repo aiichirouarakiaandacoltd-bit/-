@@ -94,7 +94,7 @@ def check(project: str, kind: str = "縦型") -> bool:
     dur = float(pr["format"]["duration"])
     num, den = map(int, v["r_frame_rate"].split("/"))
     okspec = ((v["width"], v["height"]) == (sp["W"], sp["H"]) and abs(num / den - 30) < 0.01 and v["codec_name"] == "h264"
-              and a and a["codec_name"] == "aac" and (dur <= 59.0 if kind == "縦型" else 480 <= dur <= 720))
+              and a and a["codec_name"] == "aac" and (dur <= 90.0 if kind == "縦型" else 480 <= dur <= 720))  # 縦型の上限90秒(第1-4章・荒木指示 2026-11-23)
     add("尺・解像度・fps・形式", okspec, f"{dur:.2f}秒 {v['width']}x{v['height']} {num / den:.2f}fps {v['codec_name']}/{a['codec_name'] if a else '音声なし'}"
         + (" (目安50〜75秒)" if kind == "縦型" and not 50 <= dur <= 75 else ""))
     # 5 フォント
@@ -183,10 +183,14 @@ def check(project: str, kind: str = "縦型") -> bool:
     tail_txt = "".join(s_["narration"] for s_ in scenes[-4:])
     closing = [s_["scene"] for s_ in scenes if s_.get("role") == "closing"]
     has_q = bool(re.search(r"[？?]", tail_txt)) and "コメント" in tail_txt
-    sil = subprocess.run(["ffmpeg", "-v", "info", "-sseof", "-4", "-i", str(video), "-af", "silencedetect=n=-45dB:d=0.3", "-f", "null", "-"],
-                         capture_output=True, text=True).stderr
-    starts = [float(x) for x in re.findall(r"silence_start: ([\d.]+)", sil)]
-    tail_sil = (4.0 - starts[-1]) if starts else 0.0
+    # 余韻 = 動画の長さ − ナレーションの最後の声(BGMは余韻の間も流れるので、ナレーションの音声で測る)
+    import wave
+    import numpy as np
+    with wave.open(str(pdir / "output" / "narration.wav")) as w_:
+        sr_ = w_.getframerate()
+        x_ = np.frombuffer(w_.readframes(w_.getnframes()), np.int16)
+    voiced = np.nonzero(np.abs(x_) > 300)[0]
+    tail_sil = dur - (voiced[-1] / sr_ if len(voiced) else 0.0)
     add("締めくくり(まとめ→問いかけ→コメントのお願い)と余韻(第1-4章)", bool(closing) and has_q and tail_sil >= 1.2,
         f"締めくくりの場面 {closing or 'なし'} / 最後の4場面に問いかけ{'あり' if has_q else 'なし'} / 最後の言葉のあとの余韻 {tail_sil:.1f}秒(1.2秒以上)",
         "台本係が role=closing の場面(まとめ・意味づけ・問いかけ・コメントのお願い)を最後に加える")
