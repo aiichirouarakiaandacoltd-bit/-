@@ -312,8 +312,8 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
 
 
 # 縦型の画面割り(荒木指示 2026-11-24: 画像と文字を重ねない)
-#   上: 音声クレジット・人物名・撮影情報(〜0.20) / 中: 写真の枠 BOX_TOP〜BOX_BOTTOM / 下: 字幕(中心 sub_y=0.70、2行で0.60〜0.80)
-BOX_TOP, BOX_BOTTOM = 0.215, 0.585
+#   上: 音声クレジット・人物名・撮影情報(〜0.12。荒木指示: できるだけ上に) / 中: 写真の枠 BOX_TOP〜BOX_BOTTOM / 下: 字幕(中心 sub_y=0.70、2行で0.60〜0.80)
+BOX_TOP, BOX_BOTTOM = 0.125, 0.585
 
 
 def _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main):
@@ -338,7 +338,19 @@ def _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main):
     if cw >= iw:  # 枠より横長でない写真: 枠の縦横比で切り抜く(縦長の写真は主役の顔を上寄りに)
         cw = iw
         ch = min(ih, cw / bar)
-    if iw / ih > bar and crop not in ("顔の寄り", "手元・装い"):  # 枠より横長: 全体を横幅いっぱいに、枠の中で上下中央
+    # 枠より横長の写真: 写っている方々(顔の左右の端)が枠の幅に収まるなら、左右を切って枠いっぱいに表示する(荒木指示: できる限り画面いっぱいに)
+    fit_width = False
+    if iw / ih > bar and crop not in ("顔の寄り", "手元・装い"):
+        fit_width = True
+        if fs:
+            mg = max(fh * 1.6, iw * 0.05)
+            fx0 = min(f[0] for f in fs) - mg
+            fx1 = max(f[0] + f[2] for f in fs) + mg
+            if fx1 - fx0 <= ih * bar:
+                fit_width = False
+                ch, cw = ih, ih * bar
+                cx = (fx0 + fx1) / 2
+    if fit_width:  # 収まらない時: 全員が入るよう全体を横幅いっぱいに、枠の中で上下中央
         fw, fh2 = PW, int(ih * PW / iw)
         fg = cv2.resize(img, (fw, fh2), interpolation=cv2.INTER_LANCZOS4)
         top = bt + (bh - fh2) // 2
@@ -461,7 +473,7 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
         f = font(FONT_B, fs_name)
         tw = d.textlength(text, font=f)
         x = min(max(cx - tw / 2, 24), W - tw - 24)
-        y = int(H * (0.13 if vert else 0.06))
+        y = int(H * (0.035 if vert else 0.06))
         d.rounded_rectangle((x - 10, y - 5, x + tw + 10, y + fs_name + 12), 8, fill=NAVY + (200,), outline=GOLD + (255,), width=2)
         d.text((x, y), text, font=f, fill=WHITE)
     if caption:
@@ -485,7 +497,7 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
             lines = lines[:3]
         tw = max(d.textlength(l, font=f) for l in lines)
         lh = size + 9
-        x, y = 24, int(H * (0.165 if vert else 0.16))
+        x, y = 24, int(H * (0.068 if vert else 0.16))
         if not vert:
             x, y = W - tw - 40, int(H * 0.06) + 10
         d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + lh * len(lines)), 6, fill=(0, 0, 0, 140))
@@ -493,7 +505,7 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
             d.text((x, y + i * lh), l, font=f, fill=WHITE)
     f = font(FONT_R, 20)
     tw = d.textlength(credit, font=f)
-    d.text((W - tw - 24, int(H * 0.035) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),
+    d.text((W - tw - 24, int(H * 0.008) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),
            stroke_width=2, stroke_fill=(0, 0, 0, 180))
     return np.array(im)
 
