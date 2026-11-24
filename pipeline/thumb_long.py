@@ -120,36 +120,36 @@ def credit(im, s):
     w = d.textlength(s, font=f); d.rectangle((W - w - 16, H - 24, W, H), fill=(0, 0, 0)); d.text((W - w - 8, H - 23), s, font=f, fill=(220, 220, 220))
 
 
-def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=300):
-    """画像がメイン(荒木指示 2026-11-24): 人物1名を画面の約7割に大きく。文字は左端の細い列に小さくまとめる"""
+def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=250):
+    """人物1名(バランス型・荒木さんと調整中の型): 右に写真(画面の約6割)、左に文字(読みやすい大きさ)"""
     im = Image.new("RGB", (W, H), NAVY)
-    ph = place(img, 900, H, (520, 340), face_h, focus); im.paste(ph, (W - 900, 0))
-    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - 900, fy, fw, fh)]
-    fade = grad(W, H, [(0, (255, 255, 255)), (0.27, (255, 255, 255)), (0.42, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
+    ph = place(img, 800, H, (430, 330), face_h, focus); im.paste(ph, (W - 800, 0))
+    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - 800, fy, fw, fh)]
+    fade = grad(W, H, [(0, (255, 255, 255)), (0.38, (255, 255, 255)), (0.52, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
     im = Image.composite(grad(W, H, [(0, (6, 16, 40)), (1, (20, 40, 80))]), im, fade)
-    text(im, (28, 60), big, 104, fill=big_fill, maxw=400)
-    gold_band(im, (18, 260, 430, 350), band, 60)
-    text(im, (28, 400), line, 66, maxw=400)
+    text(im, (36, 70), big, 136, fill=big_fill, maxw=540)
+    gold_band(im, (24, 280, 580, 380), band, 74)
+    text(im, (36, 425), line, 84, maxw=560)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(18, 40, 440, 190), (18, 260, 430, 350), (18, 390, 440, 490)])
+    check_faces(out, faces_, [(24, 50, 600, 240), (24, 280, 580, 380), (24, 415, 620, 540)])
 
 
 def type_D(out, img1, f1, img2, f2, top, big, band, cap):
-    """画像がメイン: 左右に人物2名(または人物と場所)を画面いっぱいに。文字は上の細い帯と下の帯だけ"""
+    """人物2名(または人物と場所)(バランス型): 左右に写真、上の帯と下の帯に文字"""
     im = Image.new("RGB", (W, H), NAVY)
-    p1 = place(img1, 640, H, (330, 330), 240, f1); fa = place.last_face
-    p2 = place(img2, 640, H, (310, 330), 240, f2); fb = place.last_face
+    p1 = place(img1, 640, H, (320, 320), 200, f1); fa = place.last_face
+    p2 = place(img2, 640, H, (320, 320), 200, f2); fb = place.last_face
     im.paste(p1, (0, 0)); im.paste(p2, (640, 0))
     ImageDraw.Draw(im).line((640, 0, 640, H), fill=(10, 20, 45), width=6)
     faces_ = ([fa] if f1 is None or len(f1) < 4 else []) + ([(fb[0] + 640, fb[1], fb[2], fb[3])] if f2 is None or len(f2) < 4 else [])
-    im.paste(grad(W, 74, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
-    text(im, (W // 2, 37), top, 56, anchor="mm", maxw=1200, shadow=False)
-    low = grad(W, 230, [(0, (0, 0, 0)), (1, (255, 255, 255))]).convert("L")
-    im.paste(Image.new("RGB", (W, 230), (6, 14, 36)), (0, 490), low)
-    text(im, (W // 2, 575), big, 118, fill="gold", anchor="mm", maxw=900)
-    gold_band(im, (240, 640, 1040, 706), band, 50)
+    im.paste(grad(W, 96, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
+    text(im, (W // 2, 48), top, 72, anchor="mm", maxw=1200, shadow=False)
+    low = grad(W, 260, [(0, (0, 0, 0)), (0.35, (255, 255, 255)), (1, (255, 255, 255))]).convert("L")
+    im.paste(Image.new("RGB", (W, 260), (6, 14, 36)), (0, 460), low)
+    text(im, (W // 2, 548), big, 132, fill="gold", anchor="mm", maxw=1000)
+    gold_band(im, (190, 640, 1090, 708), band, 54)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(0, 0, W, 74), (180, 515, 1100, 720)])
+    check_faces(out, faces_, [(0, 0, W, 96), (140, 480, 1140, 720)])
 
 
 if __name__ == "__main__":
@@ -159,6 +159,6 @@ if __name__ == "__main__":
     type_R(O + "thumb_A.png", A + "A115.jpg", None, "愛子さま", "2つの国のおことば", "込めた感謝とは？",
            "写真: 宮内庁 令和7年12月1日公表")
     type_R(O + "thumb_B.png", A + "A118.jpg", (0.53, 0.33, 0.17), "1年で2回", "東日本大震災への感謝", "2つのおことば",
-           "写真: 宮内庁 令和7年12月1日公表(御所にて)", big_fill="gold", face_h=200)
+           "写真: 宮内庁 令和7年12月1日公表(御所にて)", big_fill="gold", face_h=190)
     type_D(O + "thumb_C.png", A + "A020.jpg", None, S + "jg.jpg", (0.5, 0.5, 0.21, "scene"),
            "祖父母が植えた木", "56年前", "シンガポールで語られた3代", "写真: 宮内庁 2026.6.22 ©Naoya Ikegami/SUNTORY HALL / イメージ: 日本庭園 FN-082 CC BY-SA 4.0")
