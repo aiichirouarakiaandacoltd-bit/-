@@ -105,6 +105,38 @@ def scrape_kunaicho(url: str) -> list[dict]:
         d = ([x for pos, x in marks if pos < m.start() and x] or [date])[-1]
         out = [o for o in out if o["src"] != u]
         out.append({"src": u, "site": "宮内庁", "page": url, "caption": cap[:160], "event": f"{d} {title}".strip(), "method": method})
+    # 上の形式で拾えない写真(2026-11-24 追加): 会見ページの表(<div class="cap">)、/data/ 形式のご日程・外国ご訪問ページ
+    # (<section> 内の <p>)、旧形式のご近影ページ(<div class="cap">)。写真ごとの説明は
+    # 代替テキスト(「お写真」以外)と、その写真のすぐ後(次の写真より前)の説明文、旧形式は直前の <div class="cap"> から取る。
+    # 日付は写真より前にある最後の「令和X年M月D日」。説明文に人物名がなければ台帳に入れない(collect 側で不採用)。
+    def _txt(x: str) -> str:
+        return re.sub(r"\s+", " ", html.unescape(re.sub(r"<[^>]+>", " ", x))).strip()
+    have = {o["src"] for o in out}
+    imgs = list(re.finditer(r'<img[^>]+src="((?:https://www\.kunaicho\.go\.jp)?/(?:data|activity|about|wp-content/uploads)/[^"]+\.(?:jpg|jpeg|png))"[^>]*>', s, re.I))
+    for i, m in enumerate(imgs):
+        u = urllib.parse.urljoin(url, m.group(1))
+        if u in have or "/common/" in u:
+            continue
+        alt = re.search(r'alt="([^"]*)"', m.group(0))
+        alt = html.unescape(alt.group(1)).strip() if alt else ""
+        parts = [alt] if alt and alt not in ("お写真",) and not alt.startswith("写真：") else ([alt[3:]] if alt.startswith("写真：") else [])
+        nxt = imgs[i + 1].start() if i + 1 < len(imgs) else len(s)
+        win = s[m.end():min(nxt, m.end() + 800)]
+        fc = re.search(r'<(?:p|figcaption)[^>]*>(.*?)</(?:p|figcaption)>|<div class="cap">(.*?)</div>', win, re.S)
+        if fc:
+            parts.append(_txt(fc.group(1) or fc.group(2) or ""))
+        else:
+            prev = imgs[i - 1].end() if i > 0 else max(0, m.start() - 400)
+            back = list(re.finditer(r'<div class="cap">(.*?)</div>', s[max(prev, m.start() - 400):m.start()], re.S))
+            if back:
+                parts.append(_txt(back[-1].group(1)))
+        parts = [p for j, p in enumerate(parts) if p and p not in parts[:j]]
+        cap = " ".join(parts)
+        dates = [reiwa_date(d.group(0)) for d in re.finditer(r"令和(?:\d+|元)年\d+月\d+日", s[:m.start()])]
+        d = (dates or [date])[-1]
+        out.append({"src": u, "site": "宮内庁", "page": url, "caption": cap[:160], "event": f"{d} {title}".strip(),
+                    "method": "キャプション"})
+        have.add(u)
     # ページ末尾に説明文が1つだけの形式: 説明文の無い写真にページの説明文を当て、要目視とする
     caps = [o["caption"] for o in out if persons_in(o["caption"])]
     if len(set(caps)) == 1:
