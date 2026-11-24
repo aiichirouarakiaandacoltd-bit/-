@@ -522,6 +522,8 @@ def build(project: str, kind: str = "縦型") -> Path:
                           # 写真ごとの人物名(例: 人物の写らない会場写真は "")。無ければ場面の人物名
                           "person_label": (s.get("labels") or {}).get(img, s.get("person_label", "")),
                           "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
+                          # 人物以外を語る場面で写っている物(例: 黒鳥)。第4-3章
+                          "subject": (s.get("subjects") or {}).get(img, s.get("subject", "")),
                           "clip_start": float((s.get("clip") or {}).get("start", 0)) + (b - a) * k / n,
                           "diagram": bool(s.get("diagram"))})
     # 3) 映像

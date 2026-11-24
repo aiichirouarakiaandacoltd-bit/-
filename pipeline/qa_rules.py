@@ -142,12 +142,14 @@ def check(project: str, kind: str = "縦型") -> bool:
                 used[iid] += 1
     limit = 1 if kind == "縦型" else 3  # 荒木指示 2026-11-22: ショートは同じ写真を2回使わない
     over3 = {k: c for k, c in used.items() if c > limit}
-    person = sum(d for s, d in zip(shots, durs) if s.get("person_label") or s.get("compare")) / max(1e-9, sum(durs))
+    person_only = sum(d for s, d in zip(shots, durs) if s.get("person_label") or s.get("compare")) / max(1e-9, sum(durs))
+    # 第4-3章: ナレーションが語る物(subject)の写真も「映る割合」に数える。ただし人物の写真だけで75%以上
+    person = sum(d for s, d in zip(shots, durs) if s.get("person_label") or s.get("compare") or s.get("subject")) / max(1e-9, sum(durs))
     n_img = len(used)
-    ok7 = (not out_range and max(durs) <= sp["max_show"] and person >= sp["person_ratio"] and not over3)
+    ok7 = (not out_range and max(durs) <= sp["max_show"] and person >= sp["person_ratio"] and person_only >= 0.75 and not over3)
     add("第4章 切替間隔・最長表示・人物の割合・同一画像の回数", ok7,
         f"カット {len(shots)}(目標{sp['cuts'][0]}〜{sp['cuts'][1]}) / 平均 {sum(durs) / len(durs):.2f}秒 / 最長 {max(durs):.2f}秒(上限{sp['max_show']}) / "
-        f"範囲外 {out_range or 'なし'} / 人物が映る割合 {person:.0%}(目標{sp['person_ratio']:.0%}) / 異なる画像 {n_img}枚(目標{sp['images']}) / 上限({'1' if kind == '縦型' else '3'}回)を超えた画像 {over3 or 'なし'}",
+        f"範囲外 {out_range or 'なし'} / 人物・語る物が映る割合 {person:.0%}(目標{sp['person_ratio']:.0%})・人物のみ {person_only:.0%}(75%以上) / 異なる画像 {n_img}枚(目標{sp['images']}) / 上限({'1' if kind == '縦型' else '3'}回)を超えた画像 {over3 or 'なし'}",
         "画像を追加収集する(第3章)、場面の分け方を見直す")
     if len(shots) < sp["cuts"][0] or n_img < sp["images"]:
         res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)} / 画像 {n_img}枚",
@@ -210,6 +212,11 @@ def check(project: str, kind: str = "縦型") -> bool:
                     and not re.search(r"(です|ます|ません|でした|ました|ましょう|ください)。$", t)]
         add("ナレーションが「です・ます」調(第1-5章)", not bad_tone, bad_tone or "すべて です・ます調",
             "台本係が文末を「です・ます」調に直す(引用内は原文のまま)")
+    # 第4-3章(荒木指示 2026-11-24・KB-20261123-02 以降): 場面ごとにナレーションと画像の一致の理由(match)を書く
+    if project >= "KB-20261123-02":
+        no_match = [s_["scene"] for s_ in scenes if not str(s_.get("match", "")).strip()]
+        add("ナレーションと画像の一致の理由が全場面にある(第4-3章)", not no_match, no_match or "全場面あり(内容の妥当性は当てっこ係が目視)",
+            "直し係が各場面の match に『ナレーションの言葉→写っているもの』を書く。書けない場面は画像を探し直すか言い方を直す")
     add("冒頭の疑問に本編で回答", qa, f"question={roles.index('question') if 'question' in roles else 'なし'} answer={'あり' if 'answer' in roles else 'なし'}(回答内容の妥当性は要目視)")
     passed = all(r[1] for r in res)
     lines = [f"# qa_report — {project}({kind})", "", f"判定: **{'完成' if passed else '未完成(不足事項あり)'}**", "",
