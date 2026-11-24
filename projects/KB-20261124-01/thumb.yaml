@@ -4,15 +4,14 @@ texts:
   lower: 同じ博士号とは？
 photos:
 - ledger: A049
-- ledger: A050
 - ledger: A048
 - ledger: A047
 - ledger: A051
 center_image: A049
-layout: 長尺 型D(A=写真1枚版・文字2か所／B・C=左右2枚)(templates/thumb_long_template.md 第3版・pipeline/thumb_long.py。Aの写真1枚版は thumb/make_thumbs.py の type_D_wide)
+layout: 長尺 型D(A・B・C とも左右2枚・上の帯・金の一言・金の帯。templates/thumb_long_template.md 第3版・pipeline/thumb_long.py の type_D をそのまま使用)
 files:
   A: projects/KB-20261124-01/thumb/thumb_A.png
   B: projects/KB-20261124-01/thumb/thumb_B.png
   C: projects/KB-20261124-01/thumb/thumb_C.png
 script: projects/KB-20261124-01/thumb/make_thumbs.py
-note: 2026-11-24 直し係が作り直し。3枚とも1280×720。写真は宮内庁 英国ご訪問 報告7日目(2024-06-28・写真内の表記 John Cairns)で、3パターンで同じ写真は使っていない(A=A049、B=A050・A048、C=A047・A051)。切り抜き・拡大縮小のみ。check_faces(お顔と文字の重なり・見切れ)と credit(クレジットと文字の重なり)は3枚とも通過し、目でも確認した。赤の装飾・絵文字・作り台詞・矢印・吹き出しなし(写真の中のアカデミックガウンの赤は写真そのもの)。表紙のかぎかっこは宮内庁の原文の一部(「雅子にも」= F33、「唯一避ける話題」= F22)。
+note: 2026-11-24 再点検の直し(直し係)。3枚とも1280×720・型D。A=A049(左 皇后陛下/右 天皇陛下。帯「雅子さま34年ぶりのオックスフォード」)、B=A048(左 ガウン姿で式に臨まれる皇后陛下の寄り/右 式の会場。帯「陛下と雅子さまに」)、C=A047・A051(変更なし)。3パターンで同じ写真は使っていない。写真は宮内庁 英国ご訪問 報告7日目(2024-06-28・写真内の表記 John Cairns)。切り抜き・拡大縮小のみ。check_faces(お顔と文字の重なり・見切れ)と credit(クレジットと文字の重なり)は3枚とも通過し、目でも確認した(Bは皇后陛下のお姿が金の一言より上にあり、座っている参列者のお顔は文字の下に入っていない)。赤の装飾・絵文字・作り台詞・矢印・吹き出しなし(写真の中のアカデミックガウンと絨毯の赤は写真そのもの)。表紙のかぎかっこは宮内庁の原文の一部(「雅子にも」= F33、「唯一避ける話題」= F22)。文字は各題名の言葉から取っている。

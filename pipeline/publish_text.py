@@ -66,7 +66,7 @@ def image_credits(pdir: Path) -> str:
             providers.add(m.group(1).strip())
     lines = []
     for site, dates in by_site.items():
-        ds = sorted(d for d in dates if d)
+        ds = sorted(d for d in dates if re.match(r"\d{4}-\d\d-\d\d", d))  # ご近影など日付の記載がない写真(「令和7年 …」)は期間に数えない
         jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
         lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
