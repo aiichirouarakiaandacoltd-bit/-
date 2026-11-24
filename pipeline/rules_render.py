@@ -37,7 +37,7 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 90.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 160,
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 75.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 160,
              "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
