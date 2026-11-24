@@ -39,8 +39,10 @@ SPEED = 0.90
 SPEC = {
     "縦型": {"W": 1080, "H": 1920, "max_dur": 75.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 140,
              "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
+    # 横型(2026-11-24 長尺 KB-20261124-01): 画像と文字を重ねない(第5-2章で縦型の決まりを長尺にも適用)。
+    # 上の帯(〜6.5%)に人物名・撮影情報・音声クレジット、中に写真の枠(6.5%〜81%)、下に字幕1行(中心90.5%)
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
-             "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
+             "sub_y": 0.905, "max_lines": 1, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
 }
 NAVY, GOLD, WHITE = (22, 36, 58), (216, 188, 114), (255, 255, 255)
 
@@ -287,6 +289,8 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         ch = cw / ar
     if W < H:  # 荒木指示 2026-11-24: 縦型は画像と文字を重ねない。写真は決まった枠の中だけに置く
         return _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main)
+    if W > H:  # 横型も画像と文字を重ねない(第5-2章)。写真は上下の文字の帯の間の枠だけに置く
+        return _horizontal_box(img, crop, PW, PH, cx, cy, fh, fs, main)
     target_face_y = 0.30 if W < H else 0.38
     if not keep_all and ((x1 - x0) <= cw * 0.9 or iw / ih <= ar * 1.3):
         left = min(max(cx - cw / 2, 0), iw - cw)
@@ -380,6 +384,37 @@ def _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main):
     out[top:top + fh2, :PW] = fg
     LAST_BAND = (top, fh2, fg, out.copy())
     return out, focus
+
+
+# 横型の画面割り: 上の帯 0〜HBOX_TOP(人物名・撮影情報・クレジット)/ 写真の枠 HBOX_TOP〜HBOX_BOTTOM / 下 字幕(1行)
+HBOX_TOP, HBOX_BOTTOM = 0.065, 0.81
+
+
+def _horizontal_box(img, crop, PW, PH, cx, cy, fh, fs, main):
+    """写真を枠の高さ(横長すぎる写真は枠の幅)に合わせて全体を表示し、左右はその写真のぼかし背景。
+    「顔の寄り」は写真と同じ縦横比で主役の周り(高さ60%以上)を切り抜いてから枠に合わせる。"""
+    global LAST_BAND
+    ih, iw = img.shape[:2]
+    bt, bb = int(PH * HBOX_TOP), int(PH * HBOX_BOTTOM)
+    bh = bb - bt
+    sc = max(PW / iw, PH / ih)
+    big = cv2.resize(img, (int(iw * sc) + 1, int(ih * sc) + 1))
+    by, bx = (big.shape[0] - PH) // 2, (big.shape[1] - PW) // 2
+    bg = (cv2.GaussianBlur(big[by:by + PH, bx:bx + PW], (0, 0), 25) * 0.45).astype(np.uint8)
+    left, top, cw, ch = 0.0, 0.0, float(iw), float(ih)
+    if crop == "顔の寄り" and (fs or main is not None):
+        ch = min(ih, max(fh / 0.18, ih * 0.6))
+        cw = ch * iw / ih
+        left = min(max(cx - cw / 2, 0), iw - cw)
+        top = min(max(cy - 0.40 * ch, 0), ih - ch)
+    s = min(PW / cw, bh / ch)
+    fw, fh2 = max(1, int(cw * s)), max(1, int(ch * s))
+    fg = cv2.resize(img[int(top):int(top + ch), int(left):int(left + cw)], (fw, fh2), interpolation=cv2.INTER_LANCZOS4)
+    x0, y0 = (PW - fw) // 2, bt + (bh - fh2) // 2
+    out = bg.copy()
+    out[y0:y0 + fh2, x0:x0 + fw] = fg
+    LAST_BAND = (bt, bh, out[bt:bb].copy(), out.copy())
+    return out, (x0 + (cx - left) * s, y0 + (cy - top) * s)
 
 
 def _motion_z(motion: str, e: float) -> float:
@@ -488,7 +523,7 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
         f = font(FONT_B, fs_name)
         tw = d.textlength(text, font=f)
         x = min(max(cx - tw / 2, 24), W - tw - 24)
-        y = int(H * (0.035 if vert else 0.06))
+        y = int(H * 0.035) if vert else 12  # 横型: 上の帯(写真の枠と重ねない)
         d.rounded_rectangle((x - 10, y - 5, x + tw + 10, y + fs_name + 12), 8, fill=NAVY + (200,), outline=GOLD + (255,), width=2)
         d.text((x, y), text, font=f, fill=WHITE)
     if caption:
@@ -513,14 +548,14 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
         tw = max(d.textlength(l, font=f) for l in lines)
         lh = size + 9
         x, y = 24, int(H * (0.068 if vert else 0.16))
-        if not vert:
-            x, y = W - tw - 40, int(H * 0.06) + 10
+        if not vert:  # 横型: 上の帯の右(写真の枠と重ねない)
+            x, y = W - tw - 40, 18
         d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + lh * len(lines)), 6, fill=(0, 0, 0, 140))
         for i, l in enumerate(lines):
             d.text((x, y + i * lh), l, font=f, fill=WHITE)
     f = font(FONT_R, 20)
     tw = d.textlength(credit, font=f)
-    d.text((W - tw - 24, int(H * 0.008) if vert else H - 44), credit, font=f, fill=(255, 255, 255, 200),
+    d.text((W - tw - 24, int(H * 0.008)) if vert else (24, 18), credit, font=f, fill=(255, 255, 255, 200),
            stroke_width=2, stroke_fill=(0, 0, 0, 180))
     return np.array(im)
 
@@ -664,6 +699,8 @@ def build(project: str, kind: str = "縦型") -> Path:
     from .tts import mora_count
     for s in scenes:
         chunks = s.get("subtitle_lines") or split_sub(s["narration"], sp["line"])  # 指定があれば手動の改行を優先
+        if sp.get("max_lines") == 1:  # 横型: 字幕は1行ずつ(写真の枠の下に収める)
+            chunks = [[l] for c in chunks for l in c]
         if s.get("subtitle_lines"):
             flat = re.sub(r"[。\s]", "", "".join("".join(c) for c in chunks))
             assert flat == re.sub(r"[。\s]", "", s["narration"]), f"{s['scene']}: subtitle_lines がナレーションと一致しない"

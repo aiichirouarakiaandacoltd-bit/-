@@ -36,7 +36,7 @@ def check(job: Job | None, step_sec: float = 0.5, video: str | None = None, out_
         ok, f = cap.read()
         if not ok:
             break
-        g = cv2.cvtColor(cv2.resize(f, (270, 480)), cv2.COLOR_BGR2GRAY).astype(np.float32)
+        g = cv2.cvtColor(cv2.resize(f, (270, 480) if H >= W else (480, 270)), cv2.COLOR_BGR2GRAY).astype(np.float32)  # 横型は横長のまま
         if prev is not None:
             flick.append(float(np.abs(g - prev).mean()))
         prev = g
@@ -55,7 +55,7 @@ def check(job: Job | None, step_sec: float = 0.5, video: str | None = None, out_
                 cy0, cy1 = y * 2, (y + h) * 2
                 if cy1 > sub_y0 and cy0 < sub_y1 and h * 2 > H * 0.05:
                     issues.append({"t": round(t, 2), "kind": "字幕が顔に重なる", "detail": f"face y={cy0}-{cy1}"})
-        thumbs.append((t, cv2.resize(f, (180, 320))))
+        thumbs.append((t, cv2.resize(f, (180, 320) if H >= W else (320, 180))))
     # ちらつき: 直前10コマの中央値の4倍以上の急変(カット点は除く)
     shots = (load_json(job.output / "shots.json", []) or []) if job else (load_json(Path(video).parent / "shots.json", []) or [])
     cuts = {round(s["start"] * fps) for s in shots}
