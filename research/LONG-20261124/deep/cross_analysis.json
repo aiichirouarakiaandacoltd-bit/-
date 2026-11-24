@@ -1,0 +1,318 @@
+{
+ "尺(直近30本)": {
+  "4-8分": {
+   "n": 18,
+   "median_ratio": 1.76,
+   "median_views": 8186.0,
+   "share_over_3x": 0.28
+  },
+  "20-30分": {
+   "n": 717,
+   "median_ratio": 1.03,
+   "median_views": 18000.0,
+   "share_over_3x": 0.18
+  },
+  "30-60分": {
+   "n": 208,
+   "median_ratio": 1.02,
+   "median_views": 17500.0,
+   "share_over_3x": 0.27
+  },
+  "12-20分": {
+   "n": 370,
+   "median_ratio": 1.02,
+   "median_views": 13000.0,
+   "share_over_3x": 0.23
+  },
+  "8-12分": {
+   "n": 379,
+   "median_ratio": 0.93,
+   "median_views": 14000.0,
+   "share_over_3x": 0.19
+  },
+  "~4分": {
+   "n": 16,
+   "median_ratio": 0.8,
+   "median_views": 3418.0,
+   "share_over_3x": 0.06
+  }
+ },
+ "題名の要素(直近30本)": {
+  "肉声/実音声/生声": {
+   "n": 40,
+   "median_ratio": 2.72,
+   "median_views": 200000.0,
+   "share_over_3x": 0.47
+  },
+  "報じない/日本では": {
+   "n": 24,
+   "median_ratio": 2.58,
+   "median_views": 76500.0,
+   "share_over_3x": 0.46
+  },
+  "語学/英語/◯語": {
+   "n": 81,
+   "median_ratio": 1.49,
+   "median_views": 22000.0,
+   "share_over_3x": 0.32
+  },
+  "次の瞬間/直後/◯秒後": {
+   "n": 128,
+   "median_ratio": 1.38,
+   "median_views": 32000.0,
+   "share_over_3x": 0.37
+  },
+  "異例/前代未聞/驚愕": {
+   "n": 314,
+   "median_ratio": 1.1,
+   "median_views": 19000.0,
+   "share_over_3x": 0.23
+  },
+  "説明調(記号・疑問なし)": {
+   "n": 178,
+   "median_ratio": 1.04,
+   "median_views": 14000.0,
+   "share_over_3x": 0.19
+  },
+  "涙/感動/号泣": {
+   "n": 290,
+   "median_ratio": 1.04,
+   "median_views": 21000.0,
+   "share_over_3x": 0.2
+  },
+  "理由/ワケ/なぜ": {
+   "n": 357,
+   "median_ratio": 1.04,
+   "median_views": 17000.0,
+   "share_over_3x": 0.25
+  },
+  "【】見出し": {
+   "n": 998,
+   "median_ratio": 1.03,
+   "median_views": 15000.0,
+   "share_over_3x": 0.21
+  },
+  "数字入り": {
+   "n": 313,
+   "median_ratio": 1.0,
+   "median_views": 11000.0,
+   "share_over_3x": 0.21
+  },
+  "かぎかっこ引用": {
+   "n": 362,
+   "median_ratio": 0.98,
+   "median_views": 13000.0,
+   "share_over_3x": 0.2
+  },
+  "海外の反応/世界が": {
+   "n": 408,
+   "median_ratio": 0.98,
+   "median_views": 22500.0,
+   "share_over_3x": 0.19
+  },
+  "総集編/まとめ/全": {
+   "n": 33,
+   "median_ratio": 0.96,
+   "median_views": 9682.0,
+   "share_over_3x": 0.06
+  },
+  "疑問符？": {
+   "n": 259,
+   "median_ratio": 0.93,
+   "median_views": 17000.0,
+   "share_over_3x": 0.19
+  }
+ },
+ "人物(直近30本)": {
+  "愛子さま": {
+   "n": 735,
+   "median_ratio": 1.11,
+   "median_views": 15000.0,
+   "share_over_3x": 0.24
+  },
+  "外国要人": {
+   "n": 236,
+   "median_ratio": 1.08,
+   "median_views": 18500.0,
+   "share_over_3x": 0.24
+  },
+  "秋篠宮家関連": {
+   "n": 784,
+   "median_ratio": 1.06,
+   "median_views": 20000.0,
+   "share_over_3x": 0.2
+  },
+  "雅子さま": {
+   "n": 418,
+   "median_ratio": 0.99,
+   "median_views": 14000.0,
+   "share_over_3x": 0.19
+  },
+  "上皇ご夫妻関連": {
+   "n": 110,
+   "median_ratio": 0.95,
+   "median_views": 9904.0,
+   "share_over_3x": 0.12
+  },
+  "天皇陛下": {
+   "n": 381,
+   "median_ratio": 0.93,
+   "median_views": 10000.0,
+   "share_over_3x": 0.15
+  },
+  "両陛下": {
+   "n": 163,
+   "median_ratio": 0.89,
+   "median_views": 10000.0,
+   "share_over_3x": 0.13
+  },
+  "ご一家": {
+   "n": 34,
+   "median_ratio": 0.81,
+   "median_views": 6963.0,
+   "share_over_3x": 0.15
+  }
+ },
+ "題材(直近30本)": {
+  "シンガポール": {
+   "n": 147,
+   "median_ratio": 1.74,
+   "median_views": 25000.0,
+   "share_over_3x": 0.38
+  },
+  "園遊会": {
+   "n": 74,
+   "median_ratio": 1.27,
+   "median_views": 18000.0,
+   "share_over_3x": 0.23
+  },
+  "装い/ティアラ": {
+   "n": 64,
+   "median_ratio": 1.15,
+   "median_views": 12000.0,
+   "share_over_3x": 0.3
+  },
+  "英国": {
+   "n": 34,
+   "median_ratio": 1.11,
+   "median_views": 13500.0,
+   "share_over_3x": 0.18
+  },
+  "地方ご訪問": {
+   "n": 125,
+   "median_ratio": 1.04,
+   "median_views": 14000.0,
+   "share_over_3x": 0.21
+  },
+  "会見/おことば": {
+   "n": 70,
+   "median_ratio": 1.01,
+   "median_views": 11000.0,
+   "share_over_3x": 0.23
+  },
+  "生涯/人生": {
+   "n": 10,
+   "median_ratio": 0.97,
+   "median_views": 6044.5,
+   "share_over_3x": 0.2
+  },
+  "幼少期/家族史": {
+   "n": 80,
+   "median_ratio": 0.88,
+   "median_views": 8458.0,
+   "share_over_3x": 0.19
+  },
+  "オランダ/ベルギー": {
+   "n": 61,
+   "median_ratio": 0.81,
+   "median_views": 15000.0,
+   "share_over_3x": 0.13
+  },
+  "晩餐会": {
+   "n": 37,
+   "median_ratio": 0.81,
+   "median_views": 18000.0,
+   "share_over_3x": 0.14
+  },
+  "那須/ご静養": {
+   "n": 10,
+   "median_ratio": 0.66,
+   "median_views": 3495.5,
+   "share_over_3x": 0.2
+  }
+ },
+ "区分(直近30本)": {
+  "反応・感情型": {
+   "n": 360,
+   "median_ratio": 1.04,
+   "median_views": 18500.0,
+   "share_over_3x": 0.23
+  },
+  "NG煽り": {
+   "n": 126,
+   "median_ratio": 1.04,
+   "median_views": 25500.0,
+   "share_over_3x": 0.21
+  },
+  "NG対立": {
+   "n": 625,
+   "median_ratio": 1.03,
+   "median_views": 18000.0,
+   "share_over_3x": 0.19
+  },
+  "事実・好意型": {
+   "n": 604,
+   "median_ratio": 0.96,
+   "median_views": 11000.0,
+   "share_over_3x": 0.2
+  }
+ },
+ "big_counts": {
+  "100k_type": {
+   "事実・好意型": 351,
+   "NG対立": 373,
+   "反応・感情型": 343,
+   "NG煽り": 119
+  },
+  "100k_len": {
+   "20-30分": 564,
+   "12-20分": 267,
+   "8-12分": 191,
+   "30-60分": 142,
+   "4-8分": 11,
+   "60分~": 7,
+   "~4分": 4
+  },
+  "1m_type": {
+   "事実・好意型": 24,
+   "反応・感情型": 38,
+   "NG煽り": 12,
+   "NG対立": 10
+  },
+  "1m_len": {
+   "20-30分": 32,
+   "12-20分": 15,
+   "30-60分": 16,
+   "8-12分": 20,
+   "4-8分": 1
+  }
+ },
+ "comments_per_1000": {
+  "事実・好意型": {
+   "median": 0.4,
+   "n": 210
+  },
+  "NG対立": {
+   "median": 0.91,
+   "n": 150
+  },
+  "反応・感情型": {
+   "median": 0.4,
+   "n": 189
+  },
+  "NG煽り": {
+   "median": 0.61,
+   "n": 44
+  }
+ }
+}
