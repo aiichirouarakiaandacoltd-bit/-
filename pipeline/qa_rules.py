@@ -123,9 +123,14 @@ def check(project: str, kind: str = "縦型") -> bool:
                 over.append(f"{m.group(1)}「{line}」{w:.0f}px")
     # 5-3 字幕が小さく縮んでいない(荒木指示: 55歳以上の女性向けに最大限の大きさ。規定の85%未満は不合格)
     small = [f"{m.group(1)}「{m.group(3)}」{m.group(2)}px" for m in re.finditer(r"Dialogue: [^,]*,([^,]*),[^\n]*?\\fs(\d+)\}([^\n]*)", ass)
-             if int(m.group(2)) < sp["sub_size"] * 0.77]  # 1行8字(言葉を切らないための上限)まで許容
-    add(f"字幕が小さく縮んでいない(規定{sp['sub_size']}pxの77%以上=1行8字まで)", not small, small or "なし",
-        "長い文節・かぎかっこの引用を分けて1行の字数に収める(subtitle_lines で改行を指定してもよい)")
+             if int(m.group(2)) < sp["sub_size"]]  # 荒木指示 2026-11-24: 字幕の大きさは全て同じ(縮めた字幕があれば不合格)
+    add(f"字幕の大きさが全て同じ(規定{sp['sub_size']}px・縦型は1行7字まで・第5章)", not small, small or "なし",
+        "長い文節・かぎかっこの引用を分けて1行7字以内にする(subtitle_lines で改行を指定してもよい)")
+    # 字幕の書式(太字・縁取り・影・色)が全て同じ: スタイル1種類のみ、行ごとの書式変更(\\b \\bord \\shad \\c)なし
+    styles = re.findall(r"^Style: .*$", ass, re.M)
+    overrides = [m.group(0)[:40] for m in re.finditer(r"\\(?:b\d|bord|shad|[1-4]?c&|i1|blur)[^\\}]*", ass)]
+    add("字幕の書式(太字・縁取り・影・色)が全て同じ(第5章)", len(styles) == 1 and not overrides,
+        f"スタイル {len(styles)}種類 / 行ごとの書式変更 {overrides or 'なし'}", "書き出しの道具の字幕スタイルを1種類に戻す")
     add("字幕が画面からはみ出していない(最大限の大きさで)", not over, f"はみ出し {over or 'なし'}(画面幅 {sp['W']}px・余白各30px)",
         "書き出しの自動縮小を確認する。1行の字数(縦型7字・横型13字)を超える塊がないか字幕の分け方を見直す")
     # 6 音声
