@@ -30,6 +30,24 @@ DEFAULT_UNCONFIRMED = ("本動画では、宮内庁などの公式記録で確�
                        "未確認の逸話や証言は含めていません。")
 
 
+_ERA = {"令和": 2018, "平成": 1988, "昭和": 1925}
+
+
+def _ledger_date(field: str) -> str:
+    """台帳「撮影日・場所・行事」から、画像クレジットの期間に使う日付(YYYY-MM-DD)を取り出す。
+    先頭が年月日ならそれを使う。ご近影のように撮影日が書けない写真は、
+    「令和5年12月9日付のご感想のページに掲載」のように書かれた掲載ページの日付(和暦)を西暦に直して使う。
+    どちらも無ければ先頭10文字をそのまま返す(期間の計算では数えない)。"""
+    head = field[:10]
+    if re.match(r"\d{4}-\d\d-\d\d", head):
+        return head
+    m = re.search(r"(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日付", field)
+    if m:
+        y = _ERA[m.group(1)] + (1 if m.group(2) == "元" else int(m.group(2)))
+        return f"{y:04d}-{int(m.group(3)):02d}-{int(m.group(4)):02d}"
+    return head
+
+
 def image_credits(pdir: Path) -> str:
     """表紙と本編で使った画像を台帳から集め、掲載元・提供元を出す。"""
     import json
@@ -60,13 +78,13 @@ def image_credits(pdir: Path) -> str:
             continue
         if "©" in r["確認したキャプション"]:
             providers.add(re.search(r"©[^)）、]+", r["確認したキャプション"]).group(0).strip())
-        by_site.setdefault(r["掲載サイト名"], set()).add(r["撮影日・場所・行事"][:10])
+        by_site.setdefault(r["掲載サイト名"], set()).add(_ledger_date(r["撮影日・場所・行事"]))
         m = re.search(r"写真(?:提供)?：([^）)]+)", r["確認したキャプション"])
         if m:
             providers.add(m.group(1).strip())
     lines = []
     for site, dates in by_site.items():
-        ds = sorted(d for d in dates if re.match(r"\d{4}-\d\d-\d\d", d))  # ご近影など日付の記載がない写真(「令和7年 …」)は期間に数えない
+        ds = sorted(d for d in dates if re.match(r"\d{4}-\d\d-\d\d", d))  # 掲載ページにも日付の記載がない写真(「令和7年 …。ページに日付の記載なし」)だけ期間に数えない
         jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
         lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
