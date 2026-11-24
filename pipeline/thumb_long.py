@@ -120,36 +120,35 @@ def credit(im, s):
     w = d.textlength(s, font=f); d.rectangle((W - w - 16, H - 24, W, H), fill=(0, 0, 0)); d.text((W - w - 8, H - 23), s, font=f, fill=(220, 220, 220))
 
 
-def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=250):
-    """人物1名(バランス型・荒木さんと調整中の型): 右に写真(画面の約6割)、左に文字(読みやすい大きさ)"""
+def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=240):
+    """人物1名(荒木さんと調整中の型): 写真 約5.5割(右)・文字 約4.5割(左)。スマホで55歳以上の女性が読める大きさ"""
+    PW = 704
     im = Image.new("RGB", (W, H), NAVY)
-    ph = place(img, 800, H, (430, 330), face_h, focus); im.paste(ph, (W - 800, 0))
-    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - 800, fy, fw, fh)]
-    fade = grad(W, H, [(0, (255, 255, 255)), (0.38, (255, 255, 255)), (0.52, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
+    ph = place(img, PW + 120, H, (400, 330), face_h, focus); im.paste(ph, (W - PW - 120, 0))
+    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - PW - 120, fy, fw, fh)]
+    fade = grad(W, H, [(0, (255, 255, 255)), (0.45, (255, 255, 255)), (0.55, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
     im = Image.composite(grad(W, H, [(0, (6, 16, 40)), (1, (20, 40, 80))]), im, fade)
-    text(im, (36, 70), big, 136, fill=big_fill, maxw=540)
-    gold_band(im, (24, 280, 580, 380), band, 74)
-    text(im, (36, 425), line, 84, maxw=560)
+    text(im, (30, 60), big, 150, fill=big_fill, sw=8, maxw=600)
+    gold_band(im, (20, 285, 640, 395), band, 84)
+    text(im, (30, 430), line, 96, sw=8, maxw=620)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(24, 50, 600, 240), (24, 280, 580, 380), (24, 415, 620, 540)])
+    check_faces(out, faces_, [(20, 40, 640, 250), (20, 285, 640, 395), (20, 420, 660, 560)])
 
 
 def type_D(out, img1, f1, img2, f2, top, big, band, cap):
-    """人物2名(または人物と場所)(バランス型): 左右に写真、上の帯と下の帯に文字"""
+    """人物2名(または人物と場所): 写真 約5.5割(中央の高さ)・文字 約4.5割(上の帯と下)。下部の濃紺グラデーションは使わない"""
     im = Image.new("RGB", (W, H), NAVY)
-    p1 = place(img1, 640, H, (320, 320), 200, f1); fa = place.last_face
-    p2 = place(img2, 640, H, (320, 320), 200, f2); fb = place.last_face
+    p1 = place(img1, 640, H, (320, 305), 175, f1); fa = place.last_face
+    p2 = place(img2, 640, H, (320, 305), 175, f2); fb = place.last_face
     im.paste(p1, (0, 0)); im.paste(p2, (640, 0))
     ImageDraw.Draw(im).line((640, 0, 640, H), fill=(10, 20, 45), width=6)
     faces_ = ([fa] if f1 is None or len(f1) < 4 else []) + ([(fb[0] + 640, fb[1], fb[2], fb[3])] if f2 is None or len(f2) < 4 else [])
-    im.paste(grad(W, 96, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
-    text(im, (W // 2, 48), top, 72, anchor="mm", maxw=1200, shadow=False)
-    low = grad(W, 260, [(0, (0, 0, 0)), (0.35, (255, 255, 255)), (1, (255, 255, 255))]).convert("L")
-    im.paste(Image.new("RGB", (W, 260), (6, 14, 36)), (0, 460), low)
-    text(im, (W // 2, 548), big, 132, fill="gold", anchor="mm", maxw=1000)
-    gold_band(im, (190, 640, 1090, 708), band, 54)
+    im.paste(grad(W, 100, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
+    text(im, (W // 2, 50), top, 80, anchor="mm", maxw=1220, shadow=False)
+    text(im, (W // 2, 538), big, 140, fill="gold", sw=9, anchor="mm", maxw=1060)
+    gold_band(im, (150, 640, 1130, 714), band, 62)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(0, 0, W, 96), (140, 480, 1140, 720)])
+    check_faces(out, faces_, [(0, 0, W, 100), (110, 465, 1170, 720)])
 
 
 if __name__ == "__main__":
@@ -159,6 +158,6 @@ if __name__ == "__main__":
     type_R(O + "thumb_A.png", A + "A115.jpg", None, "愛子さま", "2つの国のおことば", "込めた感謝とは？",
            "写真: 宮内庁 令和7年12月1日公表")
     type_R(O + "thumb_B.png", A + "A118.jpg", (0.53, 0.33, 0.17), "1年で2回", "東日本大震災への感謝", "2つのおことば",
-           "写真: 宮内庁 令和7年12月1日公表(御所にて)", big_fill="gold", face_h=190)
+           "写真: 宮内庁 令和7年12月1日公表(御所にて)", big_fill="gold", face_h=180)
     type_D(O + "thumb_C.png", A + "A020.jpg", None, S + "jg.jpg", (0.5, 0.5, 0.21, "scene"),
            "祖父母が植えた木", "56年前", "シンガポールで語られた3代", "写真: 宮内庁 2026.6.22 ©Naoya Ikegami/SUNTORY HALL / イメージ: 日本庭園 FN-082 CC BY-SA 4.0")
