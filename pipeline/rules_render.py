@@ -38,7 +38,7 @@ VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
     "縦型": {"W": 1080, "H": 1920, "max_dur": 90.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 160,
-             "sub_y": 0.67, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
+             "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
 }
@@ -285,6 +285,8 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
     if cw > iw:
         cw = iw
         ch = cw / ar
+    if W < H:  # 荒木指示 2026-11-24: 縦型は画像と文字を重ねない。写真は決まった枠の中だけに置く
+        return _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main)
     target_face_y = 0.30 if W < H else 0.38
     if not keep_all and ((x1 - x0) <= cw * 0.9 or iw / ih <= ar * 1.3):
         left = min(max(cx - cw / 2, 0), iw - cw)
@@ -306,6 +308,50 @@ def plate(img_path: str, crop: str, W: int, H: int, Z: float = 1.12, sub_y: floa
         out[top:top + fh2, a0:a1] = fg[:PH - top, a0 - sx:a1 - sx]
         focus = (cx * fw / iw + sx, cy * fw / iw + top)
         LAST_BAND = (top, min(fh2, PH - top), fg[:PH - top], out.copy())
+    return out, focus
+
+
+# 縦型の画面割り(荒木指示 2026-11-24: 画像と文字を重ねない)
+#   上: 音声クレジット・人物名・撮影情報(〜0.20) / 中: 写真の枠 BOX_TOP〜BOX_BOTTOM / 下: 字幕(中心 sub_y=0.70、2行で0.60〜0.80)
+BOX_TOP, BOX_BOTTOM = 0.215, 0.585
+
+
+def _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main):
+    global LAST_BAND
+    ih, iw = img.shape[:2]
+    bt, bb = int(PH * BOX_TOP), int(PH * BOX_BOTTOM)
+    bh = bb - bt
+    bar = PW / bh
+    # 背景: 写真を画面いっぱいに広げてぼかし、暗くする(文字が読めるように)
+    sc = max(PW / iw, PH / ih)
+    big = cv2.resize(img, (int(iw * sc) + 1, int(ih * sc) + 1))
+    by, bx = (big.shape[0] - PH) // 2, (big.shape[1] - PW) // 2
+    bg = (cv2.GaussianBlur(big[by:by + PH, bx:bx + PW], (0, 0), 25) * 0.45).astype(np.uint8)
+    if crop == "顔の寄り" and fs:
+        ch = min(ih, max(fh / 0.18, ih * 0.55 if main is not None else 0))
+    elif crop == "手元・装い" and fs:
+        ch = min(ih, fh / 0.10)
+        cy = cy + fh * 2.2
+    else:
+        ch = ih
+    cw = ch * bar
+    if cw >= iw:  # 枠より横長でない写真: 枠の縦横比で切り抜く(縦長の写真は主役の顔を上寄りに)
+        cw = iw
+        ch = min(ih, cw / bar)
+    if iw / ih > bar and crop not in ("顔の寄り", "手元・装い"):  # 枠より横長: 全体を横幅いっぱいに、枠の中で上下中央
+        fw, fh2 = PW, int(ih * PW / iw)
+        fg = cv2.resize(img, (fw, fh2), interpolation=cv2.INTER_LANCZOS4)
+        top = bt + (bh - fh2) // 2
+        focus = (cx * fw / iw, cy * fw / iw + top)
+    else:
+        left = min(max(cx - cw / 2, 0), iw - cw)
+        t0 = min(max(cy - 0.38 * ch, 0), ih - ch)
+        fg = cv2.resize(img[int(t0):int(t0 + ch), int(left):int(left + cw)], (PW, bh), interpolation=cv2.INTER_LANCZOS4)
+        fh2, top = bh, bt
+        focus = ((cx - left) * PW / cw, (cy - t0) * bh / ch + top)
+    out = bg.copy()
+    out[top:top + fh2, :PW] = fg
+    LAST_BAND = (top, fh2, fg, out.copy())
     return out, focus
 
 
