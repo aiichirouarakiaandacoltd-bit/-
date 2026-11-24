@@ -115,10 +115,14 @@ def gold_band(im, box, s, size):
     text(im, ((x0 + x1) // 2, (y0 + y1) // 2), s, size, fill=NAVY, stroke=(255, 240, 190), sw=2, shadow=False, anchor="mm", maxw=x1 - x0 - 30)
 
 
-def credit(im, s):
+def credit(im, s, boxes=()):
+    """写真の出典(右下・小さく)。文字・帯の枠と重ならないことを確かめる(荒木指示 2026-11-24)"""
     d = ImageDraw.Draw(im); f = ImageFont.truetype("/usr/local/share/fonts/noto-sans-jp/NotoSansJP-Bold.ttf", 15)
-    w = d.textlength(s, font=f); d.rectangle((W - w - 16, H - 24, W, H), fill=(0, 0, 0)); d.text((W - w - 8, H - 23), s, font=f, fill=(220, 220, 220))
-
+    w = d.textlength(s, font=f); box = (W - w - 16, H - 22, W, H)
+    d.rectangle(box, fill=(0, 0, 0)); d.text((W - w - 8, H - 21), s, font=f, fill=(220, 220, 220))
+    hit = [b for b in boxes if box[0] < b[2] and box[2] > b[0] and box[1] < b[3] and box[3] > b[1]]
+    if hit:
+        raise SystemExit(f"クレジットが文字と重なっています: {hit}")
 
 def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=240):
     """人物1名(荒木さんと調整中の型): 写真 約5.5割(右)・文字 約4.5割(左)。スマホで55歳以上の女性が読める大きさ"""
@@ -131,7 +135,7 @@ def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=240):
     text(im, (30, 60), big, 150, fill=big_fill, sw=8, maxw=600)
     gold_band(im, (20, 285, 640, 395), band, 84)
     text(im, (30, 430), line, 96, sw=8, maxw=620)
-    credit(im, cap); im.save(out)
+    credit(im, cap, [(20, 40, 640, 250), (20, 285, 640, 395), (20, 420, 660, 560)]); im.save(out)
     check_faces(out, faces_, [(20, 40, 640, 250), (20, 285, 640, 395), (20, 420, 660, 560)])
 
 
@@ -145,10 +149,10 @@ def type_D(out, img1, f1, img2, f2, top, big, band, cap):
     faces_ = ([fa] if f1 is None or len(f1) < 4 else []) + ([(fb[0] + 640, fb[1], fb[2], fb[3])] if f2 is None or len(f2) < 4 else [])
     im.paste(grad(W, 100, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
     text(im, (W // 2, 50), top, 80, anchor="mm", maxw=1220, shadow=False)
-    text(im, (W // 2, 538), big, 140, fill="gold", sw=9, anchor="mm", maxw=1060)
-    gold_band(im, (150, 640, 1130, 714), band, 62)
-    credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(0, 0, W, 100), (110, 465, 1170, 720)])
+    text(im, (W // 2, 528), big, 140, fill="gold", sw=9, anchor="mm", maxw=1060)
+    gold_band(im, (150, 626, 1130, 694), band, 60)
+    credit(im, cap, [(150, 626, 1130, 694), (110, 455, 1170, 600)]); im.save(out)
+    check_faces(out, faces_, [(0, 0, W, 100), (110, 455, 1170, 720)])
 
 
 if __name__ == "__main__":
