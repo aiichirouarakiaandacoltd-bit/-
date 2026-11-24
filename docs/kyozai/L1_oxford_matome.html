@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>長尺制作のふりかえり</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: 社内教材の1枚もの。落ち着いた記録
+   IDEA 制作の進行表(工程の札と、点検の赤入れのない「指摘票」)
+   PICTURE 9分15秒の動画を時間どおりの帯で描いた構成図。答えの位置に印
+   COLOUR 白地、墨、皇室の紫 #4a2366 を主、くすんだ金 #a87b1f を補助、指摘は朱でなく紫の濃淡
+   TYPE Noto Serif JP 900 見出し + Noto Sans JP 本文
+   LAYOUT 上: 題と結論、その下に全幅の構成帯。下: 指摘票の表、教訓3つ */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#141016);--ink:light-dark(#1b1620,#efe9f3);--sub:light-dark(#5d5566,#b9aec2);--pur:light-dark(#4a2366,#c9a6e6);--pur2:light-dark(#efe7f5,#2a1f33);--gold:light-dark(#a87b1f,#e0b65a);--rule:light-dark(#ddd5e3,#3a3042)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Sans JP",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(24px,4vw,52px) max(5vw,16px)}
+.wrap{max-width:1180px;margin:0 auto}
+h1,h2{font-family:"Noto Serif JP",serif;font-weight:900;line-height:1.2;letter-spacing:-.01em;text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4.2vw,44px);color:var(--pur)}
+h2{font-size:clamp(21px,2.4vw,26px);margin-bottom:14px}
+.top{background:var(--pur2);border-bottom:1px solid var(--rule)}
+.meta{color:var(--sub);font-size:14px;margin:10px 0 0}
+.lead{font-size:17px;max-width:62em;margin:16px 0 0}
+.lead b{color:var(--pur)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5em,1fr));gap:10px 24px;margin:22px 0 0;padding:0;list-style:none}
+.facts li{border-top:2px solid var(--pur);padding-top:6px;font-size:14px;color:var(--sub)}
+.facts b{display:block;font-family:"Noto Serif JP",serif;font-size:clamp(22px,2.6vw,28px);color:var(--ink);line-height:1.2;white-space:nowrap}
+.timeline{margin-top:26px}
+.tl-head{display:flex;justify-content:space-between;font-size:13px;color:var(--sub)}
+.bar{position:relative;display:flex;height:132px;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid var(--rule);background:var(--bg)}
+.seg{position:relative;border-right:1px solid var(--bg);padding:8px 6px;font-size:13px;line-height:1.35;overflow:hidden}
+.seg span{display:block;font-variant-numeric:tabular-nums;font-size:12px;opacity:.85}
+.seg.k0{background:color-mix(in srgb,var(--pur) 92%,var(--bg));color:var(--bg)}
+.seg.k1{background:color-mix(in srgb,var(--pur) 70%,var(--bg));color:var(--bg)}
+.seg.k2{background:color-mix(in srgb,var(--pur) 22%,var(--bg))}
+.seg.k3{background:color-mix(in srgb,var(--gold) 30%,var(--bg))}
+.ans{position:absolute;top:0;bottom:0;width:3px;background:var(--gold)}
+.ans i{position:absolute;bottom:6px;left:6px;font-style:normal;font-size:12px;font-weight:700;background:var(--gold);color:#fff;padding:1px 6px;border-radius:3px;white-space:nowrap}
+.key{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--sub);margin-top:8px}
+.key em{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px)}
+.titles{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.titles li{border:1px solid var(--rule);border-radius:6px;padding:10px 12px 10px 52px;position:relative;font-size:15px}
+.titles li b{position:absolute;left:12px;top:10px;width:28px;height:28px;border-radius:50%;background:var(--pur);color:var(--bg);text-align:center;line-height:28px;font-family:"Noto Serif JP",serif}
+.titles small{display:block;color:var(--sub);font-size:13px}
+.steps{margin:0;padding-left:1.3em}
+.steps li{margin-bottom:6px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th{text-align:left;font-size:13px;color:var(--sub);font-weight:700;border-bottom:2px solid var(--pur);padding:8px 10px}
+td{border-bottom:1px solid var(--rule);padding:10px;vertical-align:top}
+td:first-child{white-space:nowrap;font-weight:700;color:var(--pur)}
+td:last-child{color:var(--sub)}
+.lessons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;list-style:none;margin:0;padding:0}
+.lessons li{background:var(--pur2);border-radius:8px;padding:16px 18px}
+.lessons b{display:block;font-family:"Noto Serif JP",serif;font-size:19px;line-height:1.35;color:var(--pur);margin-bottom:6px}
+.foot{font-size:13px;color:var(--sub);border-top:1px solid var(--rule)}
+code{font-size:13px;overflow-wrap:anywhere}
+@media(max-width:760px){.grid2,.lessons{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){
+ .bar{flex-direction:column;height:auto}
+ .seg{width:auto!important;border-right:0;border-bottom:1px solid var(--bg);padding:7px 10px;display:flex;gap:10px;align-items:baseline}
+ .seg span{flex:none;width:3.2em}
+ .ans{display:none}
+ .tl-head{display:none}
+ table{font-size:14px}
+ .stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}
+ .stack td{border:0;padding:2px 0;white-space:normal}
+ .stack td::before{content:attr(data-l);display:block;font-size:12px;color:var(--sub);font-weight:400}
+}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+
+<section class="band top"><div class="wrap">
+ <h1>長尺1本で学ぶ「調べて、作って、点検する」</h1>
+ <p class="meta">Claude塾 教材 / 題材: 雅子さまとオックスフォード(横型・長尺)/ 制作番号 KB-20261124-01 / 2026年11月24日 / 社内教材・非公開</p>
+ <p class="lead">結論: <b>出来を決めたのは、作る前の競合調査と、作った後の点検です。</b>題材は同じでも、競合の数字を見て切り口を変え、4つの係が3回点検して、作り手が見落とした誤りを直しました。機械の検査だけでは見つからなかった誤りもあります。</p>
+ <ul class="facts">
+  <li><b>9分15秒</b>動画の長さ</li>
+  <li><b>66枚</b>写真(映像なし)</li>
+  <li><b>3案</b>題名と表紙</li>
+  <li><b>4,049本</b>調べた競合動画</li>
+  <li><b>3回</b>点検の往復</li>
+ </ul>
+
+ <div class="timeline" aria-label="動画の構成">
+  <div class="tl-head"><span>0:00</span><span>構成(章ごとの長さを実際の比率で表示。時刻は目安)</span><span>9:15</span></div>
+  <div class="bar" id="bar"></div>
+  <div class="key"><span><em style="background:color-mix(in srgb,var(--pur) 92%,var(--bg))"></em>冒頭(主役の写真・お言葉・数字)</span><span><em style="background:color-mix(in srgb,var(--pur) 70%,var(--bg))"></em>疑問と答え</span><span><em style="background:color-mix(in srgb,var(--pur) 22%,var(--bg))"></em>次の疑問でつなぐ</span><span><em style="background:color-mix(in srgb,var(--gold) 30%,var(--bg))"></em>締めくくり</span><span><em style="background:var(--gold)"></em>答えを出す位置(3:06)</span></div>
+ </div>
+</div></section>
+
+<section class="band"><div class="wrap grid2">
+ <div>
+  <h2>企画は、競合の数字で切り口を変えた</h2>
+  <ol class="steps">
+   <li>皇室系の80チャンネル・4,049本を集め、好意型で伸びた動画61本を1本ずつ見た。</li>
+   <li>オックスフォードは今年すでに9本出ていて、再生の中央値は126回。どれも旅程をなぞる型だった。</li>
+   <li>同じ題材で伸びたのは「学位の一点」「お二人の笑顔と証言」に絞った動画。そこで旅程型をやめ、実際のお言葉と年の対比に絞った。</li>
+   <li>英国ご訪問の日程は約3分から約50秒に縮め、オックスフォード当日を前に出した。</li>
+  </ol>
+ </div>
+ <div>
+  <h2>題名と表紙は、主役の違う3案</h2>
+  <ol class="titles">
+   <li><b>A</b>【雅子さま34年ぶりのオックスフォード】陛下が会見で「雅子にも」と語られた、同じ博士号とは？<small>主役: 会見のお言葉と博士号</small></li>
+   <li><b>B</b>【平成3年と令和6年】陛下と雅子さまに、同じ大学から同じ博士号 お二人が同じガウンで臨まれた日<small>主役: 年の対比と同じガウン</small></li>
+   <li><b>C</b>【オックスフォードの昼食会】陛下が語られた「唯一避ける話題」とは？ 雅子さまと語り合う留学の思い出<small>主役: 昼食会のお言葉と留学の思い出</small></li>
+  </ol>
+ </div>
+</div></section>
+
+<section class="band" style="padding-top:0"><div class="wrap">
+ <h2>点検で見つかった誤りと、直し方</h2>
+ <div class="scroll"><table class="stack">
+  <thead><tr><th>係</th><th>見つけたこと</th><th>直し方</th><th>学び</th></tr></thead>
+  <tbody>
+   <tr><td>事実確認</td><td>ご近影の日付を「撮影日」と表示していた。ページにあるのは掲載の日付だけ</td><td>「令和7年 天皇陛下お誕生日に際してのご近影(御所)」のようにページの表記どおりにした</td><td>書いていないことは書かない。直しが行き過ぎて「2月23日公表」と推測を足した分も、次の点検で戻した</td></tr>
+   <tr><td>事実確認</td><td>「博士号から33年」は原文にない計算。「最後に」も、原文ではその後に2段落続いていた</td><td>「陛下は平成3年、雅子さまは令和6年」と事実だけを並べた。「さらに陛下は」に直した</td><td>引用は全文と機械で照合し、つなぎの言葉も原文の順番で確かめる</td></tr>
+   <tr><td>決まりの確認</td><td>昼食会のお言葉の場面に、ロンドンのレセプションの写真が出ていた</td><td>会場の写真に差し替えた</td><td>人物が合っていても、場面が違えば「ナレーションと画像の一致」にならない</td></tr>
+   <tr><td>決まりの確認</td><td>表紙Bの帯は「陛下と雅子さまに」なのに、陛下が写っていなかった</td><td>お二人の写真と授与式の会場を組み合わせて作り直した</td><td>表紙の文字と写真が同じことを言っているかを見る</td></tr>
+   <tr><td>写真の照合</td><td>お誕生日のご近影12枚は、説明に片方のお名前しかなかった</td><td>使わずに、説明に全員のお名前がある写真に替えた</td><td>人物はお顔で見分けない。掲載ページの説明で確かめられる写真だけを使う</td></tr>
+   <tr><td>写真の照合</td><td>街並みの写真に、通行人のお顔が分かる大きさで写っていた</td><td>人の写らない建物写真に替えた</td><td>主役でない一般の方にも配慮する</td></tr>
+   <tr><td>コマの点検</td><td>右上の撮影情報が中央の名札に重なるカットが11あった。機械の検査は0件で合格だった</td><td>撮影情報を名札の右に収める画面割りに直して書き出し直した</td><td>機械の合格は完成ではない。書き出した画面を目で見る</td></tr>
+   <tr><td>書き出し</td><td>完成ファイルが35.8秒で切れていた(作業の時間制限で途中終了)</td><td>時間制限を延ばして書き出し直し、長さを実測した</td><td>「できた」の報告より、ファイルの長さを測って確かめる</td></tr>
+  </tbody>
+ </table></div>
+</div></section>
+
+<section class="band" style="padding-top:0"><div class="wrap">
+ <h2>この1本からの教訓</h2>
+ <ul class="lessons">
+  <li><b>題材より先に、先行動画の数字を見る</b>同じ題材が多く出ていて伸びていないなら、切り口を変える。今回は旅程型から「実際のお言葉と年の対比」に変えた。</li>
+  <li><b>事実は、原文に書いてあることだけ</b>計算した年数、推測した日付、「建物」のような言い足しも、原文になければ誤り。引用は一字一句照合する。</li>
+  <li><b>作った人と点検する人を分ける</b>作り手の自己点検では見つからなかった誤りを、別の係が見つけた。点検の結果は作り手が書き換えない。</li>
+ </ul>
+</div></section>
+
+<section class="band foot"><div class="wrap">
+ 記録の場所: 直しの記録 <code>projects/KB-20261124-01/fixes.md</code> / 点検 <code>factcheck.md</code>・<code>rules_check.md</code>・<code>frames_check.md</code> / 競合調査 <code>docs/research/2026-11-24_long_competitors_deep.md</code> / 追加した制作ルール <code>docs/production_rules.md</code> 5-3章。写真は宮内庁の掲載写真と Wikimedia Commons。報道各社の撮影者表記がある写真を含むため、外部公開には使えない。
+</div></section>
+
+<script>
+{
+ const ch=[[0,"冒頭","k0"],[24,"雅子さまのコレッジ","k1"],[60,"昼食会で語られた「唯一避ける話題」","k1"],[170,"贈り物","k1"],[204,"陛下はいつ博士号を","k2"],[253,"5年違いの留学","k2"],[334,"こぼれ落ちたコイン","k2"],[384,"窓から手を振られたお部屋","k2"],[441,"3つのお言葉を並べると","k2"],[520,"締めくくり","k3"]];
+ const T=555,ans=186;
+ const mm=s=>Math.floor(s/60)+":"+String(Math.round(s%60)).padStart(2,"0");
+ const bar=document.getElementById("bar");
+ bar.innerHTML=ch.map((c,i)=>{const e=i<ch.length-1?ch[i+1][0]:T;return `<div class="seg ${c[2]}" style="width:${((e-c[0])/T*100).toFixed(2)}%" title="${mm(c[0])} ${c[1]}"><span>${mm(c[0])}</span>${c[1]}</div>`}).join("")+`<div class="ans" style="left:${(ans/T*100).toFixed(2)}%"><i>答え 3:06</i></div>`;
+}
+</script>
+</body>
+</html>
