@@ -519,6 +519,7 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
     d = ImageDraw.Draw(im)
     vert = W < H
     fs_name = 32 if vert else 30  # 荒木指示 2026-11-21: 人物名・撮影情報は極力小さく(字幕を主役にする)
+    name_right = 0  # 横型: 人物名の名札の右端(撮影情報を名札に重ねないため)
     for text, cx in labels:
         f = font(FONT_B, fs_name)
         tw = d.textlength(text, font=f)
@@ -526,12 +527,15 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
         y = int(H * 0.035) if vert else 12  # 横型: 上の帯(写真の枠と重ねない)
         d.rounded_rectangle((x - 10, y - 5, x + tw + 10, y + fs_name + 12), 8, fill=NAVY + (200,), outline=GOLD + (255,), width=2)
         d.text((x, y), text, font=f, fill=WHITE)
+        name_right = max(name_right, int(x + tw + 10))
     if caption:
         # 撮影情報: 画面からはみ出さないよう、長い時は少し縮め、それでも入らなければ2行に折り返す
         size = 22 if vert else 20
         maxw = W - 60
+        if not vert:  # 横型: 名札(中央)の右から画面右端までに収める(2026-11-24 コマ点検: 名札との重なり)
+            maxw = W - 40 - 6 - max(name_right + 24 + 6, W // 2 + 140)
         f = font(FONT_R, size)
-        while d.textlength(caption, font=f) > maxw and size > 18:
+        while d.textlength(caption, font=f) > maxw and size > (16 if not vert else 18):
             size -= 1
             f = font(FONT_R, size)
         lines = [caption]
@@ -544,12 +548,12 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
                 else:
                     cur += ch
             lines.append(cur)
-            lines = lines[:3]
+            lines = lines[:3] if vert else lines[:2]
         tw = max(d.textlength(l, font=f) for l in lines)
-        lh = size + 9
+        lh = size + 9 if vert else size + 6
         x, y = 24, int(H * (0.068 if vert else 0.16))
         if not vert:  # 横型: 上の帯の右(写真の枠と重ねない)
-            x, y = W - tw - 40, 18
+            x, y = W - tw - 40, (18 if len(lines) == 1 else 8)
         d.rounded_rectangle((x - 6, y - 3, x + tw + 6, y + lh * len(lines)), 6, fill=(0, 0, 0, 140))
         for i, l in enumerate(lines):
             d.text((x, y + i * lh), l, font=f, fill=WHITE)
