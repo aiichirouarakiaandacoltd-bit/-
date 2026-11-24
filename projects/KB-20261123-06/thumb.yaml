@@ -17,3 +17,15 @@ canva:
   png: projects/KB-20261123-06/thumb/thumb_canva.png
   photo: projects/KB-20261123-06/thumb/A017_S-A_crop.jpg
   layout_note: 元画像A017(1000×750)をx155〜840・y205〜676で切り抜き拡大のみ(天皇陛下と愛子さまの2人。左端の他の人の手は入らない。加工なし)。写真枠x60〜1020・y390〜1050(960×660)。ロゴy165・上段88px白(y258)・中段190px金(y1068)・下段128px白(y1305)、各1行・左右余白40px以上・y1460以下は空け。検査 1080×1920・写真枠外の赤0
+  canva_A:
+    design_id: DAHbzyqXBYc
+    edit_url: https://www.canva.com/d/uMcfBbHwM9UqPzr
+    png: projects/KB-20261123-06/thumb/thumb_canva_A.png
+    photo: projects/KB-20261123-06/thumb/A017_square_crop.jpg
+    layout_note: 2026-11-24 荒木指示 パターンA(バランス型)。DAHbxQqHs5Yを複製。A017をx160〜835・y75〜735で切り抜き拡大のみ(加工なし)。ロゴ36px金(y150)・上段86px白(y268)・金線y386・写真x90〜990/y430〜1310・撮影情報26px白右寄せ(y1324)・金線y1399・中段196px金1行(y1428)・下段132px白(y1665)。検査 1080×1920・赤0。撮影情報の字体はadd_textの既定字体(API上Noto Sans JPに変更不可・要確認)
+  canva_B:
+    design_id: DAHbz3fQHB4
+    edit_url: https://www.canva.com/d/cpup4bliR6vy21F
+    png: projects/KB-20261123-06/thumb/thumb_canva_B.png
+    photo: projects/KB-20261123-06/thumb/A017_square_crop.jpg
+    layout_note: 2026-11-24 荒木指示 パターンB(上寄せ型)。DAHbxQqHs5Yを複製。ロゴ36px金(y72)・上段86px白(y180)・写真x125〜955/y292〜1104・中段154px金1行(y1110)・下段100px白(y1280)・金線y1400。y1420以下は背景のみ(実測)。検査 1080×1920・赤0

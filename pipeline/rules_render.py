@@ -37,7 +37,7 @@ FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
 SPEC = {
-    "縦型": {"W": 1080, "H": 1920, "max_dur": 75.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 160,
+    "縦型": {"W": 1080, "H": 1920, "max_dur": 75.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 140,
              "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
     "横型": {"W": 1920, "H": 1080, "max_dur": 720.0, "cut": (4.0, 6.0), "max_show": 8.0, "line": 13, "sub_size": 130,
              "sub_y": 0.84, "person_ratio": 0.90, "cuts": (100, 150), "images": 60},
@@ -91,7 +91,7 @@ def _split_long(u: str, line: int) -> list[str]:
         pos += n
     if pos < len(u):
         words.append(u[pos:])
-    if len(u) <= line + 2:  # 言葉を切らないため、1行8字(縦型)までは分けずに少し縮めて出す
+    if len(u) <= line + 1:  # 荒木指示 2026-11-24: 字幕の大きさを統一するため、1行7字(縦型)まで。縮めない
         return [u]
     cuts, acc = [], 0
     for k in range(1, len(words)):
@@ -169,7 +169,7 @@ def split_sub(text: str, line: int) -> list[list[str]]:
             fixed.append(u)
     units = []
     for u in fixed:  # 1つの文節が1行に収まらない時は、単語の切れ目で分ける(字幕を縮めないため)
-        units += _split_long(u, line) if len(u) > line + 2 else [u]
+        units += _split_long(u, line) if len(u) > line + 1 else [u]
     lines, cur = [], ""
     for u in units:
         if cur and (len(cur + u) > line or cur.endswith("。")) and not (len(u) <= 1 and len(cur + u) <= line + 1 and not cur.endswith("。")):
@@ -340,7 +340,22 @@ def _vertical_box(img, crop, PW, PH, cx, cy, fh, fs, main):
         ch = min(ih, cw / bar)
     # 枠より横長の写真: 写っている方々(顔の左右の端)が枠の幅に収まるなら、左右を切って枠いっぱいに表示する(荒木指示: できる限り画面いっぱいに)
     fit_width = False
-    if iw / ih > bar and crop not in ("顔の寄り", "手元・装い"):
+    if crop == "全体表示":
+        # 2026-11-24 当てっこ係の指摘: 写真全体を枠に収める(顔検出に漏れた方が切れない・小さい写真を拡大しすぎない)。
+        # 横長は横幅いっぱいの帯、縦長は枠の高さいっぱいに置き、左右はぼかした背景
+        if iw / ih > bar:
+            fit_width = True
+        else:
+            fw2 = max(1, int(iw * bh / ih))
+            fg2 = cv2.resize(img, (fw2, bh), interpolation=cv2.INTER_LANCZOS4)
+            strip = bg[bt:bb].copy()
+            x0 = (PW - fw2) // 2
+            strip[:, x0:x0 + fw2] = fg2
+            out = bg.copy()
+            out[bt:bb, :PW] = strip
+            LAST_BAND = (bt, bh, strip, out.copy())
+            return out, (x0 + cx * bh / ih, bt + cy * bh / ih)
+    if iw / ih > bar and crop not in ("顔の寄り", "手元・装い", "全体表示"):
         fit_width = True
         if fs:
             mg = max(fh * 1.6, iw * 0.05)
@@ -565,6 +580,17 @@ def build(project: str, kind: str = "縦型") -> Path:
         off = 0
         if imgs and shots and len(imgs) > 1 and imgs[0] == shots[-1]["image"]:
             off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない
+        cuts_at = None
+        if len(imgs) > 1 and s.get("switch_subs"):
+            # 第4-3章(2026-11-24): 写真の切り替えを字幕の区切り(言葉の切れ目)に合わせる。音声・字幕は変えない。
+            # switch_subs = 次の写真に替える字幕のかたまりの番号(0始まり)。字幕の時刻と同じ計算(モーラ比)で求める
+            from .tts import mora_count
+            ch = s.get("subtitle_lines") or split_sub(s["narration"], sp["line"])
+            ms_ = [max(1, mora_count("".join(c))) for c in ch]
+            a_, b_ = s["start_sec"], s["end_sec"] - 0.06
+            st_ = [a_ + (b_ - a_) * sum(ms_[:j]) / sum(ms_) for j in range(len(ch))]
+            cuts_at = [a] + [st_[j] for j in s["switch_subs"]] + [b]
+            n = len(cuts_at) - 1
         for k in range(n):
             img = imgs[(k + off) % len(imgs)] if imgs else None
             c0 = s.get("crop", "全身")
@@ -575,14 +601,16 @@ def build(project: str, kind: str = "縦型") -> Path:
             else:
                 crop = crops[(crops.index(c0) + k) % 3]
             motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
-            shots.append({"scene": s["scene"], "start": a + (b - a) * k / n, "end": a + (b - a) * (k + 1) / n,
+            s0 = cuts_at[k] if cuts_at else a + (b - a) * k / n
+            s1 = cuts_at[k + 1] if cuts_at else a + (b - a) * (k + 1) / n
+            shots.append({"scene": s["scene"], "start": s0, "end": s1,
                           "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
                           # 写真ごとの人物名(例: 人物の写らない会場写真は "")。無ければ場面の人物名
                           "person_label": (s.get("labels") or {}).get(img, s.get("person_label", "")),
                           "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
                           # 人物以外を語る場面で写っている物(例: 黒鳥)。第4-3章
                           "subject": (s.get("subjects") or {}).get(img, s.get("subject", "")),
-                          "clip_start": float((s.get("clip") or {}).get("start", 0)) + (b - a) * k / n,
+                          "clip_start": float((s.get("clip") or {}).get("start", 0)) + (s0 - a),
                           "diagram": bool(s.get("diagram"))})
     # 3) 映像
     raw = out_dir / "video_nosub.mp4"

@@ -17,3 +17,18 @@ canva:
   photo: projects/KB-20261123-05/thumb/A003_S-A_crop.jpg
   layout_note: 元画像A003(1000×666)をx440〜1000・y20〜500で切り抜き2倍に拡大(皇后陛下と花束のみ。子ども・家族の顔は入らない。加工なし)。写真枠x102〜977・y430〜1180(875×750)。ロゴy170・上段112px白(y272)・中段120px金(y1200)・下段96px白(y1365)、各1行・左右余白40px以上・y1480以下は空け。赤は花束のバラのみ(枠内の小部分)。検査
     1080×1920・写真枠外の赤0
+  png_note: 2026-11-24 荒木指示で2パターン化。thumb_canva.png はパターンAと同じ
+  canva_A:
+    design_id: DAHbz7755d4
+    edit_url: https://www.canva.com/d/xolZY3cLpVGtUJq
+    source: DAHbxAFRlZg の複製
+    png: projects/KB-20261123-05/thumb/thumb_canva_A.png
+    photo: projects/KB-20261123-05/thumb/A003_sq_crop.jpg
+    layout_note: パターンA。ロゴ40px金(中心y160)・上段120px白(中心y290)・金細線y380(x90〜990)・写真x90〜990・y430〜1310(900×880)・撮影情報26px太字白右寄せ(y1324)・金細線y1400・中段124px金1行(中心y1500)・下段104px白(中心y1680)。写真は元画像A003(1000×666)をx440〜1000・y20〜567で切り抜き2倍に拡大(皇后陛下と花束のみ。子ども・家族の顔は入らない。加工なし)。検査1080×1920・写真枠外の赤0
+  canva_B:
+    design_id: DAHbz9Lz_mk
+    edit_url: https://www.canva.com/d/XnEb-kI6hcD1tWX
+    source: DAHbxAFRlZg の複製
+    png: projects/KB-20261123-05/thumb/thumb_canva_B.png
+    photo: projects/KB-20261123-05/thumb/A003_sq_crop.jpg
+    layout_note: パターンB。ロゴ40px金(中心y80)・上段116px白(中心y210)・写真x125〜955・y290〜1105(830×815)・中段124px金1行(中心y1200)・下段100px白(中心y1330)・金細線y1400(x125〜955)。y1420より下は濃紺のみ(実測で単色)。写真はAと同じ切り抜き。検査1080×1920・写真枠外の赤0
