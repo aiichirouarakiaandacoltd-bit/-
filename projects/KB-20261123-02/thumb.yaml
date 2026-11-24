@@ -3,15 +3,15 @@ texts:
   middle: オランダの夏とは？
   lower: 陛下が会見で語られた思い出
 photos:
-- ledger: U001
-center_image: U001
-note: 写真は荒木さん提供(2026-11-24指示)。同じ場面の写真は Getty Images 等で有償ライセンス。社内教材のみで使用。U001=2006年8月18日アペルドールン王室厩舎前(Japan Times 2006-08-20・Getty の写真説明で日付・場所確認)。元画像420×236を切らずに全体(8人)を使用、Lanczosで2.0倍拡大のみ(明るさ補正・AI加工なし)。写真枠x120〜960・y530〜1002(840×472)、枠の下右寄せに日付「2006年8月 オランダにて」34px淡白(#D8DEE8)。3段の文言・サイズは前版のまま(上段80px・中段108px金・下段75px、各1行)。検査 1080×1920・写真枠外の赤0。前版(A007・2026-06-17の写真)は DAHbuiyxnog に残す
+- ledger: U002
+center_image: U002
+note: 写真は荒木さん提供(2026-11-24指示)。同じ場面の写真は Getty Images 等で有償ライセンス。社内教材のみで使用。U002=2006年8月18日オランダ・アペルドールン王室厩舎前(Japan Times 2006-08-20・Getty の写真説明で日付・場所確認)。荒木さん提供の切り抜き版262×236(雅子さま・愛子さま・陛下・マキシマ妃・アマリア王女・アレクシア王女・ウィレム=アレキサンダー皇太子の7人)を追加の切り抜きなしで全体使用、Lanczosで2.0倍拡大のみ(明るさ補正・AI加工・顔の加工なし)。写真枠x278〜802・y530〜1002(524×472・中央)、枠の下右寄せに日付「2006年8月 オランダにて」34px淡白(#D8DEE8)。3段の文言・サイズは前版のまま(上段80px・中段108px金・下段75px、各1行)。検査 1080×1920・写真枠外の赤0。U001(全体版420×236)は台帳に残すが表紙では不使用。2026-06-17の写真(A007)の版は DAHbuiyxnog に残す
 layout: S-A
 canva:
   design_id: DAHbyGuxEeQ
   edit_url: https://www.canva.com/d/EcmwwjVMlqIOa6y
   template: DAHatUQFKSI
   png: projects/KB-20261123-02/thumb/thumb_canva.png
-  photo: projects/KB-20261123-02/thumb/U001_S-A.jpg
+  photo: projects/KB-20261123-02/thumb/U002_S-A.jpg
   previous_design_id: DAHbuiyxnog
   previous_edit_url: https://www.canva.com/d/7WfFEuCVR3LJ50h
