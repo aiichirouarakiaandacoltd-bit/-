@@ -79,8 +79,9 @@ def check(project: str, kind: str = "縦型") -> bool:
                 return bool(m) and not re.search(r"(天皇|皇后|殿下|さま)", m) and m in r.get("確認したキャプション", "")
             if not all(_ok(n) for n in re.split(r"[・、]", want) if n):
                 bad.append(f"{s['scene']}:{lab}≠{names}")
-            if s.get("caption") and r["撮影日・場所・行事"][:4] not in re.sub(r"年.*", "", s["caption"]) + s["caption"]:
-                bad.append(f"{s['scene']}:撮影年 {s['caption']}≠{r['撮影日・場所・行事'][:10]}")
+            cap = (s.get("captions") or {}).get(iid) or s.get("caption")  # 写真ごとの撮影情報があればそれで照合
+            if cap and r["撮影日・場所・行事"][:4] not in re.sub(r"年.*", "", cap) + cap:
+                bad.append(f"{s['scene']}:撮影年 {cap}≠{r['撮影日・場所・行事'][:10]}")
     for s in scenes:
         for iid in ((s.get("compare") or {}).get("images") or s.get("images") or [s.get("image")]):
             if iid and "要目視" in (ledger.get(iid) or {}).get("確認方法", ""):
@@ -217,6 +218,10 @@ def check(project: str, kind: str = "縦型") -> bool:
         no_match = [s_["scene"] for s_ in scenes if not str(s_.get("match", "")).strip()]
         add("ナレーションと画像の一致の理由が全場面にある(第4-3章)", not no_match, no_match or "全場面あり(内容の妥当性は当てっこ係が目視)",
             "直し係が各場面の match に『ナレーションの言葉→写っているもの』を書く。書けない場面は画像を探し直すか言い方を直す")
+    # 第1-4章(荒木指示 2026-11-24): 「答えは〜」の前に前置き(疑問の言い直し)を置く
+    abrupt = [s_["scene"] for s_ in scenes if s_["narration"].startswith("答えは")]
+    add("「答えは」の前に前置きがある(第1-4章)", not abrupt, abrupt or "なし",
+        "台本係が「答えは」の前に冒頭の疑問を言い直す一文(例:「〜とは、何だったのでしょうか。」)を置く")
     add("冒頭の疑問に本編で回答", qa, f"question={roles.index('question') if 'question' in roles else 'なし'} answer={'あり' if 'answer' in roles else 'なし'}(回答内容の妥当性は要目視)")
     passed = all(r[1] for r in res)
     lines = [f"# qa_report — {project}({kind})", "", f"判定: **{'完成' if passed else '未完成(不足事項あり)'}**", "",
