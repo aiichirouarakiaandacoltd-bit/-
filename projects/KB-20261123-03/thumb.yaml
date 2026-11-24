@@ -15,3 +15,16 @@ canva:
   png: projects/KB-20261123-03/thumb/thumb_canva.png
   photo: projects/KB-20261123-03/thumb/A104_S-A_crop.jpg
   layout_note: 元画像A104をx300〜960・y30〜450で切り抜き2倍に拡大(テールランプの赤を除外、加工なし)。写真枠x40〜1040・y500〜1136。上段82px白・中段98px金・下段76px白、各1行・左右余白40px
+  canva_A:
+    design_id: DAHbz_AW-78
+    edit_url: https://www.canva.com/d/YEx_rpAIIOx5gXE
+    png: projects/KB-20261123-03/thumb/thumb_canva_A.png
+    photo: projects/KB-20261123-03/thumb/A104_square_crop.jpg
+    layout_note: パターンA(バランス型・第9章②)。DAHbvLv46ikを複製。ロゴ44px金y134〜186・上段84px白y240・金細線y379・写真x90〜990・y430〜1310・撮影情報26px白右寄せy1326・金細線y1399・中段102px金1行y1459・下段78px白y1753
+  canva_B:
+    design_id: DAHbz_APRDc
+    edit_url: https://www.canva.com/d/KV8eeDDFoJQZpPT
+    png: projects/KB-20261123-03/thumb/thumb_canva_B.png
+    photo: projects/KB-20261123-03/thumb/A104_square_crop.jpg
+    layout_note: パターンB(上寄せ型・第9章②)。DAHbvLv46ikを複製。ロゴ40px金y56・上段84px白y160・写真x125〜955・y290〜1105・中段102px金1行y1139・下段78px白y1284・金細線y1399。y1420から下は濃紺のみ(画素で確認)
+  square_crop_note: A104(1000×666)をx298〜958・y0〜647で切り抜き2倍に拡大(1320×1294・加工なし)。4人を入れるため右下の車のテールランプの赤が写真内に入る(要確認)

@@ -15,3 +15,16 @@ canva:
   png: projects/KB-20261123-04/thumb/thumb_canva.png
   photo: projects/KB-20261123-04/thumb/A002_S-A_crop.jpg
   layout_note: 元画像A002(1000×666)をx250〜850・y150〜532で切り抜き2倍に拡大(両陛下のお顔と若木、加工なし)。写真枠x40〜1040・y450〜1150(1000×700、画像を左へ20px寄せ)。ロゴy170・上段104px白(y280)・中段106px金(y1200)・下段76px白(y1375)、各1行・左右余白40px以上。検査 1080×1920・写真枠外の赤0
+  canva_A:
+    design_id: DAHbzwpWubI
+    edit_url: https://www.canva.com/d/ghFvmIAsJgmmLyI
+    png: projects/KB-20261123-04/thumb/thumb_canva_A.png
+    photo: projects/KB-20261123-04/thumb/A002_A_sq.jpg
+    layout_note: 2026-11-24 荒木指示 パターンA(バランス型)。DAHbvSxfLF4を複製。ロゴ40px金(y136〜184)・上段120px白(y221)・金線y379・写真x90〜990/y430〜1310(A002をx170〜851・y0〜666で切り抜き拡大のみ)・撮影情報26px白右寄せ(y1324)・金線y1399・中段112px金1行(y1455)・下段78px白(y1755)。検査 1080×1920・赤0
+  canva_B:
+    design_id: DAHbzxYsXaM
+    edit_url: https://www.canva.com/d/DTgDp6q2r5_SbZj
+    png: projects/KB-20261123-04/thumb/thumb_canva_B.png
+    photo: projects/KB-20261123-04/thumb/A002_B_sq.jpg
+    layout_note: 2026-11-24 荒木指示 パターンB(上寄せ型)。DAHbvSxfLF4を複製。ロゴ40px金(y56)・上段120px白(y138)・写真x125〜955/y290〜1105(A002をx171〜849・y0〜666で切り抜き拡大のみ)・中段112px金1行(y1133)・下段78px白(y1284)・金線y1399。y1420より下は背景のみ(実測)。検査 1080×1920・赤0
+  png_default: thumb_canva.png はパターンAと同一
