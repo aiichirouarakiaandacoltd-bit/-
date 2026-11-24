@@ -140,11 +140,19 @@ def _new_from_batch(st, spec: str):
         sys.exit(f"{bid}:{item} は荒木さんの承認前です(bin/kabu batch-approve {bid})")
     pdir = ROOT / "projects" / st["job_id"]
     pdir.mkdir(parents=True, exist_ok=True)
+    if "title" not in it and it.get("ab_tests"):  # 長尺(第5-2章): タイトル3案のうちAを本タイトルにし、3案は ab_tests に残す
+        it["title"] = it["ab_tests"][0]["title"]
+        st["kind"] = "横型"
+        st["ab_tests"] = it["ab_tests"]
     (pdir / "plan.md").write_text(
         f"# G0 企画書 {st['job_id']}(一括承認 {bid}:{item})\n\n## タイトル\n```\n{it['title']}\n```\n\n## 概要\n{it.get('summary', '')}\n\n"
         f"- 型: {it.get('type', '')} / 伸びる要因: {it.get('factors', '')} / 裏付け: {it.get('evidence', '')} / 写真: {it.get('photos', '')}\n"
         f"- 承認: {it.get('approved_by')} {it.get('approved_at')}(一括承認。以後は承認を求めず完成まで進める)\n", encoding="utf-8")
-    (pdir / "publish.yaml").write_text(f"title: \"{it['title']}\"\n", encoding="utf-8")
+    import yaml as _y
+    pub = {"title": it["title"]}
+    if it.get("ab_tests"):
+        pub["ab_tests"] = it["ab_tests"]
+    (pdir / "publish.yaml").write_text(_y.safe_dump(pub, allow_unicode=True, sort_keys=False), encoding="utf-8")
     note = f"一括承認 {bid}:{item}({it.get('approved_at')})"
     for sid in ("research", "trends", "competitors", "plan", "gate_G0"):
         st["steps"][sid].update(status="done", note=note, at=now_jst().isoformat(timespec="seconds"))
