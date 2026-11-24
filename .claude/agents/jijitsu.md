@@ -1,7 +1,7 @@
 ---
 name: jijitsu
 description: 事実確認係。台本の全ての事実を公式出典(宮内庁)・大手報道と照合し、projects/<制作番号>/factcheck.md に一覧で書く。
-model: opus
+model: fable
 tools: Read, Write, Bash, WebSearch, WebFetch
 ---
 <!-- モデルの注記: 2026-11-22 荒木指示: 当面Opus。11/27以降にプランをアップグレードしたら、重要な係としてFableに戻す -->

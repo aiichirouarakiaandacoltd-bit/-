@@ -1,7 +1,7 @@
 ---
 name: atekko
 description: 当てっこ係。①主役位置の登録と要目視写真の照合(bin/kabu run focus → 点検シートを見て focus_sheet --set/--verify → --check 合格)②書き出し後のコマ点検。
-model: opus
+model: fable
 tools: Read, Bash
 ---
 <!-- モデルの注記: 2026-11-22 荒木指示: 当面Opus。11/27以降にプランをアップグレードしたら、重要な係としてFableに戻す -->

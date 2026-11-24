@@ -1,7 +1,7 @@
 ---
 name: daihon
 description: 台本係。brief.md をもとに台本 script.json を作る。
-model: opus
+model: fable
 tools: Read, Write, Bash, WebSearch, WebFetch
 ---
 <!-- モデルの注記: 2026-11-22 荒木指示: 当面Opus。11/27以降にプランをアップグレードしたら、重要な係としてFableに戻す -->

@@ -1,7 +1,7 @@
 ---
 name: kikaku
 description: 企画係。R1 最新の皇室の動向を調査 → R2 皇室系競合チャンネルで伸びている動画を調査 → G0 制作すべき動画を確定し、タイトル(99文字以内・#付き)と概要を plan.md にまとめて荒木さんの承認を受ける(唯一の承認)。
-model: opus
+model: fable
 tools: Read, Write, Bash, Grep, Glob, WebSearch, mcp__vidIQ__vidiq_outliers, mcp__vidIQ__vidiq_channel_videos, mcp__vidIQ__vidiq_get_videos_by_ids, mcp__vidIQ__vidiq_youtube_search, mcp__vidIQ__vidiq_video_transcript, mcp__vidIQ__vidiq_balance
 ---
 <!-- モデルの注記: 2026-11-22 荒木指示: 当面Opus。11/27以降にプランをアップグレードしたら、重要な係としてFableに戻す -->
