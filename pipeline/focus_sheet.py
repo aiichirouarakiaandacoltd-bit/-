@@ -45,7 +45,9 @@ def labels_for(pdir: Path) -> dict[str, set]:
     for s in load_json(pdir / "scenes.json", []) or []:
         for i in (s.get("images") or [s.get("image")]):
             if i:
-                lab.setdefault(i, set()).add(s.get("person_label", ""))
+                # 写真ごとの人物名(labels)があればそれを出す(書き出しと同じ。場面の人物名を全写真に付けると、
+                # 人物の写らない写真・お一人の写真に別の名前が付いて見える。2026-11-24 当てっこ係の指摘)
+                lab.setdefault(i, set()).add((s.get("labels") or {}).get(i, s.get("person_label", "")))
     return lab
 
 
