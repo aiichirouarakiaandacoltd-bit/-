@@ -48,10 +48,18 @@ def image_credits(pdir: Path) -> str:
     by_site: dict[str, set] = {}
     providers: set = set()
     supplied = []
+    commons: dict = {}
     for r in rows:
         if r["掲載サイト名"] == "提供写真":
             supplied.append(r)
             continue
+        if r["掲載サイト名"] == "Wikimedia Commons":  # 作者・ライセンスを表示(CCの表示義務)
+            ma = re.search(r"作者 ([^/／)）]+?)\s*[/／)）]", r["確認したキャプション"])
+            ml = re.search(r"(CC[ -][A-Z0-9 .\-]+?)(?:\(|（|$)", r["確認したキャプション"])
+            commons.setdefault(f"{ma.group(1).strip() if ma else '作者不明'} {ml.group(1).strip() if ml else ''}".strip(), None)
+            continue
+        if "©" in r["確認したキャプション"]:
+            providers.add(re.search(r"©[^)）、]+", r["確認したキャプション"]).group(0).strip())
         by_site.setdefault(r["掲載サイト名"], set()).add(r["撮影日・場所・行事"][:10])
         m = re.search(r"写真(?:提供)?：([^）)]+)", r["確認したキャプション"])
         if m:
@@ -62,10 +70,18 @@ def image_credits(pdir: Path) -> str:
         jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
         lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
+    if commons:
+        lines.append("写真：Wikimedia Commons（" + "、".join(commons) + "）")
+    seen_sup = set()
     for r in supplied:
         d = r["撮影日・場所・行事"]
+        if d in seen_sup:
+            continue
+        seen_sup.add(d)
         when = f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日" if re.match(r"\d{4}-\d\d-\d\d", d) else ""
-        lines.append(f"表紙写真：{when} {d[10:].strip()}（提供写真。撮影日・場所は報道写真の説明文で確認）".replace("： ", "："))
+        uses = "・".join(sorted({("表紙" if "表紙" in x["使用する場面"] else "動画") for x in supplied if x["撮影日・場所・行事"] == d}
+                               | ({"動画"} if any("動画" in x["使用する場面"] for x in supplied if x["撮影日・場所・行事"] == d) else set())))
+        lines.append(f"提供写真：{when} {d[10:].strip()}（{uses}。日付・場所は報道の写真説明で確認）".replace("： ", "："))
     if providers:
         lines.append("写真提供（掲載元の表記による）：" + "、".join(sorted(providers)))
     lines.append(f"使用画像 {len(rows)} 点。人物・日付・行事は掲載元の説明文で確認しています。")
