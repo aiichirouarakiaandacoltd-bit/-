@@ -120,36 +120,36 @@ def credit(im, s):
     w = d.textlength(s, font=f); d.rectangle((W - w - 16, H - 24, W, H), fill=(0, 0, 0)); d.text((W - w - 8, H - 23), s, font=f, fill=(220, 220, 220))
 
 
-def type_R(out, img, focus, big, band, line, cap):
-    """右に人物1名(画面の約6割)・左に文字(大・金の帯・一言)"""
+def type_R(out, img, focus, big, band, line, cap, big_fill="white", face_h=300):
+    """画像がメイン(荒木指示 2026-11-24): 人物1名を画面の約7割に大きく。文字は左端の細い列に小さくまとめる"""
     im = Image.new("RGB", (W, H), NAVY)
-    ph = place(img, 820, H, (560, 300), 230, focus); im.paste(ph, (W - 820, 0))
-    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - 820, fy, fw, fh)]
-    fade = grad(W, H, [(0, (255, 255, 255)), (0.36, (255, 255, 255)), (0.62, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
-    bg = grad(W, H, [(0, (6, 16, 40)), (1, (20, 40, 80))])
-    im = Image.composite(bg, im, fade)
-    text(im, (40, 30), big, 170, maxw=640)
-    gold_band(im, (30, 300, 700, 420), band, 92)
-    text(im, (40, 455), line, 104, maxw=700)
+    ph = place(img, 900, H, (520, 340), face_h, focus); im.paste(ph, (W - 900, 0))
+    fx, fy, fw, fh = place.last_face; faces_ = [(fx + W - 900, fy, fw, fh)]
+    fade = grad(W, H, [(0, (255, 255, 255)), (0.27, (255, 255, 255)), (0.42, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
+    im = Image.composite(grad(W, H, [(0, (6, 16, 40)), (1, (20, 40, 80))]), im, fade)
+    text(im, (28, 60), big, 104, fill=big_fill, maxw=400)
+    gold_band(im, (18, 260, 430, 350), band, 60)
+    text(im, (28, 400), line, 66, maxw=400)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(30, 30, 740, 230), (30, 300, 700, 420), (30, 455, 760, 600)])
+    check_faces(out, faces_, [(18, 40, 440, 190), (18, 260, 430, 350), (18, 390, 440, 490)])
 
 
 def type_D(out, img1, f1, img2, f2, top, big, band, cap):
-    """左右に人物2名・中央に大きな金の一言・上と下に帯"""
+    """画像がメイン: 左右に人物2名(または人物と場所)を画面いっぱいに。文字は上の細い帯と下の帯だけ"""
     im = Image.new("RGB", (W, H), NAVY)
-    p1 = place(img1, 560, H, (130, 300), 150, f1); fa = place.last_face
-    p2 = place(img2, 560, H, (430, 300), 150, f2); fb = place.last_face
-    im.paste(p1, (0, 0)); im.paste(p2, (W - 560, 0))
-    faces_ = ([fa] if f1 is None or len(f1) < 4 else []) + ([(fb[0] + W - 560, fb[1], fb[2], fb[3])] if f2 is None or len(f2) < 4 else [])
-    mid = grad(W, H, [(0, (0, 0, 0)), (0.30, (0, 0, 0)), (0.42, (255, 255, 255)), (0.58, (255, 255, 255)), (0.70, (0, 0, 0)), (1, (0, 0, 0))], horizontal=True).convert("L")
-    im = Image.composite(grad(W, H, [(0, (10, 22, 50)), (1, (25, 45, 85))]), im, mid.point(lambda v: int(v * 0.85)))
-    top_band = grad(W, 128, [(0, (6, 14, 36)), (1, (16, 32, 68))]); im.paste(top_band, (0, 0))
-    text(im, (W // 2, 66), top, 96, anchor="mm", maxw=1220)
-    text(im, (W // 2, 330), big, 200, fill="gold", anchor="mm", maxw=760)
-    gold_band(im, (90, 560, 1190, 672), band, 84)
+    p1 = place(img1, 640, H, (330, 330), 240, f1); fa = place.last_face
+    p2 = place(img2, 640, H, (310, 330), 240, f2); fb = place.last_face
+    im.paste(p1, (0, 0)); im.paste(p2, (640, 0))
+    ImageDraw.Draw(im).line((640, 0, 640, H), fill=(10, 20, 45), width=6)
+    faces_ = ([fa] if f1 is None or len(f1) < 4 else []) + ([(fb[0] + 640, fb[1], fb[2], fb[3])] if f2 is None or len(f2) < 4 else [])
+    im.paste(grad(W, 74, [(0, (6, 14, 36)), (1, (16, 32, 68))]), (0, 0))
+    text(im, (W // 2, 37), top, 56, anchor="mm", maxw=1200, shadow=False)
+    low = grad(W, 230, [(0, (0, 0, 0)), (1, (255, 255, 255))]).convert("L")
+    im.paste(Image.new("RGB", (W, 230), (6, 14, 36)), (0, 490), low)
+    text(im, (W // 2, 575), big, 118, fill="gold", anchor="mm", maxw=900)
+    gold_band(im, (240, 640, 1040, 706), band, 50)
     credit(im, cap); im.save(out)
-    check_faces(out, faces_, [(0, 0, W, 128), (250, 220, 1030, 440), (90, 560, 1190, 672)])
+    check_faces(out, faces_, [(0, 0, W, 74), (180, 515, 1100, 720)])
 
 
 if __name__ == "__main__":
@@ -158,7 +158,7 @@ if __name__ == "__main__":
     O = str(Path(__file__).resolve().parents[1] / "samples/long_aiko_2countries") + "/"
     type_R(O + "thumb_A.png", A + "A115.jpg", None, "愛子さま", "2つの国のおことば", "込めた感謝とは？",
            "写真: 宮内庁 令和7年12月1日公表")
-    type_D(O + "thumb_B.png", S + "lao_601_3.jpeg", None, S + "lao_609_1.jpeg", (0.62, 0.28, 0.15),
-           "愛子さまのおことば", "1年で2回", "東日本大震災への感謝", "写真: 宮内庁 2025.11.18 晩餐会 / 11.20 午餐会(ラオス)")
+    type_R(O + "thumb_B.png", A + "A118.jpg", (0.53, 0.33, 0.17), "1年で2回", "東日本大震災への感謝", "2つのおことば",
+           "写真: 宮内庁 令和7年12月1日公表(御所にて)", big_fill="gold", face_h=200)
     type_D(O + "thumb_C.png", A + "A020.jpg", None, S + "jg.jpg", (0.5, 0.5, 0.21, "scene"),
            "祖父母が植えた木", "56年前", "シンガポールで語られた3代", "写真: 宮内庁 2026.6.22 ©Naoya Ikegami/SUNTORY HALL / イメージ: 日本庭園 FN-082 CC BY-SA 4.0")
