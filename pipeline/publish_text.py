@@ -47,7 +47,11 @@ def image_credits(pdir: Path) -> str:
     rows = [r for r in csv.DictReader(open(pdir / "ledger.csv", encoding="utf-8")) if r["番号"] in used]
     by_site: dict[str, set] = {}
     providers: set = set()
+    supplied = []
     for r in rows:
+        if r["掲載サイト名"] == "提供写真":
+            supplied.append(r)
+            continue
         by_site.setdefault(r["掲載サイト名"], set()).add(r["撮影日・場所・行事"][:10])
         m = re.search(r"写真(?:提供)?：([^）)]+)", r["確認したキャプション"])
         if m:
@@ -58,6 +62,10 @@ def image_credits(pdir: Path) -> str:
         jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
         lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
+    for r in supplied:
+        d = r["撮影日・場所・行事"]
+        when = f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日" if re.match(r"\d{4}-\d\d-\d\d", d) else ""
+        lines.append(f"表紙写真：{when} {d[10:].strip()}（提供写真。撮影日・場所は報道写真の説明文で確認）".replace("： ", "："))
     if providers:
         lines.append("写真提供（掲載元の表記による）：" + "、".join(sorted(providers)))
     lines.append(f"使用画像 {len(rows)} 点。人物・日付・行事は掲載元の説明文で確認しています。")

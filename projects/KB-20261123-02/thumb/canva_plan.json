@@ -1,41 +1,50 @@
 {
-  "template": "DAHatUQFKSI",
-  "layout": "S-A",
-  "photos": [
-    {
-      "ledger": "A007",
-      "file": "projects/KB-20261123-02/thumb/A007_S-A.jpg",
-      "frame": {
-        "left": 72,
-        "top": 545,
-        "width": 936,
-        "height": 680
-      },
-      "alt": "天皇陛下・皇后陛下 2026-06-17(宮内庁)"
-    }
-  ],
-  "texts": {
-    "upper": "20年前にご一家で過ごした夏",
-    "middle": "語られた思い出とは？",
-    "lower": "宮内庁の記録から"
-  },
-  "middle": {
-    "font_size": 90,
-    "left": 50,
-    "top": 1260,
-    "width": 980
-  },
-  "lower": {
-    "left": 96,
-    "top": 1400
-  },
-  "steps": [
-    "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",
-    "read-design(open_transaction)で要素を特定: 文字『導入』=上段 / 『最大の訴求』=中段 / 『疑問・補足』=下段 / 画像 shape(left72)=左枠, (left542)=右枠",
-    "写真ごとに create-upload-url → curl -X POST -H 'Content-Type: application/octet-stream' --data-binary @file → mediaId",
-    "S-A: 右枠を delete_element、左枠を resize_element(936×680)・position_element(72,545)",
-    "update_fill(各枠, mediaId, alt)・replace_text(上段/中段/下段)・format_text(中段 font_size)・resize_element(中段 width)・position_element(中段・下段)",
-    "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
-    "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>"
-  ]
+ "template": "DAHatUQFKSI",
+ "layout": "S-A",
+ "photos": [
+  {
+   "ledger": "U001",
+   "file": "projects/KB-20261123-02/thumb/U001_S-A.jpg",
+   "frame": {
+    "left": 120,
+    "top": 530,
+    "width": 840,
+    "height": 472
+   },
+   "alt": "ベアトリックス女王・雅子さま・愛子さま・皇太子時代の陛下・マキシマ妃・ウィレム=アレキサンダー皇太子・アレクシア王女・アマリア王女 2006-08-18(荒木さん提供)",
+   "scale": 2.0,
+   "crop_note": "元画像420×236を切らずに全体を使用(8人全員)。Lanczosで2.0倍の拡大のみ。明るさ補正なし。prepare の自動切り抜き(fill0.80)は3.6倍になるため不使用",
+   "date_label": {
+    "text": "2006年8月 オランダにて",
+    "left": 120,
+    "top": 1012,
+    "width": 840,
+    "align": "end"
+   }
+  }
+ ],
+ "texts": {
+  "upper": "4歳の愛子さまと過ごした",
+  "middle": "オランダの夏とは？",
+  "lower": "陛下が会見で語られた思い出"
+ },
+ "middle": {
+  "font_size": 100,
+  "left": 50,
+  "top": 1260,
+  "width": 980
+ },
+ "lower": {
+  "left": 96,
+  "top": 1400
+ },
+ "steps": [
+  "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",
+  "read-design(open_transaction)で要素を特定: 文字『導入』=上段 / 『最大の訴求』=中段 / 『疑問・補足』=下段 / 画像 shape(left72)=左枠, (left542)=右枠",
+  "写真ごとに create-upload-url → curl -X POST -H 'Content-Type: application/octet-stream' --data-binary @file → mediaId",
+  "S-A: 右枠を delete_element、左枠を resize_element(936×680)・position_element(72,545)",
+  "update_fill(各枠, mediaId, alt)・replace_text(上段/中段/下段)・format_text(中段 font_size)・resize_element(中段 width)・position_element(中段・下段)",
+  "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
+  "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>"
+ ]
 }
