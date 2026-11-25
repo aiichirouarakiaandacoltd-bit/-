@@ -115,11 +115,11 @@ def gold_band(im, box, s, size):
     text(im, ((x0 + x1) // 2, (y0 + y1) // 2), s, size, fill=NAVY, stroke=(255, 240, 190), sw=2, shadow=False, anchor="mm", maxw=x1 - x0 - 30)
 
 
-def credit(im, s, boxes=()):
-    """写真の出典(右下・小さく)。文字・帯の枠と重ならないことを確かめる(荒木指示 2026-11-24)"""
+def credit(im, s, boxes=(), right=8):
+    """写真の出典(右下・小さく)。文字・帯の枠と重ならないことを確かめる(荒木指示 2026-11-24)。right=文字の右の余白px(既定8。表紙の確認で20px以上を求められたら渡す)"""
     d = ImageDraw.Draw(im); f = ImageFont.truetype("/usr/local/share/fonts/noto-sans-jp/NotoSansJP-Bold.ttf", 15)
-    w = d.textlength(s, font=f); box = (W - w - 16, H - 22, W, H)
-    d.rectangle(box, fill=(0, 0, 0)); d.text((W - w - 8, H - 21), s, font=f, fill=(220, 220, 220))
+    w = d.textlength(s, font=f); box = (W - w - right - 8, H - 22, W, H)
+    d.rectangle(box, fill=(0, 0, 0)); d.text((W - w - right, H - 21), s, font=f, fill=(220, 220, 220))
     hit = [b for b in boxes if box[0] < b[2] and box[2] > b[0] and box[1] < b[3] and box[3] > b[1]]
     if hit:
         raise SystemExit(f"クレジットが文字と重なっています: {hit}")
