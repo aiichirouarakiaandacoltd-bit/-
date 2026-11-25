@@ -31,6 +31,8 @@ python3 projects/KB-20261125-01/thumb/make_thumbs.py で thumb_A.png・thumb_B.p
       縦書きのかぎかっこは縦書き用の字形(﹁ ﹂)のまま、文字と離して置き直した(前は「生」「う」に食い込んで横書きの形に見えた)
 2026-11-25 直し係(荒木指示 2026-11-25。表紙B の文字だけ。A・C は触らない):
   B = 左上の主語の表示「愛子さま」→「愛子さまが」。ほかの文字・出典・写真・構図はそのまま
+2026-11-25 直し係(追加の荒木指示 2026-11-25。表紙C の小さな文字だけ。A は触らない):
+  C = 小さな「雅子さま」→「雅子さまから愛子さまへの思い」(横書き1行・36px・右寄せ)。縦書きの引用・出典・写真・構図はそのまま
 """
 import sys
 from pathlib import Path
@@ -202,8 +204,9 @@ def v1(out, path, focus, fh, xy, col_w, col_g, src, cap, who=None):
         return y
     column(*col_w); yb = column(*col_g)
     if who:   # 誰の言葉か: 金の行の上(横書き・小さめ)。(文字, 大きさ, 中心y)。下に細い金の線
-        ws, wn, wy = who
-        text(im, (col_g[0], wy), ws, wn, sw=6, anchor="mm"); wb = bbox(im, (col_g[0], wy), ws, wn, "mm", 6); boxes.append(wb)
+        ws, wn, wy = who[:3]
+        wx, wa = (who[3], "rm") if len(who) > 3 else (col_g[0], "mm")   # 4つ目があれば右端の x(右寄せ)。長い一言を白い行の左に収める
+        text(im, (wx, wy), ws, wn, sw=6, anchor=wa); wb = bbox(im, (wx, wy), ws, wn, wa, 6); wbox = tuple(int(v) for v in wb)
         ImageDraw.Draw(im).rectangle((wb[0] + 8, wb[3] + 1, wb[2] - 8, wb[3] + 4), fill=SRC_GOLD)
     # 出典(小さく・金の行の下)。文字の数には入れない
     sx = col_g[0] + col_g[3] // 2 + 6
@@ -211,15 +214,17 @@ def v1(out, path, focus, fh, xy, col_w, col_g, src, cap, who=None):
     sb = (sb[0] - 12, sb[1] - 5, sb[2] + 10, sb[3] + 5)   # 出典が写真(白いお召し物)にかかるので、濃紺の札を敷いて読めるようにする
     ImageDraw.Draw(im).rounded_rectangle(sb, radius=6, fill=(8, 20, 48))
     text(im, (sx, yb + 30), src, 28, fill=SRC_GOLD, sw=3, shadow=False, anchor="rm")
-    tbox = union(boxes + [sb])
+    tbox = union(boxes + [sb] + ([wbox] if who else []))
     if tbox[3] > H - 24 or tbox[2] > W - 8 or tbox[1] < 4:
         raise SystemExit(f"{out}: 縦書きの文字が画面からはみ出しています {tbox}")
     credit(im, cap, [tbox], right=CREDIT_RIGHT)
     im.save(out)
     # お顔との重なりは、縦書き(名前を含む)の枠と出典の札を別々の枠で確かめる(まとめた1つの枠だと、文字のない所までお顔と重なる扱いになるため)
     cbox = union(boxes); sbox = tuple(int(v) for v in sb)
-    print(out, "縦書きの枠", cbox, "/ 出典の札", sbox, "/ 全体", tbox)
-    if not check_faces(out, faces, [cbox, sbox]):
+    if who and any(wbox[0] < b[2] and wbox[2] > b[0] and wbox[1] < b[3] and wbox[3] + 4 > b[1] for b in boxes):
+        raise SystemExit(f"{out}: 上の一言が縦書きの文字と重なっています {wbox}")
+    print(out, "縦書きの枠", cbox, "/ 上の一言", wbox if who else None, "/ 出典の札", sbox, "/ 全体", tbox, "/ お顔", [tuple(int(v) for v in head_box(f)) for f in faces])
+    if not check_faces(out, faces, [cbox, sbox] + ([wbox] if who else [])):
         raise SystemExit(f"{out}: お顔が文字と重なるか見切れています")
 
 
@@ -238,14 +243,15 @@ r1(O + "thumb_B.png", A + "A059.jpg", (385 / 666, 425 / 1000, 150 / 1000), 205, 
 
 # C 人物の物語型(題名C): 雅子さまお一人の写真 A021(令和6年 皇后陛下お誕生日のご近影・長辺1000px)を1枚・左寄せ(お顔は左1/3)。
 #   右に縦書きで「生まれてきて/ありがとう」(平成14年4月2日 御誕生につき記者会見の原文の一部を一字一句)。右の行=白・左の行=金
-#   文字は1か所(縦書き2行・11字＋かぎかっこ)＋小さい名前「雅子さま」(金の行の上)＋小さい出典。上の帯は使わない
+#   文字は縦書き2行・11字＋かぎかっこ＋上の小さい一言「雅子さまから愛子さまへの思い」(横書き・かぎかっこなし＝当チャンネルの見出し。
+#   荒木指示 2026-11-25 で「雅子さま」から替えた。金の行の上・白い行の左に右寄せ)＋小さい出典。上の帯は使わない
 #   かぎかっこ内は原文の一部のまま。呼びかけ(「愛子、」など)は原文にないので足さない
 #   言葉は平成14年・写真は令和6年なので、出典「愛子さまご誕生の会見より(平成14年4月)」とクレジット「令和6年」で年を分けて示す(年月は会見の日付。ご誕生は平成13年12月1日)
 v1(O + "thumb_C.png", A + "A021.jpg", None, 245, (425, 305),
    (1196, 12, "生まれてきて", 98, "white", "﹁", None),
    (1044, 96, "ありがとう", 96, "gold", None, "﹂"),
    "愛子さまご誕生の会見より(平成14年4月)",
-   "写真: 宮内庁 令和6年 皇后陛下お誕生日に際してのご近影(御所)", who=("雅子さま", 46, 46))
+   "写真: 宮内庁 令和6年 皇后陛下お誕生日に際してのご近影(御所)", who=("雅子さまから愛子さまへの思い", 36, 44, 1126))
 
 # 3枚を縮小して並べた一覧(ひと目で別の表紙に見えるかの確認用)
 sheet = Image.new("RGB", (3 * 440 + 40, 248 + 20), (30, 30, 30))
