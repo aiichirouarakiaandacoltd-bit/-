@@ -1,0 +1,18 @@
+# G0 企画書 KB-20261125-01(一括承認 BATCH-LONG-20261125:L4)
+
+## タイトル
+```
+【雅子さま63歳のお誕生日】「あの幼かった愛子が」 7回のご感想のうち6回、愛子さまについて書かれたこととは？ #雅子さま #愛子さま #皇室
+```
+
+## 概要
+冒頭30秒: ①雅子さまと愛子さまのご近影 ②令和3年のご感想の一節「あの幼かった愛子がもう成年かと思いますと，信じられないような気持ちもいたします。」 ③疑問「皇后として7回のお誕生日のご感想に、愛子さまのことを何と書かれてきたのか」 ④「宮内庁が公表している全文を、年の順にたどります」の1文。
+1つの疑問と答え(全体の4割=3分30秒〜4分まで): 7回のうち6回(令和元・2・3・5・6・7年)、その年の愛子さまの節目(高校3年生・大学入学・成年・大学4年生・ご就職と初めてお一人での地方公務・初めての外国公式訪問)を書かれ、令和3・6・7年は「見守っていただけましたら」と結ばれている。令和4年は愛子さまへの言及がない。
+後半の次の疑問: 「では、愛子さまは母に何と語られたのか」。成年の記者会見(令和4年3月17日)の「母の「生まれてきてくれてありがとう」という言葉に掛けて，私も「生んでくれてありがとう」と伝えたいと思います。」へ進み、平成14年4月2日の会見の「本当に生まれてきてありがとうという気持ちで一杯になりました。」までさかのぼる。
+終盤: 令和7年のご感想のラオス、今年のシンガポールご訪問(愛子さまのご感想「私にとって2度目の外国公式訪問」)に触れ、まとめ→意味づけ→問いかけ。
+章の見出し(案): 「あの幼かった愛子が」と書かれた年/7回のうち6回、何が書かれていたのか/1回だけ書かれなかった年/愛子さまが母に返された言葉/20年前、同じ言葉が語られた会見。
+締めくくりの問いかけ:「皆さまの心に残ったのは、どの年のお言葉ですか。」
+
+
+- 型: B型(人物×過去×現在)・長尺 約9〜10分 / 伸びる要因: 1・2・5/長尺(実際のお言葉を柱にする型) / 裏付け: ['https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2019.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2020.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2021.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2022.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2023.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2024.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2025.html', 'https://www.kunaicho.go.jp/watch/activity/activity01/activity01-r040317.html', 'https://www.kunaicho.go.jp/okotoba/02/kaiken/kaiken-h14-gotanjo.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/addresses/2026sgp.html', 'https://www.kunaicho.go.jp/watch/gokinkyo/index.html'] / 写真: 公開条件を満たす見込みの写真 約60〜80枚(推定)。内訳: 皇后陛下お誕生日のご近影 令和元〜7年 29枚(確認済。令和7年は666×1000px実測、令和元〜4年の大きさは未確認)/平成14年の会見ページ 5枚(「写真：宮内庁」)/成年の記者会見ページ 3枚/新年ご一家のご近影 令和7・8年 各3枚(それ以前は未確認)/ご感想に出てくる行事の宮内庁写真(成年行事・佐賀・ラオス58枚は400px・今年11月の行事4ページ)。自作の図 8〜10枚(7年の年表・お言葉の札・母と娘の言葉の見比べ)。8分=約80カットに対し、写真60+図10+お言葉の札で足りる見込み(確度 中)
+- 承認: 荒木さん 2026-11-25T09:29:04+09:00(一括承認。以後は承認を求めず完成まで進める)
