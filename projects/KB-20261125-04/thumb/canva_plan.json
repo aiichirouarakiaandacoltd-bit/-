@@ -1,0 +1,41 @@
+{
+  "template": "DAHatUQFKSI",
+  "layout": "S-A",
+  "photos": [
+    {
+      "ledger": "A025",
+      "file": "projects/KB-20261125-04/thumb/A025_S-A.jpg",
+      "frame": {
+        "left": 72,
+        "top": 545,
+        "width": 936,
+        "height": 680
+      },
+      "alt": "皇后陛下(照合の根拠: お一人だけが写る。掲載ページの題名・説明が皇后陛下お誕生日のご近影で、名前のある方1名・写る方1名で一致。お顔での識別はしていない。2026-11-25 当てっこ係) 令和7年皇后陛下お誕(宮内庁)"
+    }
+  ],
+  "texts": {
+    "upper": "平成14年の記者会見",
+    "middle": "語られた一言とは？",
+    "lower": "愛子さまご誕生のとき、"
+  },
+  "middle": {
+    "font_size": 100,
+    "left": 50,
+    "top": 1260,
+    "width": 980
+  },
+  "lower": {
+    "left": 96,
+    "top": 1400
+  },
+  "steps": [
+    "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",
+    "read-design(open_transaction)で要素を特定: 文字『導入』=上段 / 『最大の訴求』=中段 / 『疑問・補足』=下段 / 画像 shape(left72)=左枠, (left542)=右枠",
+    "写真ごとに create-upload-url → curl -X POST -H 'Content-Type: application/octet-stream' --data-binary @file → mediaId",
+    "S-A: 右枠を delete_element、左枠を resize_element(936×680)・position_element(72,545)",
+    "update_fill(各枠, mediaId, alt)・replace_text(上段/中段/下段)・format_text(中段 font_size)・resize_element(中段 width)・position_element(中段・下段)",
+    "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
+    "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>"
+  ]
+}

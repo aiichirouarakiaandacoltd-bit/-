@@ -45,6 +45,9 @@ def _ledger_date(field: str) -> str:
     if m:
         y = _ERA[m.group(1)] + (1 if m.group(2) == "元" else int(m.group(2)))
         return f"{y:04d}-{int(m.group(3)):02d}-{int(m.group(4)):02d}"
+    m = re.match(r"(令和|平成|昭和)(元|\d+)年", field)  # 年だけ(「令和8年 新年…ご近影」など): 期間に年として数える(2026-11-25)
+    if m:
+        return f"{_ERA[m.group(1)] + (1 if m.group(2) == '元' else int(m.group(2))):04d}"
     return head
 
 
@@ -85,8 +88,8 @@ def image_credits(pdir: Path) -> str:
             providers.add(m.group(1).strip())
     lines = []
     for site, dates in by_site.items():
-        ds = sorted(d for d in dates if re.match(r"\d{4}-\d\d-\d\d", d))  # 掲載ページにも日付の記載がない写真(「令和7年 …。ページに日付の記載なし」)だけ期間に数えない
-        jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日"
+        ds = sorted(d for d in dates if re.fullmatch(r"\d{4}(-\d\d-\d\d)?", d))  # 掲載ページにも日付の記載がない写真(「令和7年 …。ページに日付の記載なし」)だけ期間に数えない
+        jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日" if len(d) > 4 else f"{int(d)}年"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
         lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
     if commons:
