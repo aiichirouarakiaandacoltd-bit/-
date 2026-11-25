@@ -41,7 +41,7 @@ def _ledger_date(field: str) -> str:
     head = field[:10]
     if re.match(r"\d{4}-\d\d-\d\d", head):
         return head
-    m = re.search(r"(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日付", field)
+    m = re.match(r"(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日", field) or re.search(r"(令和|平成|昭和)(元|\d+)年(\d+)月(\d+)日付", field)  # 先頭が和暦の年月日ならそれを使う
     if m:
         y = _ERA[m.group(1)] + (1 if m.group(2) == "元" else int(m.group(2)))
         return f"{y:04d}-{int(m.group(3)):02d}-{int(m.group(4)):02d}"
@@ -80,7 +80,8 @@ def image_credits(pdir: Path) -> str:
             providers.add(re.search(r"©[^)）、]+", r["確認したキャプション"]).group(0).strip())
         by_site.setdefault(r["掲載サイト名"], set()).add(_ledger_date(r["撮影日・場所・行事"]))
         m = re.search(r"写真(?:提供)?：([^）)]+)", r["確認したキャプション"])
-        if m:
+        # 「写真：令和7年…ご近影」「写真：新年をお迎えになった…」のような題名の書式は提供者名ではないので除く(短い名前だけ)
+        if m and len(m.group(1).strip()) <= 40 and not re.search(r"[「」]| / |ご近影|お迎え", m.group(1)):
             providers.add(m.group(1).strip())
     lines = []
     for site, dates in by_site.items():
