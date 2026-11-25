@@ -32,6 +32,28 @@ LAYOUT = {
 }
 MIDDLE_W = 980  # 中段の文字枠(左50〜右1030)
 
+# 表紙パターンA(バランス型・第9章②)の配置。荒木指示 2026-11-25「下段のタイトルが下部過ぎる」により、
+# 下段は中段のすぐ下(中段の文字枠の下端から LOWER_GAP)に置き、最下部(旧 y1753)に離さない。
+# 全体を縦の中央寄りに(ロゴ上端 y154 と下段下端の下の余白がほぼ同じ)。KB-20261123-03〜06・KB-20261125-02〜04 の
+# 既存の canva_plan.json は変えず、PATTERN_A_FROM 以降の新しい制作番号から plan に "pattern_A" を出す。
+PATTERN_A_FROM = "KB-20261125-05"
+LOWER_GAP = 70  # 中段の文字枠の下端 → 下段の文字枠の上端(約60〜90pxの範囲)
+PATTERN_A = {"logo_top": 154, "upper_top": 256, "line1_top": 399,
+             "photo": {"left": 90, "top": 450, "width": 900, "height": 880},
+             "caption_top": 1346, "line2_top": 1419, "middle_top": 1479, "text_left": 20, "text_width": 1040}
+
+
+def pattern_a(middle_size: int, lower_size: int = 74) -> dict:
+    """パターンAの各要素の y 座標。下段 = 中段の下端 + LOWER_GAP(文字枠の高さ = 文字サイズ × 約1.2)。"""
+    A = dict(PATTERN_A)
+    size = min(108, middle_size)
+    middle_bottom = A["middle_top"] + round(size * 1.2)
+    lower_top = middle_bottom + LOWER_GAP
+    A.update({"middle_font_size": size, "lower_font_size": lower_size, "lower_top": lower_top,
+              "lower_bottom": lower_top + round(lower_size * 1.2),
+              "note": "下段は中段のすぐ下に置き、最下部に離さない(荒木指示 2026-11-25)。区切り線・写真・撮影情報も上の座標へ"})
+    return A
+
 
 def crop(src: Path, focus, ar: float, out: Path, fill: float = 0.80):
     im = Image.open(src).convert("RGB")
@@ -79,6 +101,10 @@ def prepare(project: str) -> Path:
                 "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
                 "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>",
             ]}
+    if project >= PATTERN_A_FROM:
+        plan["pattern_A"] = pattern_a(middle_size)
+        plan["steps"].insert(-2, "パターンA: pattern_A の座標で position_element(ロゴ・上段・金の細線2本・写真・撮影情報・中段・下段)。"
+                                 "下段は中段のすぐ下(lower_top)。最下部に置かない")
     path = save_json(tdir / "canva_plan.json", plan)
     ty = pdir / "thumb.yaml"
     cur = yaml.safe_load(ty.read_text(encoding="utf-8")) if ty.exists() else {}
