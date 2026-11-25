@@ -16,3 +16,9 @@
 
 - 型: B型(人物×過去×現在)・長尺 約9〜10分 / 伸びる要因: 1・2・5/長尺(実際のお言葉を柱にする型) / 裏付け: ['https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2019.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2020.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2021.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2022.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2023.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2024.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/press-conference/empress2025.html', 'https://www.kunaicho.go.jp/watch/activity/activity01/activity01-r040317.html', 'https://www.kunaicho.go.jp/okotoba/02/kaiken/kaiken-h14-gotanjo.html', 'https://www.kunaicho.go.jp/watch/okotoba/imperial-family01/addresses/2026sgp.html', 'https://www.kunaicho.go.jp/watch/gokinkyo/index.html'] / 写真: 公開条件を満たす見込みの写真 約60〜80枚(推定)。内訳: 皇后陛下お誕生日のご近影 令和元〜7年 29枚(確認済。令和7年は666×1000px実測、令和元〜4年の大きさは未確認)/平成14年の会見ページ 5枚(「写真：宮内庁」)/成年の記者会見ページ 3枚/新年ご一家のご近影 令和7・8年 各3枚(それ以前は未確認)/ご感想に出てくる行事の宮内庁写真(成年行事・佐賀・ラオス58枚は400px・今年11月の行事4ページ)。自作の図 8〜10枚(7年の年表・お言葉の札・母と娘の言葉の見比べ)。8分=約80カットに対し、写真60+図10+お言葉の札で足りる見込み(確度 中)
 - 承認: 荒木さん 2026-11-25T09:29:04+09:00(一括承認。以後は承認を求めず完成まで進める)
+
+## 公開の段取り(荒木承認 2026-11-25「二段構え」)
+1. いま: 過去7回のご感想(令和元〜7年)で本編(約9分)を完成させる。
+2. 12/9 当日: 令和8年のお誕生日のご感想全文と新しいご近影(宮内庁撮影)で、冒頭と最終章を差し替える。愛子さまへの言及があれば題名の「7回のうち6回」を直す。なければ数字は変えず最終章に要点を足す。
+3. 当日中(遅くとも12/10)に公開する想定で仕上げる。差し替え部分も事実確認(原文照合)は省かない。
+※雅子さまのお誕生日は記者会見ではなく文書のご感想(過去7回とも)。当日作業の前に荒木さんへ知らせる(12/9 06:31 にリマインダー予約済み)。
