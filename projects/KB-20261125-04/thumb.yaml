@@ -1,7 +1,30 @@
-layout: S-A
 texts:
   upper: 平成14年の記者会見
   middle: 語られた一言とは？
-  lower: 愛子さまご誕生のとき、
+  lower: 愛子さまご誕生のとき
 photos:
 - ledger: A025
+center_image: A025
+note: '3段はタイトルの文言をそのまま流用(足した言葉なし。上段10字・中段9字・下段10字、各1行。下段は文末の読点を省略)。中心画像A025(令和7年 皇后陛下お誕生日に際してのご近影、宮内庁)。平成14年の写真A064等は240px級で粗いため依頼どおり近年のご近影を使い、写真下に撮影年を明記(要確認:
+  上段「平成14年の記者会見」と令和7年の写真の組み合わせ。3段に「雅子さま」の語なし、写真で示す)。背景の花に暗い赤紫の葉が入る(写真そのもの・着色なし、要確認)。加工はトリミング・拡大縮小のみ。'
+layout: S-A
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHb5vAuhLQ
+  edit_url: https://www.canva.com/d/oGHWs-CUhF6zhKg
+  png: projects/KB-20261125-04/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261125-04/thumb/A025_square_crop.jpg
+  crop_note: A025(666×1000)をx91〜611・y85〜595で切り抜き、約2.54倍に拡大(1320×1295・加工なし)
+  canva_A:
+    design_id: DAHb5vAuhLQ
+    edit_url: https://www.canva.com/d/oGHWs-CUhF6zhKg
+    png: projects/KB-20261125-04/thumb/thumb_canva_A.png
+    photo: projects/KB-20261125-04/thumb/A025_square_crop.jpg
+    layout_note: パターンA(バランス型・第9章②)。KB-20261123-03 のA(DAHbz_AW-78、テンプレートDAHatUQFKSIの複製系)を複製。ロゴ44px金y134・上段y約240・金細線y379・写真x90〜990・y430〜1310・撮影情報26px白右寄せy1326「令和7年
+      皇后陛下お誕生日に際してのご近影(御所)／宮内庁」・金細線y1399・中段y1459・下段y1753。上段92px白・中段108px金1行・下段80px白
+  canva_B:
+    design_id: DAHb5t5gqBU
+    edit_url: https://www.canva.com/d/Yxdt6B-OwZKTIau
+    png: projects/KB-20261125-04/thumb/thumb_canva_B.png
+    photo: projects/KB-20261125-04/thumb/A025_square_crop.jpg
+    layout_note: パターンB(上寄せ型・第9章②)。KB-20261123-03 のB(DAHbz_APRDc)を複製。ロゴ40px金y56・上段y約160・写真x125〜955・y290〜1105・撮影情報24px白右寄せy1110(今回追加)・中段y1146・下段y約1288・金細線y1399。y1420から下は濃紺のみ(画素で確認)。上段92px白・中段108px金1行・下段80px白
