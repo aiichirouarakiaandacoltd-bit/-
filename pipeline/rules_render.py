@@ -574,6 +574,38 @@ def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit:
     return np.array(im)
 
 
+def quote_card(src: str, bq: dict, W: int, H: int) -> Image.Image:
+    """横型: お言葉の一節を大きく見せるカット。左に写真全体(切り抜かない)、右にお言葉と出典。写真と文字は重ねない。"""
+    BG = (40, 26, 52)
+    im = Image.new("RGB", (W, H), BG)
+    top, bot = int(H * HBOX_TOP) + 12, int(H * HBOX_BOTTOM) - 12
+    pw = int(W * 0.42)
+    ph = Image.open(src).convert("RGB")
+    sc = min((pw - 60) / ph.width, (bot - top) / ph.height)
+    ph = ph.resize((max(1, int(ph.width * sc)), max(1, int(ph.height * sc))), Image.LANCZOS)
+    im.paste(ph, (30 + (pw - 60 - ph.width) // 2, top + (bot - top - ph.height) // 2))
+    d = ImageDraw.Draw(im)
+    lines = bq.get("lines") or [bq.get("text", "")]
+    x0, maxw = pw + 40, W - pw - 120
+    size = 76
+    while size > 36:
+        f = font(FONT_B, size)
+        if max(d.textlength(l, font=f) for l in lines) <= maxw and len(lines) * size * 1.4 + 60 <= bot - top:
+            break
+        size -= 2
+    f = font(FONT_B, size)
+    lh = int(size * 1.4)
+    fs = font(FONT_R, 28)
+    block = lh * len(lines) + 30 + 40
+    y = top + (bot - top - block) // 2
+    for l in lines:
+        d.text((x0, y), l, font=f, fill=WHITE)
+        y += lh
+    d.line((x0, y + 12, x0 + 120, y + 12), fill=GOLD, width=3)
+    d.text((x0, y + 26), bq.get("source", ""), font=fs, fill=GOLD)
+    return im
+
+
 def blend(fr: np.ndarray, ov: np.ndarray) -> np.ndarray:
     a = ov[..., 3:4].astype(np.float32) / 255
     rgb = ov[..., :3][..., ::-1].astype(np.float32)
@@ -661,7 +693,10 @@ def build(project: str, kind: str = "縦型") -> Path:
                           # 人物以外を語る場面で写っている物(例: 黒鳥)。第4-3章
                           "subject": (s.get("subjects") or {}).get(img, s.get("subject", "")),
                           "clip_start": float((s.get("clip") or {}).get("start", 0)) + (s0 - a),
-                          "diagram": bool(s.get("diagram"))})
+                          "diagram": bool(s.get("diagram")),
+                          # 第5-3章(2026-11-25): お言葉の一節を大きく見せるカット(at_cut は1始まり)。写真と文字は重ねない
+                          "big_quote": s["big_quote"] if (s.get("big_quote") and kind == "横型"
+                                                          and k + 1 == int(s["big_quote"].get("at_cut", 1))) else None})
     # 3) 映像
     raw = out_dir / "video_nosub.mp4"
     ff = subprocess.Popen(["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "bgr24", "-s", f"{W}x{H}", "-r", "30",
@@ -673,7 +708,17 @@ def build(project: str, kind: str = "縦型") -> Path:
         n = int(round(sh["end"] * 30)) - fcount
         if n <= 0:
             continue
-        if sh["compare"]:
+        if sh.get("big_quote") and sh["image"]:
+            sh["media"] = "写真"
+            src = str(ROOT / ledger[sh["image"]]["ファイル名"])
+            labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
+            ov = overlay(W, H, labels, sh["caption"], credit)
+            card = quote_card(src, sh["big_quote"], W, H)
+            fr = np.ascontiguousarray(np.array(card)[..., ::-1])
+            out = blend(fr, ov).tobytes()
+            for k in range(n):
+                ff.stdin.write(out)
+        elif sh["compare"]:
             ids, labs = sh["compare"]["images"], sh["compare"]["labels"]
             half = W // 2 - 6
             subs = []
