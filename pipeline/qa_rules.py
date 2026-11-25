@@ -89,7 +89,7 @@ def check(project: str, kind: str = "縦型") -> bool:
     add("画像の人物名・撮影情報が ledger.csv と一致", not bad, bad or "全場面一致(写真に写る人物そのものは要目視)",
         "人物名・キャプションを ledger の確認済みキャプションに合わせる")
     # 3 ナレーション全文と字幕
-    diff = [s["scene"] for s in scenes if re.sub(r"[、。\s]", "", s["narration"]) != re.sub(r"[、。\s]", "", "".join("".join(c) for c in s.get("subtitle", [])))]
+    diff = [s["scene"] for s in scenes if re.sub(r"[、，。\s]", "", s["narration"]) != re.sub(r"[、，。\s]", "", "".join("".join(c) for c in s.get("subtitle", [])))]
     add("ナレーション全文と字幕が一致", not diff, diff or "全場面一致(誤字の有無は要目視)")
     # 3-2 揶揄・対立のNG(本書第1-2章 荒木指示 2026-11-23)
     ng = [f"{s['scene']}:{'、'.join(ng_hits(s['narration'] + ' ' + str(s.get('person_label', ''))))}" for s in scenes

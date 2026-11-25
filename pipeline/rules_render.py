@@ -762,8 +762,9 @@ def build(project: str, kind: str = "縦型") -> Path:
         if sp.get("max_lines") == 1:  # 横型: 字幕は1行ずつ(写真の枠の下に収める)
             chunks = [[l] for c in chunks for l in c]
         if s.get("subtitle_lines"):
-            flat = re.sub(r"[。\s]", "", "".join("".join(c) for c in chunks))
-            assert flat == re.sub(r"[。\s]", "", s["narration"]), f"{s['scene']}: subtitle_lines がナレーションと一致しない"
+            # 字幕では句点と読点(、，)を省いてよい(テレビ字幕の慣行。行末の読点を省くと7字に収まる場合。2026-11-25)
+            flat = re.sub(r"[。、，\s]", "", "".join("".join(c) for c in chunks))
+            assert flat == re.sub(r"[。、，\s]", "", s["narration"]), f"{s['scene']}: subtitle_lines がナレーションと一致しない"
         ms = [max(1, mora_count("".join(c))) for c in chunks]
         a, b = s["start_sec"], s["end_sec"] - 0.06
         acc = a
