@@ -160,8 +160,15 @@ def check(project: str, kind: str = "縦型") -> bool:
         f"カット {len(shots)}(目標{sp['cuts'][0]}〜{sp['cuts'][1]}) / 平均 {sum(durs) / len(durs):.2f}秒 / 最長 {max(durs):.2f}秒(上限{sp['max_show']}) / "
         f"範囲外 {out_range or 'なし'} / 人物・語る物が映る割合 {person:.0%}(目標{sp['person_ratio']:.0%})・人物のみ {person_only:.0%}(75%以上) / 異なる画像 {n_img}枚(目標{sp['images']}) / 上限({'1' if kind == '縦型' else '3'}回)を超えた画像 {over3 or 'なし'}",
         "画像を追加収集する(第3章)、場面の分け方を見直す")
-    if len(shots) < sp["cuts"][0] or n_img < sp["images"]:
-        res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)} / 画像 {n_img}枚",
+    # 縦型の「1本=1場面」(第1-4章・荒木指示 2026-11-24。KB-20261123-02 以降)は尺が45〜60秒目安と短いので、
+    # カット数・画像枚数の目標は尺に比例させる(1カット約4.5秒。旧目標15カット/12枚は60〜75秒の解説型の値)
+    if kind == "縦型" and project >= "KB-20261123-02":
+        tgt = max(8, round(total_dur / 4.5)) if (total_dur := (shots[-1]["end"] if shots else 0)) else sp["cuts"][0]
+        cut_t, img_t = min(sp["cuts"][0], tgt), min(sp["images"], tgt)
+    else:
+        cut_t, img_t = sp["cuts"][0], sp["images"]
+    if len(shots) < cut_t or n_img < img_t:
+        res.append(("(目標値)カット数・異なる画像の枚数", False, f"カット {len(shots)}(目標{cut_t}) / 画像 {n_img}枚(目標{img_t})",
                     "目標の70%未満なら第7章により生成停止"))
     # 7-1 主役を中央に置いてから動かす(focus.json の登録)
     fj = load_json(pdir / "focus.json", {}) or {}
