@@ -134,7 +134,10 @@ def check(project: str, kind: str = "縦型") -> bool:
     add("字幕が画面からはみ出していない(最大限の大きさで)", not over, f"はみ出し {over or 'なし'}(画面幅 {sp['W']}px・余白各30px)",
         "書き出しの自動縮小を確認する。1行の字数(縦型7字・横型13字)を超える塊がないか字幕の分け方を見直す")
     # 6 音声
-    add("ナレーションが青山龍星・速度0.90", info.get("speed") == 0.9, f"speaker_id={info.get('speaker_id')}(/speakers から取得) speedScale={info.get('speed')}")
+    from .rules_render import voice_for
+    want = voice_for(project)
+    add(f"ナレーションが青山龍星・速度{want['speed']:.2f}・抑揚{want['intonation']}", info.get("speed") == want["speed"] and info.get("intonation", 1.0) == want["intonation"],
+        f"speaker_id={info.get('speaker_id')}(/speakers から取得) speedScale={info.get('speed')} intonationScale={info.get('intonation', 1.0)}")
     # 7 第4章
     durs = [s["end"] - s["start"] for s in shots]
     lo, hi = sp["cut"]

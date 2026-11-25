@@ -36,6 +36,14 @@ FONT_B = str(FONT_DIR / "NotoSansJP-Bold.ttf")
 FONT_R = str(FONT_DIR / "NotoSansJP-Regular.ttf")
 VV = "http://127.0.0.1:50021"
 SPEED = 0.90
+# 荒木選定 2026-11-25(声の聞き比べ 3番): 青山龍星ノーマル・抑揚強め・間あり。KB-20261125 以降の新規案件に適用
+VOICE_V2 = {"speed": 0.92, "intonation": 1.45, "pitch": -0.02, "gap": {"横型": 0.9, "縦型": 0.6}}
+VOICE = {"speed": SPEED, "intonation": 1.0, "pitch": 0.0, "gap": {"横型": 0.12, "縦型": 0.12}}
+
+
+def voice_for(project: str) -> dict:
+    """旧案件は作った時の声のまま(作り直しても声が変わらない)。KB-20261125 以降は VOICE_V2。"""
+    return VOICE_V2 if project >= "KB-20261125" else VOICE
 SPEC = {
     "縦型": {"W": 1080, "H": 1920, "max_dur": 75.0, "cut": (2.0, 4.0), "max_show": 5.0, "line": 6, "sub_size": 140,
              "sub_y": 0.70, "person_ratio": 0.95, "cuts": (15, 25), "images": 12},
@@ -60,13 +68,15 @@ def speaker_id() -> int:
     return next(s["id"] for p in sp if p["name"] == "青山龍星" for s in p["styles"] if s["name"] == "ノーマル")
 
 
-def tts(text: str, sid: int, readings: dict) -> np.ndarray:
+def tts(text: str, sid: int, readings: dict, voice: dict = VOICE) -> np.ndarray:
     t = text
     for k in sorted(readings, key=len, reverse=True):
         t = t.replace(k, readings[k])
     t = re.sub(r"[「」『』【】]", "", t)
     q = requests.post(VV + "/audio_query", params={"text": t, "speaker": sid}, timeout=60).json()
-    q["speedScale"] = SPEED
+    q["speedScale"] = voice["speed"]
+    q["intonationScale"] = voice["intonation"]
+    q["pitchScale"] = voice["pitch"]
     q["outputSamplingRate"] = 48000
     q["prePhonemeLength"] = 0.05
     q["postPhonemeLength"] = 0.12
@@ -585,11 +595,12 @@ def build(project: str, kind: str = "縦型") -> Path:
     out_dir.mkdir(exist_ok=True)
     # 1) 音声(場面ごとに合成・実測)
     sr = 48000
-    gap = 0.12
+    voice = voice_for(project)
+    gap = voice["gap"][kind]
     t = 0.25
     pieces = [np.zeros(int(sr * t), np.float32)]
     for s in scenes:
-        x = tts(s["narration"], sid, readings)
+        x = tts(s["narration"], sid, readings, voice)
         s["start_sec"] = round(t, 3)
         t += len(x) / sr
         pieces += [x, np.zeros(int(sr * gap), np.float32)]
@@ -738,7 +749,7 @@ def build(project: str, kind: str = "縦型") -> Path:
         s["end"] = f"{int(s['end_sec'] // 60)}:{s['end_sec'] % 60:05.2f}"
     save_json(pdir / "scenes.json", scenes)
     save_json(out_dir / "shots.json", shots)
-    save_json(out_dir / "render_info.json", {"kind": kind, "speaker_id": sid, "speed": SPEED, "duration": round(total, 3),
+    save_json(out_dir / "render_info.json", {"kind": kind, "speaker_id": sid, "speed": voice["speed"], "intonation": voice["intonation"], "pitch": voice["pitch"], "gap": gap, "duration": round(total, 3),
                                              "font": FONT_B, "bgm": str(bgm.relative_to(ROOT)), "bgm_gain_db": -37})
     print(f"書き出し: {final} ({total:.2f}秒, {len(shots)}カット)")
     return final
