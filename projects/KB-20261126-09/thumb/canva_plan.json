@@ -1,28 +1,17 @@
 {
   "template": "DAHatUQFKSI",
-  "layout": "S-B",
+  "layout": "S-A",
   "photos": [
     {
       "ledger": "A308",
-      "file": "projects/KB-20261126-09/thumb/A308_S-B.jpg",
+      "file": "projects/KB-20261126-09/thumb/A308_S-A.jpg",
       "frame": {
         "left": 72,
-        "top": 560,
-        "width": 446,
-        "height": 490
+        "top": 545,
+        "width": 936,
+        "height": 680
       },
       "alt": "愛子内親王殿下 愛子内親王殿下のお誕(宮内庁)"
-    },
-    {
-      "ledger": "A204",
-      "file": "projects/KB-20261126-09/thumb/A204_S-B.jpg",
-      "frame": {
-        "left": 542,
-        "top": 560,
-        "width": 446,
-        "height": 490
-      },
-      "alt": "人物の写真としては使わない(場所の写真。人物名は表示しない。写り込む人は小さく、どなたか分からない大きさ。2026-11-26 制作係) 2016-10-08(Wikimedia Commons)"
     }
   ],
   "texts": {
@@ -33,12 +22,12 @@
   "middle": {
     "font_size": 100,
     "left": 50,
-    "top": 1090,
+    "top": 1260,
     "width": 980
   },
   "lower": {
     "left": 96,
-    "top": 1240
+    "top": 1400
   },
   "steps": [
     "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",

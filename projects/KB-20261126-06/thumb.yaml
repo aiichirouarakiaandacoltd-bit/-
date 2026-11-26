@@ -5,8 +5,33 @@ texts:
   upper: 【愛子さま】シンガポール
   middle: 2つの数字は…
   lower: おことばで紹介された
-status: ローカル試作(thumb/thumb_local_A.png・_B.png)。Canva(DAHatUQFKSI の複製)での仕上げは未実施(この環境に
-  Canva の道具がない)。要確認
+status: Canva で仕上げ済み(2026-11-26 デザイナー(重要))。A・B とも thumb_canva --fetch の検査(1080×1920・写真枠外の赤0)を通過。ローカル試作
+  thumb/thumb_local_A.png・_B.png は参考として残す
 caption: '左 愛子内親王殿下のお誕生日に際してのご近影/宮内庁　右 マリーナ湾(2015年) 写真: CEphoto, Uwe Aranas / CC BY-SA
   3.0'
 layout: S-B
+note: '2026-11-26 デザイナー(重要): KB-20261126-02 の表紙A/B(DAHb-oo2mwU・DAHb-svXI68。テンプレート
+  DAHatUQFKSI から複製を重ねた版)を複製して作成。テンプレート本体は変更していない。写真枠を左右2分割(左=愛子さま・右=シンガポールの場所)。上段84px白(12字のため92pxから縮小し1行に収める)・中段108px金1行・下段74px白。皇族方以外の人物は写らない範囲を切り抜き(場所の写真は拡大して確認)。撮影情報は年の裏付けのないご近影に年を出さない。過去の全
+  thumb.yaml の写真(取得元URL)と照合し重なりなし。5本並べの確認画像 projects/KB-20261126-05/thumb/sgp_shorts_05-09_overview.jpg
+  を作り直した'
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHcBBPjCFY
+  edit_url: https://www.canva.com/d/RhQgdlx9U3qKnNt
+  png: projects/KB-20261126-06/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261126-06/thumb/A307_A206_pair.jpg
+  crop_note: 左 A307(667×1000)を x187〜467・y60〜614(上半身の寄り)、右 A206(3840×2560)を x1766〜2669・y205〜1990(マーライオン公園の人だかり・岸辺の人が入らない高さまで)で切り抜き、各652×1290に拡大して濃紺16pxの間隔で横に並べた(加工なし)
+  canva_A:
+    design_id: DAHcBBPjCFY
+    edit_url: https://www.canva.com/d/RhQgdlx9U3qKnNt
+    png: projects/KB-20261126-06/thumb/thumb_canva_A.png
+    photo: projects/KB-20261126-06/thumb/A307_A206_pair.jpg
+    layout_note: パターンA(バランス型)。ロゴy154・上段y256(84px)・金細線y399・写真x90〜990・y450〜1330・撮影情報y1346
+      白右寄せ(2行22px)・金細線y1419・中段y1479(108px)・下段y1679(74px)
+  canva_B:
+    design_id: DAHcBA0bJUc
+    edit_url: https://www.canva.com/d/W5twzmjDBOIJ3Qj
+    png: projects/KB-20261126-06/thumb/thumb_canva_B.png
+    photo: projects/KB-20261126-06/thumb/A307_A206_pair.jpg
+    layout_note: パターンB(上寄せ型)。ロゴ40px y56・上段y165(84px)・写真x125〜955・y290〜1105・撮影情報y1110
+      白右寄せ(2行20px)・中段y1168(108px)・下段y1300(74px)・金細線y1399

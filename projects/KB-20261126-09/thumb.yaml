@@ -1,11 +1,36 @@
 photos:
 - ledger: A308
-- ledger: A204
 texts:
   upper: 【愛子さま】シンガポール
   middle: 昨年訪れた場所は…
   lower: 「感銘を受けました」
-status: ローカル試作(thumb/thumb_local_A.png・_B.png)。Canva(DAHatUQFKSI の複製)での仕上げは未実施(この環境に
-  Canva の道具がない)。要確認
-caption: '左 愛子内親王殿下のお誕生日に際してのご近影/宮内庁　右 万博のシンガポール館(2025年) 写真: Beixepo / CC0'
-layout: S-B
+status: Canva で仕上げ済み(2026-11-26 デザイナー(重要))。A・B とも thumb_canva --fetch の検査(1080×1920・写真枠外の赤0)を通過。ローカル試作
+  thumb/thumb_local_A.png・_B.png は参考として残す
+caption: 愛子内親王殿下のお誕生日に際してのご近影／宮内庁
+layout: S-A
+note: '2026-11-26 デザイナー(重要): KB-20261126-02 の表紙A/B(DAHb-oo2mwU・DAHb-svXI68。テンプレート
+  DAHatUQFKSI から複製を重ねた版)を複製して作成。テンプレート本体は変更していない。事実確認係の差し戻し(右の写真と撮影情報の不一致・「昨年訪れた場所は…」の横にシンガポールの景色だと昨年の場所がシンガポールにあるように読める)により、右の写真(A221→一時
+  A204)をやめ、A308 の1枚構成にした。万博シンガポール館の写真(A221・A222)は赤い球体が写る範囲の大半を占め、人の写らない縦長の切り抜きでは赤い面が大きくなるため使わない。上段84px白(12字のため92pxから縮小し1行に収める)・中段100px金1行・下段74px白。皇族方以外の人物は写らない範囲を切り抜き(場所の写真は拡大して確認)。撮影情報は年の裏付けのないご近影に年を出さない。過去の全
+  thumb.yaml の写真(取得元URL)と照合し重なりなし。5本並べの確認画像 projects/KB-20261126-05/thumb/sgp_shorts_05-09_overview.jpg
+  を作り直した'
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHcBPBcreY
+  edit_url: https://www.canva.com/d/kSE2e-waers4mMt
+  png: projects/KB-20261126-09/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261126-09/thumb/A308_single.jpg
+  crop_note: A308(400×266)を x124〜396・y0〜266 で切り抜き 1320×1291 に拡大(加工なし)。写るのは愛子さまと白い馬のみ。1枚構成
+  canva_A:
+    design_id: DAHcBPBcreY
+    edit_url: https://www.canva.com/d/kSE2e-waers4mMt
+    png: projects/KB-20261126-09/thumb/thumb_canva_A.png
+    photo: projects/KB-20261126-09/thumb/A308_single.jpg
+    layout_note: パターンA(バランス型)。ロゴy154・上段y256(84px)・金細線y399・写真x90〜990・y450〜1330・撮影情報y1346
+      白右寄せ(1行26px)・金細線y1419・中段y1479(100px)・下段y1669(74px)
+  canva_B:
+    design_id: DAHcBGAiOQk
+    edit_url: https://www.canva.com/d/oLXyEYZrp64nJ59
+    png: projects/KB-20261126-09/thumb/thumb_canva_B.png
+    photo: projects/KB-20261126-09/thumb/A308_single.jpg
+    layout_note: パターンB(上寄せ型)。ロゴ40px y56・上段y165(84px)・写真x125〜955・y290〜1105・撮影情報y1110
+      白右寄せ(1行24px)・中段y1168(100px)・下段y1292(74px)・金細線y1399

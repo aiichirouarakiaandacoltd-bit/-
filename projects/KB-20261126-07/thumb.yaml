@@ -5,8 +5,34 @@ texts:
   upper: 【愛子さま】シンガポール
   middle: 足を運ばれた場所は…
   lower: 「雄大な街の景観」とは？
-status: ローカル試作(thumb/thumb_local_A.png・_B.png)。Canva(DAHatUQFKSI の複製)での仕上げは未実施(この環境に
-  Canva の道具がない)。要確認
+status: Canva で仕上げ済み(2026-11-26 デザイナー(重要))。A・B とも thumb_canva --fetch の検査(1080×1920・写真枠外の赤0)を通過。ローカル試作
+  thumb/thumb_local_A.png・_B.png は参考として残す
 caption: '左 令和7年11月20日 ラオス クワンシーの滝にて/宮内庁　右 マーライオン公園(2016年) 写真: Tony Hisgett / CC BY
   2.0'
 layout: S-B
+note: '2026-11-26 デザイナー(重要): KB-20261126-02 の表紙A/B(DAHb-oo2mwU・DAHb-svXI68。テンプレート
+  DAHatUQFKSI から複製を重ねた版)を複製して作成。テンプレート本体は変更していない。写真枠を左右2分割(左=愛子さま・右=シンガポールの場所)。上段84px白(12字のため92pxから縮小し1行に収める)・中段90px金1行・下段74px白。皇族方以外の人物は写らない範囲を切り抜き(場所の写真は拡大して確認)。撮影情報は年の裏付けのないご近影に年を出さない。過去の全
+  thumb.yaml の写真(取得元URL)と照合し重なりなし。5本並べの確認画像 projects/KB-20261126-05/thumb/sgp_shorts_05-09_overview.jpg
+  を作り直した'
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHcBL7Bl7M
+  edit_url: https://www.canva.com/d/gFVn-TTlzhTdnMK
+  png: projects/KB-20261126-07/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261126-07/thumb/A101_A201_pair.jpg
+  crop_note: 左 A101(400×266)を x154〜238・y0〜166、右 A201(3840×2536)を x1190〜1843・y304〜1596(階段の見物客が入らない範囲)で切り抜き、各652×1290に拡大して濃紺16pxの間隔で横に並べた(加工なし)。A101
+    は元が小さく約7.8倍の拡大で粗い
+  canva_A:
+    design_id: DAHcBL7Bl7M
+    edit_url: https://www.canva.com/d/gFVn-TTlzhTdnMK
+    png: projects/KB-20261126-07/thumb/thumb_canva_A.png
+    photo: projects/KB-20261126-07/thumb/A101_A201_pair.jpg
+    layout_note: パターンA(バランス型)。ロゴy154・上段y256(84px)・金細線y399・写真x90〜990・y450〜1330・撮影情報y1346
+      白右寄せ(2行22px)・金細線y1419・中段y1479(90px)・下段y1657(74px)
+  canva_B:
+    design_id: DAHcBPAk8h8
+    edit_url: https://www.canva.com/d/L8tFOiObXGo53R3
+    png: projects/KB-20261126-07/thumb/thumb_canva_B.png
+    photo: projects/KB-20261126-07/thumb/A101_A201_pair.jpg
+    layout_note: パターンB(上寄せ型)。ロゴ40px y56・上段y165(84px)・写真x125〜955・y290〜1105・撮影情報y1110
+      白右寄せ(2行20px)・中段y1168(90px)・下段y1282(74px)・金細線y1399

@@ -76,12 +76,12 @@ def image_credits(pdir: Path) -> str:
             continue
         if r["掲載サイト名"] == "Wikimedia Commons":  # 作者・ライセンスを表示(CCの表示義務)
             ma = re.search(r"作者 ([^/／)）]+?)\s*[/／)）]", r["確認したキャプション"])
-            ml = re.search(r"(CC[ -][A-Z0-9 .\-]+?)(?:\(|（|$)", r["確認したキャプション"])
+            ml = re.search(r"(CC0|CC[ -][A-Z0-9 .\-]+?)(?:\(|（|$)", r["確認したキャプション"])
             lic = r.get("利用条件・作者") or ""  # 台帳に「利用条件・作者」欄がある時はそこから(2026-11-26)
             if not ma:
                 ma = re.search(r"作者[:：]\s*([^/／]+?)\s*(?:[/／]|$)", lic)
             if not ml:
-                ml = re.search(r"(CC[ -][A-Z0-9 .\-]*?[0-9.]+)", lic)
+                ml = re.search(r"(CC0|CC[ -][A-Z0-9 .\-]*?[0-9.]+)", lic)
             commons.setdefault(f"{ma.group(1).strip() if ma else '作者不明'} {ml.group(1).strip() if ml else ''}".strip(), None)
             continue
         if "©" in r["確認したキャプション"]:
