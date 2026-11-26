@@ -606,6 +606,88 @@ def quote_card(src: str, bq: dict, W: int, H: int) -> Image.Image:
     return im
 
 
+TAMIL_FONT = "/usr/local/share/fonts/noto-sans-tamil/NotoSansTamil-Bold.ttf"
+
+
+def _runs(text: str):
+    """タミル文字(U+0B80〜U+0BFF)だけ Noto Sans Tamil、ほかは Noto Sans JP で描くための区切り。
+    Noto Sans JP にタミル文字が無いため(SG01 のおことば原文「வணக்கம்」。2026-11-26 制作係)。"""
+    out, cur, ta = [], "", None
+    for c in text:
+        t = 0x0B80 <= ord(c) <= 0x0BFF
+        if ta is None or t == ta:
+            cur += c
+        else:
+            out.append((cur, ta)); cur = c
+        ta = t
+    if cur:
+        out.append((cur, ta))
+    return out
+
+
+def _mixed_len(d, text, size):
+    return sum(d.textlength(t, font=font(TAMIL_FONT if ta else FONT_B, size)) for t, ta in _runs(text))
+
+
+def _mixed_draw(d, xy, text, size, fill):
+    x, y = xy
+    for t, ta in _runs(text):
+        f = font(TAMIL_FONT if ta else FONT_B, size)
+        d.text((x, y + (size * 0.02 if ta else 0)), t, font=f, fill=fill)
+        x += d.textlength(t, font=f)
+
+
+def quote_card_v(src: str, bq: dict, W: int, H: int, main=None) -> Image.Image:
+    """縦型(2026-11-26 制作係 追加): おことば・ご感想の原文を大きく見せるカット。画面割り(第4章)は縦型のまま:
+    上(〜12%)に人物名・撮影情報、中(12.5%〜58.5%)の枠を上下に分け、上に写真(全体を見せ、左右はぼかし)、
+    下に原文と出典の札。写真と文字は重ねない。下(60〜80%)は通常どおりナレーションの字幕。"""
+    BG = (22, 36, 58)
+    ph = Image.open(src).convert("RGB")
+    sc = max(W / ph.width, H / ph.height)
+    bg = ph.resize((int(ph.width * sc) + 1, int(ph.height * sc) + 1)).crop((0, 0, W, H))
+    from PIL import ImageFilter
+    bg = Image.blend(bg.filter(ImageFilter.GaussianBlur(30)), Image.new("RGB", (W, H), (0, 0, 0)), 0.55)
+    im = bg
+    lines = bq.get("lines") or [bq.get("text", "")]
+    top, bot = int(H * 0.125), int(H * 0.585)
+    d = ImageDraw.Draw(im)
+    size = int(bq.get("size", 76))
+    while size > 34:
+        if max(_mixed_len(d, l, size) for l in lines) <= W - 140:
+            break
+        size -= 2
+    lh = int(size * 1.32)
+    card_h = lh * len(lines) + 120
+    card_top = bot - card_h
+    ph_h = card_top - top - 16
+    # 写真は枠の上部いっぱいに(主役の位置 focus.json を中心に切り抜く。全体が入る時は切らない)
+    tw, th = W - 60, ph_h
+    ar = tw / th
+    fx, fy = (main or (0.5, 0.4))
+    cw, ch = ph.width, ph.width / ar
+    if ch > ph.height:
+        ch, cw = ph.height, ph.height * ar
+    if bq.get("keep_all"):
+        cw, ch = ph.width, ph.height
+    l0 = min(max(fx * ph.width - cw / 2, 0), ph.width - cw)
+    t0 = min(max(fy * ph.height - ch * 0.4, 0), ph.height - ch)
+    ph = ph.crop((int(l0), int(t0), int(l0 + cw), int(t0 + ch)))
+    s2 = min(tw / ph.width, th / ph.height)
+    p2 = ph.resize((max(1, int(ph.width * s2)), max(1, int(ph.height * s2))), Image.LANCZOS)
+    im.paste(p2, ((W - p2.width) // 2, top + (ph_h - p2.height) // 2))
+    d = ImageDraw.Draw(im)
+    d.rounded_rectangle((30, card_top, W - 30, bot), 18, fill=BG, outline=GOLD, width=3)
+    y = card_top + 30
+    for l in lines:
+        w = _mixed_len(d, l, size)
+        _mixed_draw(d, ((W - w) / 2, y), l, size, WHITE)
+        y += lh
+    fs = font(FONT_R, 30)
+    src_t = bq.get("source", "")
+    d.text(((W - d.textlength(src_t, font=fs)) / 2, bot - 58), src_t, font=fs, fill=GOLD)
+    return im
+
+
 def blend(fr: np.ndarray, ov: np.ndarray) -> np.ndarray:
     a = ov[..., 3:4].astype(np.float32) / 255
     rgb = ov[..., :3][..., ::-1].astype(np.float32)
@@ -695,7 +777,7 @@ def build(project: str, kind: str = "縦型") -> Path:
                           "clip_start": float((s.get("clip") or {}).get("start", 0)) + (s0 - a),
                           "diagram": bool(s.get("diagram")),
                           # 第5-3章(2026-11-25): お言葉の一節を大きく見せるカット(at_cut は1始まり)。写真と文字は重ねない
-                          "big_quote": s["big_quote"] if (s.get("big_quote") and kind == "横型"
+                          "big_quote": s["big_quote"] if (s.get("big_quote")  # 横型・縦型(縦型は 2026-11-26 から quote_card_v)
                                                           and k + 1 == int(s["big_quote"].get("at_cut", 1))) else None})
     # 3) 映像
     raw = out_dir / "video_nosub.mp4"
@@ -713,7 +795,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             src = str(ROOT / ledger[sh["image"]]["ファイル名"])
             labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
             ov = overlay(W, H, labels, sh["caption"], credit)
-            card = quote_card(src, sh["big_quote"], W, H)
+            card = quote_card(src, sh["big_quote"], W, H) if W > H else quote_card_v(src, sh["big_quote"], W, H, mains.get(sh["image"]))
             fr = np.ascontiguousarray(np.array(card)[..., ::-1])
             out = blend(fr, ov).tobytes()
             for k in range(n):
