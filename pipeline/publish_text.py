@@ -96,7 +96,9 @@ def image_credits(pdir: Path) -> str:
         ds = sorted(d for d in dates if re.fullmatch(r"\d{4}(-\d\d-\d\d)?", d))  # 掲載ページにも日付の記載がない写真(「令和7年 …。ページに日付の記載なし」)だけ期間に数えない
         jp = lambda d: f"{int(d[:4])}年{int(d[5:7])}月{int(d[8:10])}日" if len(d) > 4 else f"{int(d)}年"
         span = f"{jp(ds[0])}〜{jp(ds[-1])}" if len(ds) > 1 else (jp(ds[0]) if ds else "")
-        lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ掲載写真）")
+        # 掲載ページに年月日の記載がない写真(ご近影など)があれば、期間の外にあることを書き添える(事実確認の指摘 2026-11-26)
+        extra = "、および年月日の記載がないご近影などのページ" if len(ds) < len(dates) else ""
+        lines.append(f"写真：{site}ウェブサイト（{span}の各行事ページ{extra}掲載写真）")
     if commons:
         lines.append("写真：Wikimedia Commons（" + "、".join(commons) + "）")
     seen_sup = set()
