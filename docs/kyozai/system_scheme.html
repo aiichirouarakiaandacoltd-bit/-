@@ -79,7 +79,7 @@ footer{background:var(--navy);color:#cfd6e2;font-size:14px}
 </header>
 
 <nav class="scroll" aria-label="目次">
-<a href="#map">全体図</a><a href="#steps">19工程</a><a href="#roles">係の一覧</a><a href="#design">動画の設計式</a><a href="#plan">企画の型</a><a href="#images">画像のルール</a><a href="#spec">固定仕様</a><a href="#long">長尺の追加ルール</a><a href="#qa">完成判定</a><a href="#publish">タイトル・表紙・説明文</a><a href="#stop">停止条件</a><a href="#files">ファイルと道具</a><a href="#example">実例</a>
+<a href="#map">全体図</a><a href="#steps">19工程</a><a href="#roles">係の一覧</a><a href="#design">動画の設計式</a><a href="#plan">企画の型</a><a href="#images">画像のルール</a><a href="#spec">固定仕様</a><a href="#long">長尺の追加ルール</a><a href="#qa">完成判定</a><a href="#publish">タイトル・表紙・説明文</a><a href="#stop">停止条件</a><a href="#files">ファイルと道具</a><a href="#screens">画面の設計図</a><a href="#dataflow">データの流れ</a><a href="#details">細則</a><a href="#example">実例</a>
 </nav>
 
 <section class="band" id="map">
@@ -257,6 +257,76 @@ footer{background:var(--navy);color:#cfd6e2;font-size:14px}
 <h3>主な道具 <code>pipeline/</code></h3>
 <div class="scroll"><table><tbody id="tool-body"></tbody></table></div>
 </div>
+</div>
+</div>
+</section>
+
+
+<section class="band alt" id="screens">
+<div class="in">
+<h2>画面の設計図: 文字と写真を重ねない配置</h2>
+<p class="sec-sub">ショート本編・ショート表紙(パターンA/B)・長尺表紙を、実寸の比率で描いています(数字はピクセルの目安)。</p>
+<div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,15em),1fr))">
+<figure style="margin:0"><svg viewBox="0 0 1080 1920" role="img" aria-label="ショート本編の画面割り" style="width:100%;max-width:260px;display:block;margin:auto;background:#16243A">
+<rect x="0" y="0" width="1080" height="230" fill="#1b2c45"/><text x="540" y="90" fill="#D8BC72" font-size="56" text-anchor="middle" font-family="Noto Sans JP">人物名 32px</text><text x="540" y="170" fill="#fff" font-size="50" text-anchor="middle" font-family="Noto Sans JP">撮影情報 22px・音声クレジット</text>
+<rect x="30" y="240" width="1020" height="883" fill="#3b4f6e" stroke="#D8BC72" stroke-width="6"/><text x="540" y="650" fill="#fff" font-size="80" text-anchor="middle" font-family="Noto Sans JP">写真の枠</text><text x="540" y="740" fill="#cfd6e2" font-size="50" text-anchor="middle" font-family="Noto Sans JP">12.5%〜58.5%・ズーム2〜7%</text>
+<rect x="30" y="1150" width="1020" height="390" fill="none" stroke="#fff" stroke-dasharray="20 14" stroke-width="5"/><text x="540" y="1310" fill="#fff" font-size="110" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">字幕140px</text><text x="540" y="1440" fill="#fff" font-size="60" text-anchor="middle" font-family="Noto Sans JP">1行7字・2行まで</text>
+<text x="540" y="1700" fill="#aab6c8" font-size="50" text-anchor="middle" font-family="Noto Sans JP">下部はYouTubeの表示が重なるため空ける</text></svg><figcaption>ショート本編(1080×1920)。上=名前と撮影情報、中=写真、下=字幕(中心は画面の70%)。</figcaption></figure>
+<figure style="margin:0"><svg viewBox="0 0 1080 1920" role="img" aria-label="ショート表紙パターンA" style="width:100%;max-width:260px;display:block;margin:auto;background:#16243A">
+<text x="540" y="170" fill="#D8BC72" font-size="56" text-anchor="middle" font-family="Noto Serif JP">日本が誇る皇室物語</text><text x="540" y="290" fill="#fff" font-size="84" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">上段(白・大)</text><line x1="90" y1="400" x2="990" y2="400" stroke="#D8BC72" stroke-width="5"/>
+<rect x="90" y="450" width="900" height="880" fill="#3b4f6e"/><text x="540" y="900" fill="#fff" font-size="80" text-anchor="middle" font-family="Noto Sans JP">写真</text><text x="980" y="1380" fill="#cfd6e2" font-size="36" text-anchor="end" font-family="Noto Sans JP">撮影日・行事/宮内庁</text><line x1="90" y1="1420" x2="990" y2="1420" stroke="#D8BC72" stroke-width="5"/>
+<text x="540" y="1530" fill="#D8BC72" font-size="104" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">中段(金・1行)</text><text x="540" y="1680" fill="#fff" font-size="70" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">下段(中段のすぐ下)</text></svg><figcaption>ショート表紙 パターンA(バランス型)。下段は中段の約60〜90px下。</figcaption></figure>
+<figure style="margin:0"><svg viewBox="0 0 1080 1920" role="img" aria-label="ショート表紙パターンB" style="width:100%;max-width:260px;display:block;margin:auto;background:#16243A">
+<text x="540" y="95" fill="#D8BC72" font-size="56" text-anchor="middle" font-family="Noto Serif JP">日本が誇る皇室物語</text><text x="540" y="230" fill="#fff" font-size="84" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">上段(白・大)</text>
+<rect x="125" y="290" width="830" height="815" fill="#3b4f6e"/><text x="540" y="720" fill="#fff" font-size="80" text-anchor="middle" font-family="Noto Sans JP">写真</text>
+<text x="540" y="1230" fill="#D8BC72" font-size="104" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">中段(金・1行)</text><text x="540" y="1350" fill="#fff" font-size="70" font-weight="700" text-anchor="middle" font-family="Noto Sans JP">下段(白)</text><line x1="125" y1="1400" x2="955" y2="1400" stroke="#D8BC72" stroke-width="5"/>
+<rect x="0" y="1420" width="1080" height="500" fill="none" stroke="#aab6c8" stroke-dasharray="20 14" stroke-width="4"/><text x="540" y="1680" fill="#aab6c8" font-size="56" text-anchor="middle" font-family="Noto Sans JP">y1420から下は空ける</text></svg><figcaption>ショート表紙 パターンB(上寄せ型)。A・Bは同じ写真・同じ3段見出し。</figcaption></figure>
+<figure style="margin:0"><svg viewBox="0 0 1280 720" role="img" aria-label="長尺表紙の型" style="width:100%;display:block;background:#16243A">
+<rect x="560" y="0" width="720" height="720" fill="#3b4f6e"/><text x="920" y="360" fill="#fff" font-size="44" text-anchor="middle" font-family="Noto Sans JP">写真 5.5</text><text x="920" y="410" fill="#cfd6e2" font-size="26" text-anchor="middle" font-family="Noto Sans JP">人物1〜2名(多くて3名)を大きく</text>
+<text x="40" y="190" fill="#fff" font-size="70" font-weight="900" font-family="Noto Serif JP">愛子さま</text><text x="40" y="300" fill="#D8BC72" font-size="96" font-weight="900" font-family="Noto Serif JP">「初めて」</text><text x="40" y="400" fill="#fff" font-size="62" font-weight="900" font-family="Noto Serif JP">はいくつ？</text><text x="40" y="520" fill="#cfd6e2" font-size="28" font-family="Noto Sans JP">文字 4.5・2か所・約20字</text><text x="40" y="560" fill="#cfd6e2" font-size="28" font-family="Noto Sans JP">最大の文字は2〜5字の語</text><text x="1260" y="705" fill="#cfd6e2" font-size="20" text-anchor="end" font-family="Noto Sans JP">写真:宮内庁</text></svg><figcaption>長尺表紙(1280×720)。極太明朝・金の文字。A/B/Cの3枚で写真・構図・人物の左右・文字の位置を必ず変える。</figcaption></figure>
+</div>
+</div>
+</section>
+
+<section class="band" id="dataflow">
+<div class="in">
+<h2>データの流れ: どのファイルが次の工程の材料になるか</h2>
+<figure style="margin:0"><div class="scroll"><svg viewBox="0 0 1200 330" role="img" aria-label="ファイルの流れ" style="min-width:900px;width:100%;height:auto;color:var(--ink)">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="currentColor"/></marker></defs>
+<g font-family="Noto Sans JP,sans-serif" font-size="15" text-anchor="middle" fill="currentColor">
+<g fill="none" stroke="currentColor" stroke-width="1.5">
+<rect x="10" y="30" width="150" height="54" rx="4"/><rect x="10" y="130" width="150" height="54" rx="4"/><rect x="10" y="230" width="150" height="54" rx="4"/>
+<rect x="230" y="80" width="150" height="54" rx="4"/><rect x="230" y="200" width="150" height="54" rx="4"/>
+<rect x="450" y="80" width="170" height="54" rx="4"/><rect x="450" y="200" width="170" height="54" rx="4"/>
+<rect x="690" y="140" width="170" height="54" rx="4" stroke="#D8BC72" stroke-width="3"/>
+<rect x="930" y="40" width="250" height="54" rx="4"/><rect x="930" y="140" width="250" height="54" rx="4"/><rect x="930" y="240" width="250" height="54" rx="4"/>
+</g>
+<text x="85" y="62">candidates.json</text><text x="85" y="162">competitors.md</text><text x="85" y="262">宮内庁ページ・Commons</text>
+<text x="305" y="112">plan.md(G0)</text><text x="305" y="232">facts.md・ledger.csv</text>
+<text x="535" y="112">script.md</text><text x="535" y="232">scenes.json・focus.json</text>
+<text x="775" y="172">…_internal.mp4</text>
+<text x="1055" y="72">qa_report.md・frames_check.md</text><text x="1055" y="172">publish.yaml・thumb.yaml</text><text x="1055" y="272">description.txt・表紙PNG</text>
+<g stroke="currentColor" stroke-width="1.5" fill="none" marker-end="url(#ar2)">
+<path d="M160,57 L228,100"/><path d="M160,157 L228,115"/><path d="M160,257 L228,230"/><path d="M380,107 L448,107"/><path d="M380,227 L448,227"/><path d="M535,134 L535,198"/><path d="M620,227 L688,175"/><path d="M860,160 L928,72"/><path d="M860,167 L928,167"/><path d="M1055,194 L1055,238"/>
+</g></g></svg></div>
+<figcaption>機械の道具は scenes.json だけを見て書き出すので、ナレーション・字幕・写真・人物名・撮影情報はすべて scenes.json に省略せず書きます。</figcaption></figure>
+</div>
+</section>
+
+<section class="band alt" id="details">
+<div class="in">
+<h2>細則: 各工程の具体的な決まり</h2>
+<div class="grid2">
+<div class="card"><h3>作業前チェック(毎回最初)</h3><ol><li>ツール: Python 3・ffmpeg/ffprobe・requests・Pillow・gdown。無ければ公式の方法で入れる(荒木さん許可済み)</li><li>VOICEVOX: localhost:50021 に接続、話者IDは /speakers から「青山龍星 ノーマル」を取得、試験音声を1つ作る</li><li>BGM: Googleドライブから gdown で assets/bgm/ に取得(あれば再取得しない)</li><li>フォント: Noto Sans JP を確認。用意できなければ制作を始めない</li></ol></div>
+<div class="card"><h3>G0 で荒木さんに出すもの(plan.md)</h3><ol><li>題材と判断理由(最新動向・競合の伸びとの対応)</li><li>タイトル(99字以内・#付き)</li><li>概要(疑問・答えの要旨・型・写真の当て・尺)</li><li>5要素の表</li><li>100点評価: 適合10/強い疑問20/事実15/物語15/比較10/解説10/素材15/シリーズ性5。80点以上で候補、85点以上を優先。5要素のどれかが0点か揶揄・対立なら不採用</li></ol></div>
+<div class="card"><h3>G1 事実確認の順序</h3><p>宮内庁 → 官公庁 → 主催者公式 → 主要報道 → 史料。人物・敬称・日時・場所・発言・引用・制度を照合し、1つずつ「公式事実/報道/分析」を区別して出典URLを残す。引用は一字一句、原文の文脈を変える切り取りはしない。</p></div>
+<div class="card"><h3>画像台帳 ledger.csv の列</h3><p>番号/ファイル名/取得元URL/掲載サイト名/取得日/写っている人物/撮影日・場所・行事/確認したキャプション/確認方法(キャプション・ページ説明文(要目視)・目視確認済)/使用する場面/素材種別。説明文が1つしかないページの写真は「要目視」とし、当てっこ係が説明文・人数・服装で照合して「目視確認済」にしたものだけ使う。</p></div>
+<div class="card"><h3>scenes.json の1場面</h3><p><code>scene</code> 番号・<code>start/end</code>・<code>narration</code>(完成ナレーション)・<code>subtitle</code>(行ごと)・<code>image/images</code>(台帳番号)・<code>crop</code>(顔の寄り/全身など)・<code>motion</code>・<code>person_label</code>(人物名)・<code>caption</code>(撮影情報)・<code>subject</code>・<code>match</code>(言葉と画像が合う理由)。「前と同じ」「以下同様」の省略は禁止。</p></div>
+<div class="card"><h3>字幕の細則</h3><ul><li>改行は文節の切れ目だけ。言葉の途中、数字と単位の間では切らない</li><li>「ました」「です」など語尾だけの行はつくらない</li><li>句点と行末の読点は省いてよい(行の途中の読点は残す)</li><li>長い行を自動で縮めない(大きさがそろわなくなるため)</li><li>G5で全行の幅・大きさ・書式を実測し、1つでも違えば不合格</li></ul></div>
+<div class="card"><h3>文体と表記</h3><ul><li>ナレーションは「です・ます」調。引用は原文のまま</li><li>表記は1本の中でタイトル・表紙・字幕・説明文までそろえる(迷う語は漢字)</li><li>意味が変わる言い回しは使わず事実どおりに</li><li>説明文の問いかけは動画の締めの問いかけと同じ(closing_question)</li></ul></div>
+<div class="card"><h3>競合調査のやり方(R2)</h3><ul><li>競合を大手/新規/少登録者の高再生/低再生に分け、原則直近10本(必要なら30本)</li><li>公開日・再生数・経過日数・登録者比・平均と中央値・上下各3本・冒頭・構成などを記録</li><li>公開されていないCTRは推測で確定しない。取得できない値は「未確認」</li><li>長尺はG0の前に同じ題材の先行動画を上位5本・下位5本調べる</li></ul></div>
+<div class="card"><h3>連続制作と利用枠</h3><p>G0はバッチで一括承認し、1本がG6まで終わると次の本へ自動で進む。本数の上限は決めず、Claudeの利用枠が続く限り制作。上限に達したら工程の状態を bin/kabu に残し、枠が戻ったら止まった所から再開する。</p></div>
+<div class="card"><h3>納品のかたち</h3><p>1本ごとに「動画・表紙(ショートA/B、長尺A/B/C)・タイトル・説明文」を1セットで渡す。タイトルと説明文はそのまま貼れるテキスト。投稿はシステムでは行わず、荒木さんが判断する。</p></div>
 </div>
 </div>
 </section>
