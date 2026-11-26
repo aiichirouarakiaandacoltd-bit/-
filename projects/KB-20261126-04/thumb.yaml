@@ -5,3 +5,29 @@ texts:
   lower: 「受け継いでいくことができれば」
 photos:
 - ledger: A113
+center_image: A113
+note: '2026-11-26 デザイナー(重要): 3段はタイトルの文言をそのまま流用(足した言葉・呼びかけなし)。A113(令和8年2月17日 第100回国風盆栽展ご覧(東京都美術館)、宮内庁キャプション「日本盆栽協会名誉総裁である寬仁親王妃殿下のご案内で…をご覧になる天皇皇后両陛下並びに愛子内親王殿下」、1000×666、撮影者・提供者表記なし、当てっこ係照合済み)。盆栽の前でほほえまれる愛子さまの横顔と皇后陛下。寬仁親王妃殿下の後ろのリボン徽章の関係者(x約140〜175)が入らないよう左端を
+  x195 で切り、右の関係者の男性も外した(右端に天皇陛下は入らない)。植樹・蘭の題材に合わせ植物の場面にした。 過去の全 thumb.yaml の写真(取得元URL)と照合し未使用・同じ日の撮影もなし。お誕生日・新年のご近影ではなく行事の場面。加工はトリミング・拡大縮小のみ。3本(-02
+  A091 金の椅子・ラオスの衣装/-03 A133 桜の金屏風・ベージュのコート・立ち姿/-04 A113 盆栽・ピンクの装いと皇后陛下)を縮小して並べ、写真・服装・背景で見分けられることを確認(projects/KB-20261126-01/thumb/shorts_02-04_covers_overview.jpg)。thumb_canva
+  --fetch の検査(1080×1920・写真枠外の赤0)をA・Bとも通過。要確認: シンガポールご訪問(令和8年11月)の愛子さまの写真は台帳にないため、別の行事の写真を使用(写真下に年月日と行事を明記)。下段の引用は題名と同じ一字一句(かぎかっこ込み)で、1行に収めるため62pxに縮小。'
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHb_MxxEAw
+  edit_url: https://www.canva.com/d/ehCuzOk-ME08ktM
+  png: projects/KB-20261126-04/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261126-04/thumb/A113_square_crop.jpg
+  crop_note: A113(1000×666)をx195〜488・y140〜426で切り抜き、1320×1290に拡大(加工なし)
+  canva_A:
+    design_id: DAHb_MxxEAw
+    edit_url: https://www.canva.com/d/ehCuzOk-ME08ktM
+    png: projects/KB-20261126-04/thumb/thumb_canva_A.png
+    photo: projects/KB-20261126-04/thumb/A113_square_crop.jpg
+    layout_note: パターンA(バランス型・PATTERN_A)。KB-20261125-03 のA(DAHb5g6MddQ)を複製。ロゴy154・上段y約256〜264・金細線y399・写真x90〜990・y450〜1330・撮影情報26px白右寄せy1346「令和8年2月17日
+      第100回国風盆栽展(東京都美術館)／宮内庁」・金細線y1419・中段y1479・下段y1669(中段の文字枠の下端から約70px)。上段76px白(13字のため縮小)・中段100px金1行(9字)・下段62px白(16字・1行に収めるため縮小)
+  canva_B:
+    design_id: DAHb_I4-pnY
+    edit_url: https://www.canva.com/d/2mKRHm8T7eaMuHq
+    png: projects/KB-20261126-04/thumb/thumb_canva_B.png
+    photo: projects/KB-20261126-04/thumb/A113_square_crop.jpg
+    layout_note: パターンB(上寄せ型)。KB-20261125-03 のB(DAHb5m5zzSA)を複製。ロゴ40px金y56・上段y約160〜168・写真x125〜955・y290〜1105・撮影情報24px白右寄せy1110「令和8年2月17日
+      第100回国風盆栽展(東京都美術館)／宮内庁」・中段y1146・下段y1288・金細線y1399。y1420から下は濃紺のみ。上段76px白(13字のため縮小)・中段100px金1行(9字)・下段62px白(16字・1行に収めるため縮小)

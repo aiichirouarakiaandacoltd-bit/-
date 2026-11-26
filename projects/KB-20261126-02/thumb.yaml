@@ -5,3 +5,30 @@ texts:
   lower: 初めての外国公式訪問で
 photos:
 - ledger: A091
+center_image: A091
+note: '2026-11-26 デザイナー(重要): 3段はタイトルの文言をそのまま流用(足した言葉・呼びかけなし)。A091(宮内庁「天皇ご一家のご活動」掲載、説明文「国家主席を表敬された愛子内親王殿下
+  （ラオス）」、同じ行事のラオスご訪問ページの日付は令和7年11月18日、1000×666、撮影者・提供者表記なし)。ラオスの伝統衣装で金の椅子に座られ、ほほえまれる横顔。右の国家主席(皇族方以外)と左の日本国旗は切り抜きで外した(国旗の赤が
+  thumb_canva の赤検査に掛かったため切り抜きを右へ寄せた)。写真に皇族方以外の人物は体の一部も入らないことを確認。 過去の全 thumb.yaml の写真(取得元URL)と照合し未使用・同じ日の撮影もなし。お誕生日・新年のご近影ではなく行事の場面。加工はトリミング・拡大縮小のみ。3本(-02
+  A091 金の椅子・ラオスの衣装/-03 A133 桜の金屏風・ベージュのコート・立ち姿/-04 A113 盆栽・ピンクの装いと皇后陛下)を縮小して並べ、写真・服装・背景で見分けられることを確認(projects/KB-20261126-01/thumb/shorts_02-04_covers_overview.jpg)。thumb_canva
+  --fetch の検査(1080×1920・写真枠外の赤0)をA・Bとも通過。要確認: A091 の人物の照合は親台帳の『キャプション』(制作係 2026-11-26)のみで、当てっこ係の照合済み印はない(説明文の名前は愛子内親王殿下・国家主席の2名で写る方2名と一致)。愛子さまのお顔は横向きでやや小さい(元の写真で約45px→約2.4倍に拡大)。'
+canva:
+  template: DAHatUQFKSI
+  design_id: DAHb-oo2mwU
+  edit_url: https://www.canva.com/d/cl20XFh3W6eeA_Y
+  png: projects/KB-20261126-02/thumb/thumb_canva.png(=A の写し)
+  photo: projects/KB-20261126-02/thumb/A091_square_crop.jpg
+  crop_note: A091(1000×666)をx140〜510・y215〜577で切り抜き、1320×1290に拡大(加工なし)
+  canva_A:
+    design_id: DAHb-oo2mwU
+    edit_url: https://www.canva.com/d/cl20XFh3W6eeA_Y
+    png: projects/KB-20261126-02/thumb/thumb_canva_A.png
+    photo: projects/KB-20261126-02/thumb/A091_square_crop.jpg
+    layout_note: パターンA(バランス型・PATTERN_A)。KB-20261125-03 のA(DAHb5g6MddQ)を複製。ロゴy154・上段y約256〜264・金細線y399・写真x90〜990・y450〜1330・撮影情報26px白右寄せy1346「令和7年11月18日
+      国家主席表敬(ラオス)／宮内庁」・金細線y1419・中段y1479・下段y1657(中段の文字枠の下端から約70px)。上段92px白(10字)・中段90px金1行(10字)・下段74px白(11字)
+  canva_B:
+    design_id: DAHb-svXI68
+    edit_url: https://www.canva.com/d/Mrre94J7ifg9UoY
+    png: projects/KB-20261126-02/thumb/thumb_canva_B.png
+    photo: projects/KB-20261126-02/thumb/A091_square_crop.jpg
+    layout_note: パターンB(上寄せ型)。KB-20261125-03 のB(DAHb5m5zzSA)を複製。ロゴ40px金y56・上段y約160〜168・写真x125〜955・y290〜1105・撮影情報24px白右寄せy1110「令和7年11月18日
+      国家主席表敬(ラオス)／宮内庁」・中段y1150・下段y1280・金細線y1399。y1420から下は濃紺のみ。上段92px白(10字)・中段90px金1行(10字)・下段74px白(11字)
