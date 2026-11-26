@@ -23,3 +23,7 @@ projects/*/voicevox_test.wav
 projects/*/output/
 projects/*/assets/
 assets/bgm/*.wav
+
+# 納品用の写し(元は projects/ にある)
+delivery/**/*.mp4
+delivery/**/*.png
