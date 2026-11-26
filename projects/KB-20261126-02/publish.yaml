@@ -3,7 +3,11 @@ thumb:
   upper: 【愛子さま】ラオス
   middle: おことばの一節とは？
   lower: 初めての外国公式訪問で
-  center_image: A091
+  center_image: A179
+  second_image: A086
+  photos:
+  - A179
+  - A086
 closing_question: ラオスご訪問で、心に残った場面はどれですか？
 question_topic: ラオスご訪問の晩餐会で愛子さまが述べられたおことば
 subject_area: 皇室、国際親善
