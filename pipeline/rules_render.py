@@ -630,10 +630,13 @@ def _mixed_len(d, text, size):
 
 
 def _mixed_draw(d, xy, text, size, fill):
+    # 2026-11-26 直し係: タミル文字とカタカナを同じ行に並べる(「வணக்கம்(ワナッカム)」)ため、
+    # Noto Sans JP の基準線にそろえて描く(JP だけの行は従来と同じ位置)
     x, y = xy
+    base = y + font(FONT_B, size).getmetrics()[0]
     for t, ta in _runs(text):
         f = font(TAMIL_FONT if ta else FONT_B, size)
-        d.text((x, y + (size * 0.02 if ta else 0)), t, font=f, fill=fill)
+        d.text((x, base), t, font=f, fill=fill, anchor="ls")
         x += d.textlength(t, font=f)
 
 
