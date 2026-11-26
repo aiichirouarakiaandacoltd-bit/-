@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>皇室物語 制作システム全体図</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@600;900&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE work: 社内の引き継ぎ資料。正確・整然、読み手は制作を初めて見る人
+   IDEA 皇室物語チャンネル自身の表紙の配色(濃紺・金・白)で刷った「制作工程表」
+   PICTURE 4つの持ち場(荒木さん/判断する係/点検する係/機械)を一本の線で貫く工程路線図。差し戻しは破線で戻る
+   COLOUR 濃紺 #16243A の帯、金 #D8BC72、白。差し戻しだけ朱でなく金の破線(赤は使わない決まり)
+   TYPE 見出し Noto Serif JP 900、本文 Noto Sans JP
+   LAYOUT 濃紺の帯に題と結論→路線図(横に流れる)→章ごとの帯。スマホは路線図を横スクロール */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1826);--ink:light-dark(#16243A,#eef1f6);--sub:light-dark(#4a5568,#a9b4c6);--navy:#16243A;--gold:#D8BC72;--gold2:light-dark(#9a7b2c,#D8BC72);--line:light-dark(#d9dee6,#2a3a52);--panel:light-dark(#f4f6f9,#152235)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:64px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Noto Sans JP","Hiragino Sans",sans-serif;overflow-x:clip}
+.band{padding:clamp(28px,4vw,56px) max(5vw,16px)}
+.in{max-width:1240px;margin:0 auto}
+.hero{background:var(--navy);color:#fff}
+.hero .logo{color:var(--gold);font:700 15px "Noto Serif JP",serif;margin:0 0 10px}
+h1{font:900 clamp(30px,4.6vw,50px)/1.1 "Noto Serif JP",serif;margin:0 0 16px;text-wrap:balance}
+h2{font:900 clamp(22px,2.6vw,30px)/1.25 "Noto Serif JP",serif;margin:0 0 6px;text-wrap:balance}
+h3{font:700 17px/1.4 "Noto Sans JP",sans-serif;margin:18px 0 6px}
+.lead{font-size:17px;max-width:62em;margin:0 0 18px;color:#e6eaf1}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(10em,1fr));gap:12px;margin-top:8px}
+.kpi{border-top:2px solid var(--gold);padding-top:8px}
+.kpi b{display:block;font:900 clamp(26px,3vw,34px)/1.1 "Noto Serif JP",serif;color:var(--gold)}
+.kpi span{font-size:14px;color:#d5dbe5}
+.sec-sub{color:var(--sub);margin:0 0 16px;max-width:62em}
+nav.scroll{display:flex;gap:6px 18px;flex-wrap:nowrap;overflow-x:auto;padding:10px max(5vw,16px);border-bottom:1px solid var(--line);background:var(--bg);font-size:14px}
+nav.scroll a{flex:none;color:var(--ink);text-decoration:none;padding:6px 0}
+nav.scroll a:hover{color:var(--gold2)}
+@media(min-width:900px){nav.scroll{position:sticky;top:0;z-index:5}}
+.mapwrap{overflow-x:auto;background:var(--navy);border-radius:4px}
+.mapwrap svg{display:block;min-width:1080px;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--sub);margin-top:8px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,30em),1fr));gap:20px 36px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,18em),1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px 16px}
+.card h3{margin-top:0}
+.card p{margin:4px 0;font-size:15px}
+.tag{display:inline-block;font-size:12px;border:1px solid var(--gold2);color:var(--gold2);border-radius:3px;padding:0 6px;margin-right:6px;white-space:nowrap}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{font-weight:700;border-bottom:2px solid var(--gold2);white-space:nowrap}
+td.n{white-space:nowrap;font-weight:700}
+code{font:14px/1.5 ui-monospace,Menlo,monospace;background:var(--panel);padding:1px 5px;border-radius:3px;overflow-wrap:anywhere}
+ul,ol{padding-left:1.3em;margin:6px 0}
+li{margin:3px 0}
+.ng{border-left:3px solid var(--gold2);padding-left:12px}
+.note{font-size:14px;color:var(--sub)}
+.alt{background:var(--panel)}
+footer{background:var(--navy);color:#cfd6e2;font-size:14px}
+@media(max-width:600px){table{font-size:13px}th,td{padding:6px 4px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--line)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:7em}.stack td::before{content:attr(data-l);float:inline-start;width:6.5em;margin-inline-start:-7em;color:var(--sub);font-weight:700}.stack td:empty{display:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+
+<header class="band hero">
+<div class="in">
+<p class="logo">日本が誇る皇室物語</p>
+<h1>自動動画制作システムの仕組み</h1>
+<p class="lead">荒木さんが承認するのは「タイトルと概要(G0)」の1回だけです。承認後は、16の係(AIのサブエージェント)と機械の道具が、調査→事実確認→素材→台本→点検→書き出し→検査→タイトル・表紙・説明文まで自動で進め、動画・表紙・タイトル・説明文を1本ずつ納品します。点検の係が不合格を出すと「直し係」に差し戻され、合格するまで先へ進みません。</p>
+<div class="kpis">
+<div class="kpi"><b>1回</b><span>人の承認(G0のみ)</span></div>
+<div class="kpi"><b>19工程</b><span>env_check〜pub_check</span></div>
+<div class="kpi"><b>16係</b><span>.claude/agents の係</span></div>
+<div class="kpi"><b>2形式</b><span>ショート縦型・長尺横型</span></div>
+</div>
+<p class="note" style="color:#aab6c8;margin-top:16px">Claude塾の内部学習教材です。成果物は外部に公開・配布しません。2026年11月26日時点の内容(制作ルール docs/production_rules.md・pipeline/kabu.py より)。</p>
+</div>
+</header>
+
+<nav class="scroll" aria-label="目次">
+<a href="#map">全体図</a><a href="#steps">19工程</a><a href="#roles">係の一覧</a><a href="#design">動画の設計式</a><a href="#plan">企画の型</a><a href="#images">画像のルール</a><a href="#spec">固定仕様</a><a href="#long">長尺の追加ルール</a><a href="#qa">完成判定</a><a href="#publish">タイトル・表紙・説明文</a><a href="#stop">停止条件</a><a href="#files">ファイルと道具</a><a href="#example">実例</a>
+</nav>
+
+<section class="band" id="map">
+<div class="in">
+<h2>全体図: 4つの持ち場を1本の線が貫く</h2>
+<p class="sec-sub">上から「荒木さん」「判断する係」「点検する係」「機械(道具)」。左から右へ進み、点検で不合格なら破線で直し係に戻ります。</p>
+<figure style="margin:0">
+<div class="mapwrap"><svg id="map-svg" viewBox="0 0 1600 560" role="img" aria-label="工程の路線図。荒木さんの承認はG0の1回だけで、以後は係と機械が順に進め、点検で不合格なら直し係に差し戻す"></svg></div>
+<figcaption>横にスクロールできます。○は工程、金の破線は差し戻し(直し係 naoshi が直して同じ点検をやり直す)。</figcaption>
+</figure>
+</div>
+</section>
+
+<section class="band alt" id="steps">
+<div class="in">
+<h2>19工程: 誰が、何を、どこに書くか</h2>
+<p class="sec-sub">工程は <code>bin/kabu</code> の状態ファイル(state.json)で管理します。種類は「係」=AIが判断、「点検」=採点の係、「機械」=道具が自動処理、「承認」=荒木さん。</p>
+<div class="scroll"><table class="stack"><thead><tr><th>工程</th><th>担当</th><th>種類</th><th>内容と出力</th><th>不合格の戻り先</th></tr></thead><tbody id="steps-body"></tbody></table></div>
+</div>
+</section>
+
+<section class="band" id="roles">
+<div class="in">
+<h2>係の一覧: 16のサブエージェント</h2>
+<p class="sec-sub">各係は <code>.claude/agents/*.md</code> に役割と使える道具が定義されています。人物は「お顔」で見分けず、宮内庁の説明文・人数・服装で照合するのが全係共通の決まりです。</p>
+<div class="grid3" id="roles-grid"></div>
+</div>
+</section>
+
+<section class="band alt" id="design">
+<div class="in">
+<h2>動画の設計式: 5つの要素が1つでも欠ければ出さない</h2>
+<p class="sec-sub">「強い疑問 × 確認できる事実 × 人物の物語 × 比較 × 独自の解説」。企画(G0)・台本(G3)・タイトル(G6)のすべてで満たします。</p>
+<div class="scroll"><table class="stack"><thead><tr><th>要素</th><th>満たす条件</th><th>例</th></tr></thead><tbody id="five-body"></tbody></table></div>
+<div class="grid2" style="margin-top:20px">
+<div>
+<h3>使ってよい比較(事実×事実だけ)</h3>
+<ul><li>時間: 前回・前年の同じ行事と今回</li><li>制度・行事: 文化勲章と秋の勲章、親授式と伝達式</li><li>歴史: 初めて・〇年ぶり(公式記録で確認できるもの)</li><li>同じ方の歩み: 初めてのご公務と今回</li></ul>
+<h3>締めくくり(必須)</h3>
+<ol><li>まとめ: 冒頭の疑問の答えを一文で</li><li>意味づけ: 「〜かもしれません」と分析と分かる言い方で</li><li>問いかけ: 選んで答えやすい具体的な問い</li><li>お願い: コメントのお願い、最後に約2秒の余韻</li></ol>
+<p class="note">「答えは〜」の前には、冒頭の疑問を言い直す前置きを必ず入れる。ナレーションは「です・ます」調で統一。</p>
+</div>
+<div class="ng">
+<h3>揶揄・対立のNG(企画・台本・タイトル・表紙・説明文すべて)</h3>
+<ul><li>皇族同士を比べて優劣・格差・扱いの差を示す</li><li>表情・視線・立ち位置から内心や不仲を読み取る</li><li>怒り・嫉妬・確執・冷遇などの描写、「激怒」「拒否」などの創作</li><li>皮肉・あおり・嘲笑、絵文字での揶揄、政治的主張</li><li>作られた発言(公式記録にない「」の台詞)、汗・怒りマーク、赤丸</li><li>競合で伸びていても、この型は採用しない</li></ul>
+<p class="note">NG語はタイトル・説明文・ナレーションで自動検査。1つでもあれば不合格。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="band" id="plan">
+<div class="in">
+<h2>企画の型: 1本=1場面=1つの疑問</h2>
+<p class="sec-sub">企画係は最新動向(R1)と競合調査(R2)から題材を決めます。競合は「模倣→要素分解→本質の言語化→独自企画化」で学び、タイトル・台本・映像はコピーしません。</p>
+<div class="grid3">
+<div class="card"><h3><span class="tag">最優先</span>A型</h3><p>行事 × 一場面 × 疑問。実際に何が起きたかを事実で説明(園遊会・外国賓客・晩餐会・訪問)</p></div>
+<div class="card"><h3><span class="tag">第2優先</span>B型</h3><p>人物 × 過去の出来事 × 現在の背景。確認できる時系列で構成(雅子さまの交流・愛子さまの公務)</p></div>
+<div class="card"><h3><span class="tag">条件付き</span>C型</h3><p>同種の出来事 × 異なる対応 × 理由。条件をそろえ、人物の優劣をつくらない</p></div>
+</div>
+<div class="grid2" style="margin-top:20px">
+<div>
+<h3>競合調査で分かった「伸びる要因」</h3>
+<ol id="growth-list"></ol>
+</div>
+<div>
+<h3>優先人物</h3>
+<ol><li>愛子さま・雅子さま</li><li>両陛下・佳子さまの具体的な活動</li><li>美智子さま・紀子さま・悠仁さま(出来事ごとに判断)</li><li>久子さま・華子さま・信子さま(検証枠)</li></ol>
+<h3>日本称賛の要素は「事実で言える海外からの敬意」に置き換える</h3>
+<p>名前を冠した花・名誉学位・勲章・記念植樹、相手国元首のスピーチの一節(一字一句)、宮中のおもてなしの作法、語学と国際経験、長く続く交流。「世界が絶句」「仰天」など相手の内心の断定は使わない。</p>
+<h3>G0の企画評価(100点・内部用)</h3>
+<p>学習者への適合10/強い疑問20/確認できる事実15/人物の物語15/比較10/独自の解説10/人物画像・実写素材の豊富さ15 ほか。複数本はバッチ(<code>research/batches/*.yaml</code>)でまとめて承認し、1本終わると次の本へ自動で進む。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="band alt" id="images">
+<div class="in">
+<h2>画像のルール: 常に人物がいて、語っているものが映る</h2>
+<p class="sec-sub">写真は宮内庁・官公庁・主催者・主要報道・Wikimedia Commons から、誰が・いつ・どこでをキャプションで確認できたものだけ。台帳 <code>ledger.csv</code> に1枚ずつ記録します。</p>
+<div class="scroll"><table><thead><tr><th>項目</th><th>縦型(ショート)</th><th>横型(長尺)</th></tr></thead><tbody id="img-body"></tbody></table></div>
+<div class="grid2" style="margin-top:20px">
+<div>
+<h3>見せ方</h3>
+<ul>
+<li>すべての写真に少しの拡大・移動(ズーム2〜7%)。写真の外側は見せない</li>
+<li>ズーム・パンは主役を画面の真ん中に置いた状態から始める(主役位置は当てっこ係が focus.json に登録)</li>
+<li>人物名を毎回表示、撮影日・場所・行事を画面の隅に小さく</li>
+<li>複数の方が写る横長写真は横幅いっぱいに置き、上下にぼかした背景</li>
+<li>縦型は画面を上(名前・撮影情報)・中(写真)・下(字幕)に分け、画像と文字を重ねない</li>
+<li>過去の会見を扱う時は確認済みの近年の写真を使ってよい。実際の撮影日を必ず表示し、「その年の写真」と誤解させない</li>
+<li>写真の切り替えは字幕の切れ目で(語の途中で替えない)</li>
+</ul>
+</div>
+<div>
+<h3>ナレーションと画像の一致(最重要)</h3>
+<p>語っている「もの・人・場所・瞬間」をその場面の画像で見せる。優先順位は ①その瞬間の写真 ②同じ物・場所の写真(日付を表示) ③その人物のその行事の写真 ④イメージ写真(「イメージ」と表示)。各場面の <code>scenes.json</code> に一致の理由 <code>match</code> を書く。</p>
+<h3 class="ng">禁止</h3>
+<p class="ng">AIによる実在人物の顔の生成・合成・表情の変更、着色、体型の変更。許される加工はトリミング・拡大縮小・パン・明るさの軽い補正だけ。報道・YouTubeの映像は取り込まない(権利と利用条件を確認できた公式映像のみ)。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="band" id="spec">
+<div class="in">
+<h2>固定仕様: 声・字幕・音・色はすべての動画で同じ</h2>
+<div class="scroll"><table class="stack"><thead><tr><th>項目</th><th>仕様</th></tr></thead><tbody id="spec-body"></tbody></table></div>
+</div>
+</section>
+
+<section class="band alt" id="long">
+<div class="in">
+<h2>長尺(横型)の追加ルール</h2>
+<p class="sec-sub">ショートの決まりはすべて長尺にも当てはめたうえで、次を足します。</p>
+<ol id="long-list" class="grid2" style="padding-left:1.3em"></ol>
+</div>
+</section>
+
+<section class="band" id="qa">
+<div class="in">
+<h2>完成判定(G5): 全項目合格のときだけ「完成」</h2>
+<p class="sec-sub">道具 <code>pipeline/qa_rules.py</code> が自動で測り、<code>qa_report.md</code> に合否と実測値を書きます。そのあと当てっこ係が書き出し後のコマを目で点検します。</p>
+<ul id="qa-list" class="grid2" style="padding-left:1.3em"></ul>
+</div>
+</section>
+
+<section class="band alt" id="publish">
+<div class="in">
+<h2>タイトル・表紙・説明文(G6)</h2>
+<div class="grid3">
+<div class="card"><h3>① タイトル</h3><p>CTR20%以上を狙う。99文字以内・ハッシュタグ2〜4個。型は【導入】+短い疑問文+具体語+根拠の示唆。G0で承認済みの題名を使い、事実と合わない所だけ最小限に直して完成報告で伝える。長尺はA/B/Cの3案でABテスト。</p></div>
+<div class="card"><h3>② 表紙</h3><p>3段見出しはタイトルの文言から流用(足さない)。濃紺・金・白、赤なし。ショートはCanvaでパターンA(バランス型)とB(上寄せ型)の2枚、同じ写真。長尺は型R(1名)/型D(2名)で3枚、写真・構図・人物の左右・題名の位置を3枚とも変える。</p></div>
+<div class="card"><h3>③ 説明文</h3><p>テンプレートどおり: 本文→問いかけ(動画の締めと同じ)→参考資料→画像クレジット→制作クレジット→免責事項(省略しない)。5000文字以内、マークダウン記号なし、ハッシュタグはカンマ区切りで最後にもカンマ、60個まで。長尺は章の時刻入り。</p></div>
+</div>
+<h3>表紙の写真の決まり(荒木さんの指摘から追加)</h3>
+<ul id="thumb-list"></ul>
+<p class="note">④ 公開後(G7)は分析係がCTR・再生数を実測して記録し、型の分析係が月1回、型を見直します。公開・投稿はシステムでは行いません。</p>
+</div>
+</section>
+
+<section class="band" id="stop">
+<div class="in">
+<h2>停止条件: 足りなければ「完成」と呼ばず止まって報告</h2>
+<div class="grid2">
+<ul>
+<li>確認できない主要な事実が残っている</li>
+<li>写っている人物・行事を特定できない画像しか集まらない場面がある</li>
+<li>人物画像が目標の70%未満</li>
+<li>内容に合う素材が足りず、繰り返しや図解でしか尺を埋められない</li>
+<li>尺が仕様から外れ、ナレーションを削ると内容が成り立たない</li>
+<li>G0の承認がない</li>
+</ul>
+<div>
+<h3>最優先原則</h3>
+<ol><li>成果物は内部学習教材専用、外部に公開・配布しない</li><li>人物の画像を最大限多く使い、飽きさせない</li><li>事実が確認できないものは入れない(推測で補わない)</li><li>人物・行事を特定できない画像は使わない</li><li>未確認・不足があれば完成と呼ばない</li><li>縦型と横型で同じ出来事を重複して作らない</li></ol>
+<p class="note">優先順位: ①荒木さんの明示指示 ②制作ルール ③矛盾しない承認済みの個別指示。点検係の判定は上書きせず、直しは「再採点」として追記する。</p>
+</div>
+</div>
+</div>
+</section>
+
+<section class="band alt" id="files">
+<div class="in">
+<h2>ファイルと道具</h2>
+<div class="grid2">
+<div>
+<h3>1本ごとのフォルダ <code>projects/&lt;制作番号&gt;/</code></h3>
+<div class="scroll"><table><tbody id="files-body"></tbody></table></div>
+</div>
+<div>
+<h3>司令塔 <code>bin/kabu</code></h3>
+<div class="scroll"><table><tbody id="cmd-body"></tbody></table></div>
+<h3>主な道具 <code>pipeline/</code></h3>
+<div class="scroll"><table><tbody id="tool-body"></tbody></table></div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="band" id="example">
+<div class="in">
+<h2>実例: 「愛子さま25年の軌跡」(12/1お誕生日)</h2>
+<p class="sec-sub">長尺1本と、そこへ誘導するショート3本を同時に制作した流れです。</p>
+<div class="scroll"><table class="stack"><thead><tr><th>制作番号</th><th>内容</th><th>公開想定</th><th>点検で直したこと</th></tr></thead><tbody id="ex-body"></tbody></table></div>
+<p class="note">各段階で「決まりの確認係」「事実確認係」「当てっこ係」が差し戻し、直し係が直して再点検。たとえば宮中午餐の写真は、どなたが写るか説明文で確かめられず皇族方以外が大きく写るため使用をやめ、別の日の写真に「午餐の写真ではありません」と表示しました。</p>
+</div>
+</section>
+
+<footer class="band"><div class="in">日本が誇る皇室物語 制作システム 全体図 / Claude塾 内部学習教材 / 2026年11月26日版。詳細は docs/production_rules.md を正とします。</div></footer>
+
+<script>
+{
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const steps=[
+["env_check","作業前チェック","書き出し係","機械","ツール・VOICEVOX・BGM・Noto Sans JP を確認 → env_check.md",""],
+["research","R1 最新動向の収集","棚調べ係","機械","宮内庁の新着・ご日程と主要報道を収集 → candidates.json",""],
+["trends","R1 動向の読み取り","企画係","係","直近の皇室の動向を整理 → trends.md",""],
+["competitors","R2 競合調査","企画係","係","皇室系競合で伸びている動画を実測 → competitors.md",""],
+["plan","G0 企画","企画係","係","題材・タイトル(99字・#付き)・概要・5要素・100点評価 → plan.md",""],
+["gate_G0","G0 承認","荒木さん","承認","タイトルと概要の承認(唯一の承認。バッチで一括も可)","plan"],
+["facts","G1 事実","事実確認係","点検","宮内庁→官公庁→主催者→主要報道→史料で照合。公式事実/報道/分析を区別 → facts.md","plan"],
+["images","G2 素材","制作係","係","人物画像をキャプションで特定して収集 → ledger.csv(目標の70%未満なら停止)","plan"],
+["script","G3 台本","台本係","係","完成ナレーション script.md と場面設計 scenes.json","facts"],
+["rules_script","台本の採点","決まりの確認係","点検","制作ルールで台本と場面設計を採点 → rules_check.md","script"],
+["focus","主役位置と照合","当てっこ係","係","点検シートで主役位置を登録、要目視写真を照合 → focus.json","script"],
+["render","G4 生成","書き出し係","機械","音声(青山龍星)・字幕・映像・BGM → output/…_internal.mp4",""],
+["frames","コマ点検","当てっこ係","点検","人物の取り違え・字幕とお顔の重なり・切替位置 → frames_check.md","script"],
+["qa","G5 検査","確認係","機械","第8章の自動検査 → qa_report.md(全合格のみ完成)","script"],
+["pub_title","G6① タイトル","タイトル係","係","承認済みタイトルを確定 → publish.yaml","script"],
+["thumb_title","G6② 表紙の設計","タイトル係","係","3段見出しと中心画像を確定 → thumb.yaml","pub_title"],
+["thumb_render","表紙の制作","デザイナー(重要)","機械","Canvaで表紙PNGと編集可能デザイン(長尺は道具で3案)","thumb_title"],
+["pub_desc","G6③ 説明文","説明文係","係","テンプレートでフルバージョンの説明文 → description.txt","pub_title"],
+["pub_check","G6 検査","確認係","機械","99字・3段の流用・末尾カンマ・5000字・NG語 → check.md","pub_desc"]
+];
+document.getElementById("steps-body").innerHTML=steps.map(s=>`<tr><td class="n">${esc(s[1])}<br><code>${esc(s[0])}</code></td><td>${esc(s[2])}</td><td><span class="tag">${esc(s[3])}</span></td><td>${esc(s[4])}</td><td>${s[5]?`<code>${esc(s[5])}</code>`:"—"}</td></tr>`).join("");
+
+/* 路線図 */
+const lanes=[["荒木さん",70],["判断する係",190],["点検する係",310],["機械(道具)",430]];
+const laneOf={"承認":0,"係":1,"点検":2,"機械":3};
+const short={env_check:"作業前",research:"R1収集",trends:"R1動向",competitors:"R2競合",plan:"G0企画",gate_G0:"G0承認",facts:"G1事実",images:"G2素材",script:"G3台本",rules_script:"決まり採点",focus:"主役位置",render:"G4生成",frames:"コマ点検",qa:"G5検査",pub_title:"タイトル",thumb_title:"表紙設計",thumb_render:"表紙制作",pub_desc:"説明文",pub_check:"G6検査"};
+const x0=200,dx=(1560-x0)/(steps.length);
+const pts=steps.map((s,i)=>({id:s[0],x:x0+dx*i+dx/2,y:lanes[laneOf[s[3]]][1],k:s[3],back:s[5]}));
+const P=Object.fromEntries(pts.map(p=>[p.id,p]));
+let g=`<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#D8BC72"/></marker><marker id="aw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0L10,5L0,10z" fill="#ffffff"/></marker></defs>`;
+lanes.forEach(([n,y],i)=>{g+=`<rect x="0" y="${y-55}" width="1600" height="110" fill="${i%2?"#1b2c45":"#16243A"}"/><text x="24" y="${y+5}" fill="#D8BC72" font-size="17" font-weight="700" font-family="Noto Sans JP,sans-serif">${esc(n)}</text>`});
+g+=`<text x="24" y="545" fill="#aab6c8" font-size="13" font-family="Noto Sans JP,sans-serif">R1・R2 → G0承認(1回だけ) → G1〜G5 → G6 → 納品(動画・表紙・題名・説明文)</text>`;
+let d=`M${pts[0].x},${pts[0].y}`;pts.slice(1).forEach(p=>d+=` L${p.x},${p.y}`);
+g+=`<path d="${d}" fill="none" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" opacity=".9"/>`;
+/* 差し戻し: 点検→直し係→戻り先 */
+const backs=[["rules_script","script"],["facts","plan"],["frames","script"],["qa","script"],["pub_check","pub_desc"]];
+backs.forEach(([a,b],i)=>{const A=P[a],B=P[b];const yy=A.y+38+i%2*8;g+=`<path d="M${A.x},${A.y+16} C${A.x},${yy+20} ${B.x},${yy+20} ${B.x},${B.y+16}" fill="none" stroke="#D8BC72" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#ar)"/>`});
+pts.forEach(p=>{const big=p.k==="承認";g+=`<circle cx="${p.x}" cy="${p.y}" r="${big?17:13}" fill="${big?"#D8BC72":p.k==="点検"?"#16243A":"#ffffff"}" stroke="${p.k==="点検"?"#D8BC72":"#ffffff"}" stroke-width="3"/><text x="${p.x}" y="${p.y-26}" text-anchor="middle" fill="#ffffff" paint-order="stroke" stroke="#16243A" stroke-width="5" font-size="13" font-family="Noto Sans JP,sans-serif" font-weight="700">${esc(short[p.id])}</text>`});
+g+=`<text x="${P.rules_script.x}" y="${P.rules_script.y+80}" text-anchor="middle" fill="#D8BC72" font-size="13" font-family="Noto Sans JP,sans-serif">不合格 → 直し係が直して再点検</text>`;
+g+=`<text x="${P.gate_G0.x}" y="${P.gate_G0.y+38}" text-anchor="middle" fill="#D8BC72" font-size="13" font-family="Noto Sans JP,sans-serif">唯一の承認</text>`;
+g+=`<rect x="1490" y="440" width="96" height="56" rx="4" fill="#D8BC72"/><text x="1538" y="474" text-anchor="middle" fill="#16243A" font-size="15" font-weight="700" font-family="Noto Sans JP,sans-serif">納品</text><path d="M${P.pub_check.x+14},${P.pub_check.y} L1488,466" stroke="#ffffff" stroke-width="2" marker-end="url(#aw)"/>`;
+document.getElementById("map-svg").innerHTML=g;
+
+const roles=[
+["企画係","kikaku","R1動向・R2競合調査からG0企画。タイトルと概要をまとめ荒木さんの承認を受ける"],
+["棚調べ係","tanashirabe","Googleニュース・宮内庁新着などの検索の棚を調べる"],
+["制作係","seisaku","制作部のまとめ役。人物画像の収集と台帳づくり"],
+["事実確認係","jijitsu","台本のすべての事実を宮内庁など公式出典と照合 → factcheck.md"],
+["台本係","daihon","完成ナレーションと場面設計(写真・切り抜き・動き・人物名・撮影情報)"],
+["決まりの確認係","kimari","制作ルールで台本・画面・投稿文を採点 → rules_check.md"],
+["当てっこ係","atekko","主役位置の登録・要目視写真の照合、書き出し後のコマ点検"],
+["直し係","naoshi","点検の差し戻しを場面ごとに直す(写真の差し替え・言い回し・字幕・画面割り)"],
+["書き出し係","kakidashi","音声→字幕→書き出しの機械工程を実行し計測"],
+["確認係","kakunin","各係の成果と採点をまとめて採点し直し指示 → review.md"],
+["タイトル係","thumb-title","CTR20%を狙うタイトルを確定し、表紙の3段見出しと中心画像を決める"],
+["デザイナー(重要)","designer-key","Canvaで表紙を作り書き出し、道具で保存・検査(テンプレートは変更しない)"],
+["説明文係","gaiyou","確定タイトルから本文・参考資料・ハッシュタグを書き、フルバージョンに組み立て"],
+["通りすがり係","toorisugari","人物像の違う3人の視聴者として、最初の2秒で止まるかを率直に答える"],
+["分析係","bunseki","公開後のCTR・インプレッション・再生数を実測し記録"],
+["型の分析係","kata-bunseki","月1回、伸びた動画と伸びなかった動画の型を比べ改善案を書く"]
+];
+document.getElementById("roles-grid").innerHTML=roles.map(r=>`<div class="card"><h3>${esc(r[0])} <code>${esc(r[1])}</code></h3><p>${esc(r[2])}</p></div>`).join("");
+
+const five=[["①強い疑問","冒頭2秒で「なぜ？」「何を？」と思わせ、本編で必ず答える","文化勲章は、どこで誰が手渡すのか？"],["②確認できる事実","答えの根拠は宮内庁等の公式記録。推測・伝聞で答えない","宮内庁の写真説明・ご日程・おことば全文"],["③人物の物語","出来事の羅列にせず、主役の方の歩み・公式に語られた想いでつなぐ","祖父母・両親から受け継がれた交流"],["④比較","事実と事実を並べる比較だけ。優劣の評価はしない","前回の訪問と今回"],["⑤独自の解説","公式記録を整理して背景・制度・意味を説明。「分析」と分かる言い方","親授式と伝達式の違い"]];
+document.getElementById("five-body").innerHTML=five.map(r=>`<tr><td class="n">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("");
+
+const growth=["1つの場面と答えのある疑問(「一言とは？」)","人物は雅子さま・愛子さま、場面は外交と家族","「外国から見た日本」の誇り(確認できる事実だけ)","投稿の量と時刻の固定(本数の上限は決めない)","過去の記録の掘り起こし(銀婚式・婚約会見など)","実写の映像(権利と利用条件を確認できたものだけ)","尺は二極: 一瞬型15〜30秒/解説型50〜90秒","揶揄・対立も伸びるが必要条件ではない → 使わない"];
+document.getElementById("growth-list").innerHTML=growth.map(t=>`<li>${esc(t)}</li>`).join("");
+
+const img=[["切替間隔","2〜4秒","4〜6秒"],["1枚の最長表示","5秒","8秒"],["人物が映る割合","95%以上(人物のみ75%以上)","90%以上"],["カット数の目標","尺に比例(約4.5秒に1カット・最低8)","100〜150"],["異なる画像","12枚以上(尺に比例)","60枚以上"],["同じ画像の回数","1本に1回だけ","3回まで・隣り合わない"],["多様さ(異なる画像÷カット)","0.6以上","0.5以上"],["図解・文字だけ","合計3秒以内","全体の5%以内"]];
+document.getElementById("img-body").innerHTML=img.map(r=>`<tr><td class="n">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join("");
+
+const spec=[["尺","縦型: 目安45〜60秒・上限75秒/横型: 8分以上12分以内(ナレーションに沿う長さ、水増ししない)"],["画面","縦型 1080×1920(9:16)/横型 1920×1080(16:9)・30fps・MP4(H.264/AAC)"],["声","VOICEVOX「青山龍星」ノーマル。速度0.92・抑揚1.45・高さ-0.02、場面の間 横型0.9秒/縦型0.6秒。話者IDは一覧から取得"],["字幕","Noto Sans JP Bold・白・黒縁9px・影2px の1種類のみ。全文表示、縦型は1行7字まで、横型は13字まで"],["人物名・撮影情報","極力小さく(縦型 32px/22px、横型 30px/20px)。字幕を主役に"],["BGM","UNL1337(箕輪レコーズ)。ナレーションより18〜24dB低く、最後はゆっくり消す"],["配色","濃紺 #16243A・金 #D8BC72・白。赤は使わない"],["構成(縦型)","0〜3秒 人物と疑問/〜15秒 状況/〜40秒 展開・根拠/〜57秒 回答・締めくくり"],["構成(横型)","冒頭30秒: 主役の写真→実際のお言葉か数字→疑問→この動画でたどるもの。答えは全体の4割までに"]];
+document.getElementById("spec-body").innerHTML=spec.map(r=>`<tr><td class="n">${esc(r[0])}</td><td>${esc(r[1])}</td></tr>`).join("");
+
+const long=["映像があれば映像も使う(宮内庁の公式動画など、区間と出典を記録)","尺は8〜12分。足りなければ確認済みの事実・場面を足し、言い直しで延ばさない","タイトルと表紙は切り口の違う3案でABテスト","表紙の型を統一(明朝の極太・金の文字と帯・人物1〜3名・矢印なし)。3枚で写真・構図・配置・題名の位置は必ず変える","G0の前に同じ題材の先行動画(上位5本・下位5本)を調べる","1本=1場面=1つの疑問。題名と結びつかない場面が60秒続いたら削る","実際のお言葉は表紙・題名に使ってよい(一字一句、出典を添える)","表紙の文字は2か所・合計20字前後、写真5.5:文字4.5","章の見出しは疑問か具体的な物に。説明文に章の時刻","実績は公開7日後の再生数を直近の中央値との倍率で記録。長尺は週1本前後"];
+document.getElementById("long-list").innerHTML=long.map(t=>`<li>${esc(t)}</li>`).join("");
+
+const qa=["人物・日付・敬称・引用が facts.md と一致","画像の人物名・撮影情報が台帳と一致","ナレーション全文と字幕が一致し誤字がない","尺・解像度・fps・形式が仕様どおり","画面の文字がすべて Noto Sans JP","字幕が最大の大きさで、はみ出さない","声が青山龍星・決められた速度と抑揚","切替間隔・最長表示・人物の割合・同じ画像の回数","隣り合う同じ画像なし・多様さ・図解の上限","黒画面・無音・音割れなし、BGM音量が適切","冒頭の疑問に本編で回答","締めくくり(まとめ→問いかけ→お願い)と余韻","揶揄・対立のNG語がない","主役位置がすべて登録済み"];
+document.getElementById("qa-list").innerHTML=qa.map(t=>`<li>${esc(t)}</li>`).join("");
+
+const thumb=["直近の表紙(長尺・ショートとも)に使った写真は再使用しない","直近の本編で何度も使っている写真も表紙に使わない(使用回数を数えて最少のもの)","お誕生日・新年のご近影より、行事・ご公務の場面の写真を優先","題材と写真の雰囲気を合わせる(お祝いの題材に献花・慰霊・被災地の写真は使わない)","皇族方以外の人物は、お顔だけでなく後ろ姿・体の一部も入れない","題名の主語・話題の人物は必ず表紙に写す","表情は話している途中より穏やかで自然なもの","同時期に出す複数本の表紙は縮小して並べ、見分けられることを確かめる"];
+document.getElementById("thumb-list").innerHTML=thumb.map(t=>`<li>${esc(t)}</li>`).join("");
+
+const files=[["plan.md","企画(G0)"],["facts.md / factcheck.md","事実と出典、照合結果"],["ledger.csv","画像台帳(出典・人物・撮影情報・確認方法)"],["script.md","章ごとの完成ナレーション全文"],["scenes.json","場面設計(ナレーション・字幕・画像・切り抜き・動き・人物名・撮影情報・一致の理由)"],["focus.json","写真ごとの主役位置"],["rules_check.md / frames_check.md","決まりの採点・コマ点検"],["fixes.md","直し係の記録"],["output/…_internal.mp4","完成動画"],["qa_report.md","G5検査結果"],["publish.yaml / thumb.yaml","タイトル・表紙・説明文の材料"],["publish/description.txt","説明文(そのまま貼れる形)"],["thumb/*.png","表紙(ショート A/B、長尺 A/B/C)"]];
+document.getElementById("files-body").innerHTML=files.map(r=>`<tr><td><code>${esc(r[0])}</code></td><td>${esc(r[1])}</td></tr>`).join("");
+const cmds=[["new --from-batch","バッチから制作番号を作る"],["batch-approve","企画リストを一括承認(G0)"],["run <工程> --job <番号>","機械工程を実行(focus・render・frames・qa・pub_check など)"],["status / next","いまの工程と次にやること"],["done / fail","工程の完了・差し戻し"]];
+document.getElementById("cmd-body").innerHTML=cmds.map(r=>`<tr><td><code>${esc(r[0])}</code></td><td>${esc(r[1])}</td></tr>`).join("");
+const tools=[["rules_render.py","音声・字幕・写真の動き・BGMを合成して書き出し(FFmpeg)"],["qa_rules.py","G5の自動検査"],["frame_check.py","コマの切り出しと点検シート"],["focus_sheet.py","主役位置の点検シートと登録"],["publish_text.py","説明文の組み立てと検査、画像クレジットの自動作成"],["thumb_canva.py / thumb_long.py","ショート表紙(Canva)/長尺表紙"],["collect_images.py / research.py","写真の収集/最新動向の収集"]];
+document.getElementById("tool-body").innerHTML=tools.map(r=>`<tr><td><code>${esc(r[0])}</code></td><td>${esc(r[1])}</td></tr>`).join("");
+
+const ex=[["KB-20261126-01","長尺「愛子さま25年の軌跡」10分32秒・126カット・写真74種","12/1","題名を原文に合わせて最小限に直す/宮中午餐の写真を差し替え/12/1当日公開の言い回しに"],["KB-20261126-02","ショート ラオス 初めての外国公式訪問","11/28","皇族方以外が写る写真2枚を差し替え"],["KB-20261126-03","ショート 日本赤十字社 ご就職","11/29","本編で多用の写真を表紙から外す"],["KB-20261126-04","ショート シンガポール","11/30","写真の切替を字幕の切れ目に/最後の無音(BGMの消え方)を修正"]];
+document.getElementById("ex-body").innerHTML=ex.map(r=>`<tr><td class="n">${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td><td>${esc(r[3])}</td></tr>`).join("");
+}
+</script>
+</body>
+</html>
