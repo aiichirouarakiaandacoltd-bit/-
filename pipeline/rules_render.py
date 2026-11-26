@@ -783,7 +783,7 @@ def build(project: str, kind: str = "縦型") -> Path:
     assp = str(ass).replace(":", "\\:")
     fc = (f"[0:v]ass='{assp}':fontsdir={FONT_DIR},format=yuv420p[v];"
           f"[1:a]aresample=48000,apad=pad_dur=4,loudnorm=I=-16:TP=-1.5:LRA=11,aresample=48000[n];"
-          f"[2:a]aresample=48000,atrim=0:{total + 4:.2f},loudnorm=I=-37:TP=-9:LRA=11,aresample=48000,afade=t=in:d=1,afade=t=out:st={max(0, total - 1.8):.2f}:d=1.8[b];"
+          f"[2:a]aresample=48000,atrim=0:{total + 4:.2f},loudnorm=I=-37:TP=-9:LRA=11,aresample=48000,afade=t=in:d=1,afade=t=out:st={max(0, total - 1.2):.2f}:d=1.2[b];"
           f"[n][b]amix=inputs=2:duration=shortest:normalize=0,alimiter=limit=0.70:level=disabled,atrim=0:{total:.3f}[a]")
     subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", str(raw), "-i", str(wav), "-stream_loop", "-1", "-i", str(bgm),
                     "-filter_complex", fc, "-map", "[v]", "-map", "[a]", "-c:v", "libx264", "-preset", "medium", "-crf", "18",
