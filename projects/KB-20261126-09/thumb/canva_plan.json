@@ -1,0 +1,74 @@
+{
+  "template": "DAHatUQFKSI",
+  "layout": "S-B",
+  "photos": [
+    {
+      "ledger": "A308",
+      "file": "projects/KB-20261126-09/thumb/A308_S-B.jpg",
+      "frame": {
+        "left": 72,
+        "top": 560,
+        "width": 446,
+        "height": 490
+      },
+      "alt": "愛子内親王殿下 愛子内親王殿下のお誕(宮内庁)"
+    },
+    {
+      "ledger": "A204",
+      "file": "projects/KB-20261126-09/thumb/A204_S-B.jpg",
+      "frame": {
+        "left": 542,
+        "top": 560,
+        "width": 446,
+        "height": 490
+      },
+      "alt": "人物の写真としては使わない(場所の写真。人物名は表示しない。写り込む人は小さく、どなたか分からない大きさ。2026-11-26 制作係) 2016-10-08(Wikimedia Commons)"
+    }
+  ],
+  "texts": {
+    "upper": "【愛子さま】シンガポール",
+    "middle": "昨年訪れた場所は…",
+    "lower": "「感銘を受けました」"
+  },
+  "middle": {
+    "font_size": 100,
+    "left": 50,
+    "top": 1090,
+    "width": 980
+  },
+  "lower": {
+    "left": 96,
+    "top": 1240
+  },
+  "steps": [
+    "copy-design(TEMPLATE)→ 新しい design_id を thumb.yaml の canva に記録",
+    "read-design(open_transaction)で要素を特定: 文字『導入』=上段 / 『最大の訴求』=中段 / 『疑問・補足』=下段 / 画像 shape(left72)=左枠, (left542)=右枠",
+    "写真ごとに create-upload-url → curl -X POST -H 'Content-Type: application/octet-stream' --data-binary @file → mediaId",
+    "S-A: 右枠を delete_element、左枠を resize_element(936×680)・position_element(72,545)",
+    "update_fill(各枠, mediaId, alt)・replace_text(上段/中段/下段)・format_text(中段 font_size)・resize_element(中段 width)・position_element(中段・下段)",
+    "パターンA: pattern_A の座標で position_element(ロゴ・上段・金の細線2本・写真・撮影情報・中段・下段)。下段は中段のすぐ下(lower_top)。最下部に置かない",
+    "サムネイルで顔が枠に収まり、中段が1行、文字同士が重ならないことを確認 → commit",
+    "export-design(png, 1080×1920)→ python -m pipeline.thumb_canva --project P --fetch <URL>"
+  ],
+  "pattern_A": {
+    "logo_top": 154,
+    "upper_top": 256,
+    "line1_top": 399,
+    "photo": {
+      "left": 90,
+      "top": 450,
+      "width": 900,
+      "height": 880
+    },
+    "caption_top": 1346,
+    "line2_top": 1419,
+    "middle_top": 1479,
+    "text_left": 20,
+    "text_width": 1040,
+    "middle_font_size": 100,
+    "lower_font_size": 74,
+    "lower_top": 1669,
+    "lower_bottom": 1758,
+    "note": "下段は中段のすぐ下に置き、最下部に離さない(荒木指示 2026-11-25)。区切り線・写真・撮影情報も上の座標へ"
+  }
+}
