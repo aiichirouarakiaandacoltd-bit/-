@@ -1,6 +1,6 @@
 layout: S-A
 texts:
-  upper: 【シンガポール】愛子さまが
+  upper: 【愛子さま】シンガポール
   middle: 書かれたものとは？
   lower: 「受け継いでいくことができれば」
 photos:
@@ -25,14 +25,14 @@ canva:
     png: projects/KB-20261126-04/thumb/thumb_canva_A.png
     photo: projects/KB-20261126-04/thumb/A167_square_crop.jpg
     layout_note: パターンA(バランス型)。撮影情報26px白右寄せy1346「令和8年9月1日 令和8年度宮内庁防災訓練(宮内庁庁舎)／宮内庁」。
-      2026-11-26 写真差し替えのため旧デザイン(DAHb_MxxEAw)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
+      2026-11-26 写真差し替えのため旧デザイン(DAHb_MxxEAw)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま。2026-11-26 荒木指示(【】は主役)で上段の文字だけ差し替え、76px(13字)→84px(12字)1行、中心の高さは旧と同じ。写真・中段・下段・配置は不変
   canva_B:
     design_id: DAHb_F_ddQQ
     edit_url: https://www.canva.com/d/W4goW3ZQHsRjjcf
     png: projects/KB-20261126-04/thumb/thumb_canva_B.png
     photo: projects/KB-20261126-04/thumb/A167_square_crop.jpg
     layout_note: パターンB(上寄せ型)。撮影情報24px白右寄せy1110「令和8年9月1日 令和8年度宮内庁防災訓練(宮内庁庁舎)／宮内庁」。
-      2026-11-26 写真差し替えのため旧デザイン(DAHb_I4-pnY)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
+      2026-11-26 写真差し替えのため旧デザイン(DAHb_I4-pnY)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま。2026-11-26 荒木指示(【】は主役)で上段の文字だけ差し替え、76px(13字)→84px(12字)1行、中心の高さは旧と同じ。写真・中段・下段・配置は不変
 previous:
   center_image: A113
   canva_A: DAHb_MxxEAw

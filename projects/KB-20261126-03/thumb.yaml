@@ -1,6 +1,6 @@
 layout: S-A
 texts:
-  upper: 【日本赤十字社】愛子さまが
+  upper: 【愛子さま】日本赤十字社
   middle: つづられた一節とは？
   lower: ご就職に際しての文書回答で
 photos:
@@ -26,14 +26,14 @@ canva:
     png: projects/KB-20261126-03/thumb/thumb_canva_A.png
     photo: projects/KB-20261126-03/thumb/A061_square_crop.jpg
     layout_note: パターンA(バランス型)。撮影情報26px白右寄せy1346「令和7年5月3日 第23回世界災害救急医学会開会式／宮内庁」。 2026-11-26
-      写真差し替えのため旧デザイン(DAHb_BbHpD0)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
+      写真差し替えのため旧デザイン(DAHb_BbHpD0)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま。2026-11-26 荒木指示(【】は主役)で上段の文字だけ差し替え、76px(13字)→84px(12字)1行、中心の高さは旧と同じ。写真・中段・下段・配置は不変
   canva_B:
     design_id: DAHb_H3YjaA
     edit_url: https://www.canva.com/d/NnmwNjy9vlxDaNe
     png: projects/KB-20261126-03/thumb/thumb_canva_B.png
     photo: projects/KB-20261126-03/thumb/A061_square_crop.jpg
     layout_note: パターンB(上寄せ型)。撮影情報24px白右寄せy1110「令和7年5月3日 第23回世界災害救急医学会開会式／宮内庁」。 2026-11-26
-      写真差し替えのため旧デザイン(DAHb_E809Jc)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
+      写真差し替えのため旧デザイン(DAHb_E809Jc)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま。2026-11-26 荒木指示(【】は主役)で上段の文字だけ差し替え、76px(13字)→84px(12字)1行、中心の高さは旧と同じ。写真・中段・下段・配置は不変
 previous:
   center_image: A133
   canva_A: DAHb_BbHpD0
