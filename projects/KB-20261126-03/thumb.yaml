@@ -4,31 +4,37 @@ texts:
   middle: つづられた一節とは？
   lower: ご就職に際しての文書回答で
 photos:
-- ledger: A133
-center_image: A133
-note: '2026-11-26 デザイナー(重要): 3段はタイトルの文言をそのまま流用(足した言葉・呼びかけなし)。A133(令和8年10月6日「大英博物館日本美術コレクション
-  百花繚乱 海を越えた江戸絵画」ご覧(東京都美術館)、宮内庁キャプション「…をご覧になる天皇皇后両陛下並びに愛子内親王殿下」、1000×666、撮影者・提供者表記なし、当てっこ係照合済み)。桜の金屏風の前に立たれ、穏やかにほほえまれる愛子さまお一人の範囲(手前の説明役の方の後ろ姿と両陛下は入れない。左端の皇后陛下の腕
-  x約517 より右で切った)。 過去の全 thumb.yaml の写真(取得元URL)と照合し未使用・同じ日の撮影もなし。お誕生日・新年のご近影ではなく行事の場面。加工はトリミング・拡大縮小のみ。3本(-02
-  A091 金の椅子・ラオスの衣装/-03 A133 桜の金屏風・ベージュのコート・立ち姿/-04 A113 盆栽・ピンクの装いと皇后陛下)を縮小して並べ、写真・服装・背景で見分けられることを確認(projects/KB-20261126-01/thumb/shorts_02-04_covers_overview.jpg)。thumb_canva
-  --fetch の検査(1080×1920・写真枠外の赤0)をA・Bとも通過。要確認: 写真は勤務の場面ではない(写真下に年月日と行事を明記)。元の写真のお顔が小さく(約45px)約4.9倍に拡大しているため、やや柔らかい画質。'
+- ledger: A061
+center_image: A061
+note: '2026-11-26 デザイナー(重要): 荒木指示「表紙の画像を変更」「A133はしょっちゅう出てくる」により A133 から A061 に変更。A061=宮内庁「天皇ご一家のご活動」掲載、説明文「第23回世界災害救急医学会開会式でおことばを述べられる愛子内親王殿下
+  （京王プラザホテル）」、令和7年5月3日(月別ご日程で確定)、1000×666、撮影者・提供者表記なし、愛子さまお一人のみ(皇族方以外は写らない)。選んだ理由:
+  日本赤十字社に関わる宮内庁の写真(A040 日赤企画展=直近の本編3回・全員マスク・400px/佐賀県赤十字血液センター=本編3回・400pxで隣の関係者を外すと約6倍拡大/A039
+  ご供花=献花のため不可)はどれも使用回数が多いか表紙の条件に合わないため、災害救護に近い災害救急医学の国際学会の場面で、直近の本編・表紙での使用が少ないもの(本編2回
+  KB-20261126-01・-03、表紙0回)を選んだ。過去の全 thumb.yaml と照合し表紙で未使用・同じ日の撮影もなし。行事の場面(ご近影ではない)。加工はトリミング・拡大縮小のみ(約1.7倍)。3本並べ(projects/KB-20261126-01/thumb/shorts_02-04_covers_overview.jpg)で
+  -02 A091(金の椅子・ラオスの衣装)・-04 A167(防災訓練・屋外・皇后陛下と)と見分けられることを確認。thumb_canva --fetch の検査(1080×1920・写真枠外の赤0)をA・Bとも通過。要確認:
+  日赤の行事そのものの写真ではない(写真下に年月日と行事を明記)。おことばの途中の表情(口元が開く)。'
 canva:
   template: DAHatUQFKSI
-  design_id: DAHb_BbHpD0
-  edit_url: https://www.canva.com/d/irGDgtu2cv97f1U
+  design_id: DAHb_G7URQA
+  edit_url: https://www.canva.com/d/LMOYgDPO6xerwyd
   png: projects/KB-20261126-03/thumb/thumb_canva.png(=A の写し)
-  photo: projects/KB-20261126-03/thumb/A133_square_crop.jpg
-  crop_note: A133(1000×666)をx548〜818・y150〜414で切り抜き、1320×1290に拡大(加工なし)
+  photo: projects/KB-20261126-03/thumb/A061_square_crop.jpg
+  crop_note: A061(1000×666)をx265〜795・y0〜518で切り抜き(演台の社名ロゴを外す)、1320×1290に拡大(加工なし)
   canva_A:
-    design_id: DAHb_BbHpD0
-    edit_url: https://www.canva.com/d/irGDgtu2cv97f1U
+    design_id: DAHb_G7URQA
+    edit_url: https://www.canva.com/d/LMOYgDPO6xerwyd
     png: projects/KB-20261126-03/thumb/thumb_canva_A.png
-    photo: projects/KB-20261126-03/thumb/A133_square_crop.jpg
-    layout_note: パターンA(バランス型・PATTERN_A)。KB-20261125-03 のA(DAHb5g6MddQ)を複製。ロゴy154・上段y約256〜264・金細線y399・写真x90〜990・y450〜1330・撮影情報26px白右寄せy1346「令和8年10月6日
-      百花繚乱 海を越えた江戸絵画(東京都美術館)／宮内庁」・金細線y1419・中段y1479・下段y1657(中段の文字枠の下端から約70px)。上段76px白(13字のため縮小)・中段90px金1行(10字)・下段74px白(13字)
+    photo: projects/KB-20261126-03/thumb/A061_square_crop.jpg
+    layout_note: パターンA(バランス型)。撮影情報26px白右寄せy1346「令和7年5月3日 第23回世界災害救急医学会開会式／宮内庁」。 2026-11-26
+      写真差し替えのため旧デザイン(DAHb_BbHpD0)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
   canva_B:
-    design_id: DAHb_E809Jc
-    edit_url: https://www.canva.com/d/LpOnW7bxZS_wzGy
+    design_id: DAHb_H3YjaA
+    edit_url: https://www.canva.com/d/NnmwNjy9vlxDaNe
     png: projects/KB-20261126-03/thumb/thumb_canva_B.png
-    photo: projects/KB-20261126-03/thumb/A133_square_crop.jpg
-    layout_note: パターンB(上寄せ型)。KB-20261125-03 のB(DAHb5m5zzSA)を複製。ロゴ40px金y56・上段y約160〜168・写真x125〜955・y290〜1105・撮影情報24px白右寄せy1110「令和8年10月6日
-      百花繚乱 海を越えた江戸絵画(東京都美術館)／宮内庁」・中段y1150・下段y1280・金細線y1399。y1420から下は濃紺のみ。上段76px白(13字のため縮小)・中段90px金1行(10字)・下段74px白(13字)
+    photo: projects/KB-20261126-03/thumb/A061_square_crop.jpg
+    layout_note: パターンB(上寄せ型)。撮影情報24px白右寄せy1110「令和7年5月3日 第23回世界災害救急医学会開会式／宮内庁」。 2026-11-26
+      写真差し替えのため旧デザイン(DAHb_E809Jc)を copy-design で複製し、写真(update_fill)と撮影情報の文字だけを替えた。3段の文言・配置は旧のまま
+previous:
+  center_image: A133
+  canva_A: DAHb_BbHpD0
+  canva_B: DAHb_E809Jc
