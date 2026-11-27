@@ -118,7 +118,7 @@ def check(project: str, kind: str = "縦型") -> bool:
     dur = float(pr["format"]["duration"])
     num, den = map(int, v["r_frame_rate"].split("/"))
     okspec = ((v["width"], v["height"]) == (sp["W"], sp["H"]) and abs(num / den - 30) < 0.01 and v["codec_name"] == "h264"
-              and a and a["codec_name"] == "aac" and (dur <= (90.0 if project < "KB-20261123-02" else 75.0) if kind == "縦型" else 480 <= dur <= 720))  # 縦型の上限75秒(第1-4章・荒木指示 2026-11-24。N1〜N5すべて適用。それより前の制作番号は旧上限90秒)
+              and a and a["codec_name"] == "aac" and (dur <= (90.0 if project < "KB-20261123-02" else 75.0) if kind == "縦型" else ((600 <= dur <= 900) if project >= "KB-20261127-02" else 480 <= dur <= 720)))  # 横型: 荒木承認 2026-11-27 で 10〜15分(それより前は 8〜12分)  # 縦型の上限75秒(第1-4章・荒木指示 2026-11-24。N1〜N5すべて適用。それより前の制作番号は旧上限90秒)
     add("尺・解像度・fps・形式", okspec, f"{dur:.2f}秒 {v['width']}x{v['height']} {num / den:.2f}fps {v['codec_name']}/{a['codec_name'] if a else '音声なし'}"
         + (" (目安50〜75秒)" if kind == "縦型" and not 50 <= dur <= 75 else ""))
     # 5 フォント
