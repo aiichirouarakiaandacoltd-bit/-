@@ -541,7 +541,8 @@ def video_frames(path: str, start: float, n: int, W: int, H: int, end: float | N
     dur = max(0.0, min(n / 30.0, avail))
     if stats is not None:
         stats.update({"scale": round(s, 3), "src": f"{sw}x{sh}", "clip_avail": round(avail, 3), "clip_short": avail + 0.05 < n / 30.0})
-    cmd = ["ffmpeg", "-v", "error", "-ss", f"{start:.3f}", "-t", f"{max(dur, 1 / 30):.3f}", "-i", str(path), "-an",
+    nread = max(1, int(dur * 30 + 0.5))  # 区間の中で読むコマ数(足りない分は最後のコマで止める)
+    cmd = ["ffmpeg", "-v", "error", "-ss", f"{start:.3f}", "-i", str(path), "-an", "-frames:v", str(nread),
            "-vf", f"fps=30,scale={tw}:{th}:flags=lanczos", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
     pr = subprocess.Popen(cmd, stdout=subprocess.PIPE)
     size = tw * th * 3
@@ -551,7 +552,7 @@ def video_frames(path: str, start: float, n: int, W: int, H: int, end: float | N
     px, py = x0 + (bw - cw) // 2, y0 + (bh - ch) // 2
     last = None
     for k in range(n):
-        buf = pr.stdout.read(size) if last is None or k < int(dur * 30 + 0.5) else b""
+        buf = pr.stdout.read(size) if k < nread else b""
         if len(buf) == size:
             fr = np.frombuffer(buf, np.uint8).reshape(th, tw, 3)
             # 背景: その映像を画面いっぱいに広げてぼかし、暗くする(写真の枠と同じ見た目。小さくしてからぼかして速く)
@@ -566,6 +567,7 @@ def video_frames(path: str, start: float, n: int, W: int, H: int, end: float | N
         elif last is None:
             last = np.zeros((H, W, 3), np.uint8)
         yield last
+    pr.stdout.read()
     pr.stdout.close()
     pr.wait()
 
@@ -806,7 +808,8 @@ def build(project: str, kind: str = "縦型") -> Path:
         if imgs and shots and len(imgs) > 1 and imgs[0] == shots[-1]["image"]:
             off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない
         cuts_at = None
-        vid = {i: is_video(ledger[i]["ファイル名"]) for i in imgs if i in ledger}
+        sw_subs = s.get("switch_subs")
+        vid = {x: is_video(ledger[x]["ファイル名"]) for x in imgs if x in ledger}
         if len(imgs) == 1 and vid.get(imgs[0]):
             n = 1  # 映像1本だけの場面は切らずに1カットで流す(長さは qa_rules が最長表示で検査)
         if len(imgs) > 1 and any(vid.values()) and not s.get("switch_subs"):
@@ -820,14 +823,15 @@ def build(project: str, kind: str = "縦型") -> Path:
             m = min(len(imgs), len(bounds) + 1)
             if m < len(imgs):
                 print(f"注意: {s['scene']} は字幕の切れ目が {len(bounds)} か所しかないため、素材 {imgs[m:]} を使わない")
-            pick = []
+            pick, prev = [], -1
             for k in range(1, m):
                 want_t = a + (b - a) * k / m
-                cand = [j for j, _ in bounds if (not pick or j > pick[-1]) and len(bounds) - [x for x, _ in bounds].index(j) >= m - k]
-                pick.append(min(cand, key=lambda j: abs(dict(bounds)[j] - want_t)))
-            s["switch_subs"] = pick
-            s["_switch_auto"] = True
-        if len(imgs) > 1 and s.get("switch_subs"):
+                cand = [q for q in range(prev + 1, len(bounds) - (m - 1 - k))]  # 後ろの切替の分の切れ目を残す
+                prev = min(cand, key=lambda q: abs(bounds[q][1] - want_t))
+                pick.append(bounds[prev][0])
+            sw_subs = pick
+            imgs = imgs[:m]
+        if len(imgs) > 1 and sw_subs:
             # 第4-3章(2026-11-24): 写真の切り替えを字幕の区切り(言葉の切れ目)に合わせる。音声・字幕は変えない。
             # switch_subs = 次の写真に替える字幕のかたまりの番号(0始まり)。字幕の時刻と同じ計算(モーラ比)で求める
             from .tts import mora_count
@@ -835,7 +839,7 @@ def build(project: str, kind: str = "縦型") -> Path:
             ms_ = [max(1, mora_count("".join(c))) for c in ch]
             a_, b_ = s["start_sec"], s["end_sec"] - 0.06
             st_ = [a_ + (b_ - a_) * sum(ms_[:j]) / sum(ms_) for j in range(len(ch))]
-            cuts_at = [a] + [st_[j] for j in s["switch_subs"]] + [b]
+            cuts_at = [a] + [st_[j] for j in sw_subs] + [b]
             n = len(cuts_at) - 1
         for k in range(n):
             img = imgs[(k + off) % len(imgs)] if imgs else None
@@ -926,14 +930,14 @@ def build(project: str, kind: str = "縦型") -> Path:
                 st_ = {}
                 gen = video_frames(src, sh["clip_start"], n, W, H, end=sh.get("clip_end"), crop=sh["crop"],
                                    focus_x=sh.get("clip_x", 0.5), stats=st_)
-                gen = list(gen)
-                sh.update(st_)
             else:
                 sh["media"] = "写真"
                 pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=sh.get("main") or mains.get(sh["image"]))
                 gen = frames_for(pl, fo, n, W, H, sh["motion"], band=LAST_BAND)
             for fr in gen:
                 ff.stdin.write(blend(fr, ov).tobytes())
+            if sh["media"] == "映像":
+                sh.update(st_)  # 拡大の倍率・元の大きさ・区間の残り(qa_rules が検査)
         fcount += n
     ff.stdin.close()
     ff.wait()

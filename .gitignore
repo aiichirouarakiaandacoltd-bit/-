@@ -27,3 +27,6 @@ assets/bgm/*.wav
 # 納品用の写し(元は projects/ にある)
 delivery/**/*.mp4
 delivery/**/*.png
+
+# 見張り役の状態(実行のたびに変わる)
+data/watch_state.json

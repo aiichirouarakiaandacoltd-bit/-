@@ -14,11 +14,19 @@ from collections import Counter
 from pathlib import Path
 
 from .common import ROOT, load_json, ng_hits
-from .rules_render import SPEC
+from .rules_render import MAX_UPSCALE, SPEC, is_video, video_info
 
 
 # 荒木承認 2026-11-27「2回まで可(切り抜きを変える)」: 題材そのものの写真が少ない縦型の案件
 SHORT_REUSE2 = {"KB-20261127-01"}
+
+# 実写映像に使えるライセンス・利用条件(台帳の「ライセンス」列)。Wikimedia Commons の CC BY / CC BY-SA / CC0 / PD、
+# 政府の公式動画(利用規約が許すもの)、無料素材サイトの商用・改変可。報道映像・YouTube からの取得は使わない
+CLIP_LICENSE_OK = re.compile(r"(CC[ -]?BY(-SA)?[ -]?\d|CC0|Public domain|パブリックドメイン|(?-i:\bPD\b)|政府標準利用規約|公共データ利用規約|"
+                             r"利用規約(で)?(複製|改変|二次利用)可|商用(利用)?(可|OK)・改変可)", re.I)
+CLIP_URL_NG = re.compile(r"(youtube\.com|youtu\.be|nicovideo|tiktok\.com|news|nhk\.or\.jp|fnn\.jp|tbs\.co\.jp|ntv\.co\.jp|"
+                         r"tv-asahi|tv-tokyo|jiji\.com|kyodonews|asahi\.com|yomiuri|mainichi|sankei|nikkei)", re.I)
+
 
 def probe(p):
     r = subprocess.run(["ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json", str(p)], capture_output=True, text=True)
@@ -39,6 +47,11 @@ def check(project: str, kind: str = "縦型") -> bool:
     facts = (pdir / "facts.md").read_text(encoding="utf-8") if (pdir / "facts.md").exists() else ""
     video = pdir / "output" / f"{project}_{kind}_internal.mp4"
     res = []
+
+    def is_clip(sh):  # 実写映像のカット(書き出しの記録・台帳の素材種別・ファイルの種類のどれかで判定)
+        r = ledger.get(sh.get("image") or "") or {}
+        return (sh.get("media") == "映像" or r.get("素材種別") == "映像"
+                or (bool(r.get("ファイル名")) and is_video(r["ファイル名"])))
 
     def add(name, ok, detail, todo=""):
         res.append((name, ok, detail, todo))
@@ -177,7 +190,8 @@ def check(project: str, kind: str = "縦型") -> bool:
                     "目標の70%未満なら第7章により生成停止"))
     # 7-1 主役を中央に置いてから動かす(focus.json の登録)
     fj = load_json(pdir / "focus.json", {}) or {}
-    nofocus = sorted({s.get("image") for s in shots if s.get("image") and not s.get("compare") and s.get("image") not in fj})
+    nofocus = sorted({s.get("image") for s in shots if s.get("image") and not s.get("compare") and s.get("image") not in fj
+                      and not is_clip(s)})  # 実写映像は動きを付けないので主役の位置の登録は不要
     add("主役の位置が登録済み(ズーム・パンの開始位置)", not nofocus, f"未登録 {nofocus or 'なし'}",
         "当てっこ係が bin/kabu run focus の点検シートを見て focus_sheet --set で登録する")
     # 7-2 第4-2章 素材の豊富さと画面の華やかさ
@@ -187,11 +201,49 @@ def check(project: str, kind: str = "縦型") -> bool:
     div_min = 0.6 if kind == "縦型" else 0.5
     diag = sum(d for s, d in zip(shots, durs) if s.get("diagram") or not (s.get("image") or s.get("compare")))
     diag_ok = diag <= 3.0 if kind == "縦型" else diag <= 0.05 * sum(durs)
-    n_clip = sum(1 for s in shots if s.get("media") == "映像")
+    n_clip = sum(1 for s in shots if is_clip(s))
     add("第4-2章 素材の豊富さ(隣接の重複・多様さ・図解の量)", not adj and div >= div_min and diag_ok,
         f"隣り合う同じ画像 {adj or 'なし'} / 異なる画像÷カット数 {div:.2f}(目安{div_min}以上) / "
         f"図解・文字だけ {diag:.1f}秒(上限{'3秒' if kind == '縦型' else '全体の5%'}) / 実写映像カット {n_clip}",
         "同じ行事の別の写真・実写映像を追加し、scenes.json の images に複数指定する(内容に合わない素材で水増ししない)")
+    # 7-3 実写映像(第4-2章・荒木承認 2026-11-27): 権利・区間・拡大・出典表示・元の音・写真との切替位置
+    clips = [s for s in shots if is_clip(s)]
+    if clips:
+        bad_v = []
+        sub_starts = [sum(float(x) * k for x, k in zip(m.group(1).split(":"), (3600, 60, 1)))
+                      for m in re.finditer(r"^Dialogue: \d+,([^,]+),", ass, re.M)]
+        for sh in clips:
+            iid, d_ = sh["image"], sh["end"] - sh["start"]
+            r = ledger.get(iid) or {}
+            tag = f"{sh['scene']}:{iid}"
+            if r.get("素材種別") != "映像":
+                bad_v.append(f"{tag} 台帳の素材種別が「映像」でない")
+            lic = r.get("ライセンス", "")
+            if not CLIP_LICENSE_OK.search(lic) or re.search(r"(?i)\b(NC|ND)\b|非営利|改変禁止", lic):
+                bad_v.append(f"{tag} ライセンス「{lic or '未記入'}」が使える条件か確認できない")
+            if CLIP_URL_NG.search(r.get("取得元URL", "")) or not r.get("取得元URL", "").startswith("http"):
+                bad_v.append(f"{tag} 取得元URL「{r.get('取得元URL', '')[:60]}」(報道・動画共有サイトからの取得は不可)")
+            cr = (r.get("クレジット表記") or "").strip()
+            if not cr or cr not in sh.get("caption", ""):
+                bad_v.append(f"{tag} 出典・ライセンスの表示がない(台帳の「クレジット表記」)")
+            if sh.get("clip_end") is None:
+                bad_v.append(f"{tag} 使う区間の終わり(clip の end)が未記入")
+            f_ = ROOT / r.get("ファイル名", "")
+            vi = video_info(str(f_)) if f_.is_file() else {"duration": 0}
+            last = min(sh.get("clip_end") or 1e9, vi["duration"])
+            if sh.get("clip_start", 0) + d_ > last + 0.05:
+                bad_v.append(f"{tag} 区間が足りない(開始{sh.get('clip_start', 0):.2f}秒+{d_:.2f}秒 > 終わり{last:.2f}秒)")
+            if sh.get("scale", 0) > MAX_UPSCALE + 1e-6 or "scale" not in sh:
+                bad_v.append(f"{tag} 拡大 {sh.get('scale', '未記録')}倍(上限{MAX_UPSCALE}倍)")
+        for k in range(1, len(shots)):
+            if is_clip(shots[k]) != is_clip(shots[k - 1]) and not any(abs(shots[k]["start"] - t_) <= 0.05 for t_ in sub_starts):
+                bad_v.append(f"{shots[k]['scene']}:{shots[k]['start']:.2f}秒 写真と映像の切替が字幕の切れ目でない")
+        n_aud = sum(1 for x in pr["streams"] if x["codec_type"] == "audio")
+        if n_aud != 1 or info.get("clip_audio") != "不使用":
+            bad_v.append(f"映像の元の音を使っていない記録がない(音声 {n_aud}本 / clip_audio={info.get('clip_audio')})")
+        add("実写映像の権利・区間・拡大・出典表示・元の音・切替位置(第4-2章)", not bad_v,
+            bad_v or f"映像 {len(clips)}カット すべて合格(拡大 最大{max(s_.get('scale', 0) for s_ in clips):.2f}倍・元の音は不使用)",
+            "台帳に素材種別=映像・ライセンス・クレジット表記を書き、clip の start/end を映像の長さの内側に直す。権利を確認できない映像は使わない")
     # 8 黒画面・無音・音割れ・BGM
     blk = re.findall(r"black_start:([0-9.]+)", ff(["-i", str(video), "-vf", "blackdetect=d=0.2:pix_th=0.08", "-an", "-f", "null", "-"]))
     sil = [float(x) for x in re.findall(r"silence_start: ([0-9.]+)", ff(["-i", str(video), "-af", "silencedetect=n=-45dB:d=1.5", "-vn", "-f", "null", "-"])) if float(x) < dur - 1.5]

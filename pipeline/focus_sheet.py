@@ -20,7 +20,7 @@ import cv2
 from PIL import Image, ImageDraw, ImageFont
 
 from .common import ROOT, load_json, save_json
-from .rules_render import faces
+from .rules_render import faces, is_video
 
 FONT = "/usr/local/share/fonts/noto-sans-jp/NotoSansJP-Bold.ttf"
 
@@ -56,6 +56,7 @@ def sheet(project: str) -> list[Path]:
     rows = {r["番号"]: r for r in ledger(pdir)[0]}
     labs = labels_for(pdir)
     ids = used_images(pdir) or list(rows)
+    ids = [i for i in ids if not is_video(rows.get(i, {}).get("ファイル名", ""))]  # 実写映像は動きを付けないので点検しない
     out = pdir / "output" / "focus"
     out.mkdir(parents=True, exist_ok=True)
     f, fs = ImageFont.truetype(FONT, 26), ImageFont.truetype(FONT, 18)
@@ -127,7 +128,7 @@ def check(project: str) -> bool:
     fj = load_json(pdir / "focus.json", {}) or {}
     rows = {r["番号"]: r for r in ledger(pdir)[0]}
     ids = used_images(pdir)
-    miss = [i for i in ids if i not in fj]
+    miss = [i for i in ids if i not in fj and not is_video(rows.get(i, {}).get("ファイル名", ""))]  # 実写映像は不要
     pend = [i for i in ids if "要目視" in rows.get(i, {}).get("確認方法", "")]
     print(json.dumps({"未登録の主役位置": miss, "要目視のまま": pend}, ensure_ascii=False))
     return not miss and not pend

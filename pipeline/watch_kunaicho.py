@@ -177,7 +177,10 @@ def count_photos(s: str, page_url: str = "") -> dict:
         stem = m.group(1)
         subs = sorted({urllib.parse.urljoin(BASE, x) for x in re.findall(rf'href="([^"#]*/info/{re.escape(stem)}-?\d+\.html)', main)}
                       - {page_url})
-    return {"subpages": subs, "photos": len(photos), "no_credit": sum(1 for p in photos if not p["provider"]),
+    body = _txt(main)
+    k = body.find("広報室")
+    ev = reiwa_date(body[k:] if k >= 0 else body)  # 行事の日(掲載日の「宮内庁総務課広報室」より後の最初の日付)
+    return {"subpages": subs, "event_date": ev, "photos": len(photos), "no_credit": sum(1 for p in photos if not p["provider"]),
             "providers": sorted({p["provider"] for p in photos if p["provider"]}),
             "h1": _txt(h1.group(1)) if h1 else "", "srcs": [p["src"] for p in photos]}
 
@@ -312,7 +315,9 @@ def run(a) -> int:
         if not s:
             continue
         info = count_photos(s, u)
-        for sub in info.pop("subpages")[:a.max_sub]:  # 報告ページの子ページの写真も合算する
+        subs = info.pop("subpages")
+        info["subpages"] = f"{min(len(subs), a.max_sub)}/{len(subs)}" if subs else ""
+        for sub in subs[:a.max_sub]:  # 報告ページの子ページの写真も合算する
             if f.count >= f.limit:
                 info["note"] = "子ページの一部は上限のため未計数"
                 break
@@ -367,7 +372,10 @@ def _ph(info: dict | None) -> tuple[str, str, str]:
     if not info:
         return "未確認", "", ""
     prov = "・".join(info["providers"]) if info["providers"] else "なし"
-    return str(info["photos"]), str(info["no_credit"]), prov
+    n = str(info["photos"])
+    if info.get("subpages"):
+        n += f"(子ページ {info['subpages']} を合算)"
+    return n, str(info["no_credit"]), prov
 
 
 def write_report(now, a, merged, pages, fetched, f, cond_res, skipped, first_run):
@@ -395,11 +403,13 @@ def write_report(now, a, merged, pages, fetched, f, cond_res, skipped, first_run
             continue
         L += [f"### {name} {len(rows)}件", ""]
         if name.startswith("行事ページ"):
-            L += ["| 日付 | 宮家 | 題名 | 写真 | 表記なし | 提供者表記 | 載った所 | URL |", "|---|---|---|---|---|---|---|---|"]
+            L += ["| 日付 | 行事の日 | 宮家 | 題名 | 写真 | 表記なし | 提供者表記 | 載った所 | URL |", "|---|---|---|---|---|---|---|---|---|"]
             for m in rows:
-                n, nc, pv = _ph(pages.get(m["url"].split("#")[0]))
+                info = pages.get(m["url"].split("#")[0])
+                n, nc, pv = _ph(info)
                 src = "・".join([m["src"], *m["also"]])
-                L.append(f"| {m['date']} | {m['family']} | {m['title']}{'(' + m['who'] + ')' if m.get('who') else ''} | {n} | {nc} | {pv} | {src} | {m['url']} |")
+                ev = (info or {}).get("event_date") or ""
+                L.append(f"| {m['date']} | {ev} | {m['family']} | {m['title']}{'(' + m['who'] + ')' if m.get('who') else ''} | {n} | {nc} | {pv} | {src} | {m['url']} |")
         elif name == "おことば":
             L += ["| 掲載日 | 宮家 | 題名 | URL |", "|---|---|---|---|"]
             L += [f"| {m['date']} | {m['family']} | {m['title']} | {m['url']} |" for m in rows]
