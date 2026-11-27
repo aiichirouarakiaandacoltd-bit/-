@@ -5,6 +5,7 @@ import os
 D = os.path.dirname(__file__); A = os.path.join(D, "../../../assets/KB-20261124-01")
 BLACK = "/usr/share/fonts/opentype/noto/NotoSansCJK-Black.ttc"; BOLD = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
 YEL, WHITE, RED, NAVY, GOLD, INK = (255, 230, 0), (255, 255, 255), (205, 15, 25), (22, 36, 58), (216, 188, 114), (25, 25, 25)
+PINK = (236, 72, 145)  # 荒木指示 2026-11-27: 赤の帯ではなくピンクの帯
 F = lambda p, s: ImageFont.truetype(p, s, index=0)
 Q = "「あと20年で100年もの月日が」"; S1 = "12月9日 63歳を迎えられる雅子さま"; S2 = "昨年のご感想に綴られた想いとは…"
 CAP = "写真:宮内庁 令和7年 皇后陛下お誕生日に際してのご近影/「」は令和7年のご感想より"
@@ -35,7 +36,7 @@ def long_A(out):  # 写真全面(2枚つなぎ)+文字直乗せ
     grad(im, 0, 200, 170, up=True); grad(im, 430, 720, 230); d = ImageDraw.Draw(im)
     t(d, (W / 2, 70), Q, fit(d, Q, BLACK, 80, W * 0.96), YEL, 8)
     t(d, (W / 2, 560), S1, fit(d, S1, BLACK, 60, W * 0.92), WHITE, 7)
-    d.rounded_rectangle((40, 610, W - 40, 700), 14, fill=RED); t(d, (W / 2, 655), S2, fit(d, S2, BLACK, 74, W * 0.9), WHITE, 5)
+    d.rounded_rectangle((40, 610, W - 40, 700), 14, fill=PINK); t(d, (W / 2, 655), S2, fit(d, S2, BLACK, 74, W * 0.9), WHITE, 5)
     d.text((W - 8, 604), CAP, font=F(BOLD, 13), fill=WHITE, anchor="rb", stroke_width=2, stroke_fill=(0, 0, 0)); im.save(out, quality=95)
 
 def long_B(out):  # 白基調・写真を大きく右に、左に文字(上品)
@@ -62,7 +63,7 @@ def short_A(out):
     for i, line in enumerate(["「あと20年で", "100年もの月日が」"]): t(d, (W / 2, 150 + i * 140), line, fit(d, line, BLACK, 128, W * 0.95), YEL, 10)
     t(d, (W / 2, 1330), "12月9日 63歳を迎えられる", fit(d, "12月9日 63歳を迎えられる", BLACK, 76, W * 0.92), WHITE, 8)
     t(d, (W / 2, 1440), "雅子さま", F(BLACK, 110), WHITE, 10)
-    d.rounded_rectangle((40, 1530, W - 40, 1660), 18, fill=RED); t(d, (W / 2, 1595), "ご感想に綴られた想いとは…", fit(d, "ご感想に綴られた想いとは…", BLACK, 76, W * 0.86), WHITE, 5)
+    d.rounded_rectangle((40, 1530, W - 40, 1660), 18, fill=PINK); t(d, (W / 2, 1595), "ご感想に綴られた想いとは…", fit(d, "ご感想に綴られた想いとは…", BLACK, 76, W * 0.86), WHITE, 5)
     d.text((W - 12, 1708), CAP, font=F(BOLD, 18), fill=WHITE, anchor="rt", stroke_width=2, stroke_fill=(0, 0, 0)); im.save(out, quality=95)
 
 def short_B(out):
