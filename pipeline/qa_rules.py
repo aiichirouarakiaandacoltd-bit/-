@@ -17,6 +17,9 @@ from .common import ROOT, load_json, ng_hits
 from .rules_render import SPEC
 
 
+# 荒木承認 2026-11-27「2回まで可(切り抜きを変える)」: 題材そのものの写真が少ない縦型の案件
+SHORT_REUSE2 = {"KB-20261127-01"}
+
 def probe(p):
     r = subprocess.run(["ffprobe", "-v", "error", "-show_format", "-show_streams", "-of", "json", str(p)], capture_output=True, text=True)
     return json.loads(r.stdout)
@@ -150,6 +153,8 @@ def check(project: str, kind: str = "縦型") -> bool:
             if iid:
                 used[iid] += 1
     limit = 1 if kind == "縦型" else 3  # 荒木指示 2026-11-22: ショートは同じ写真を2回使わない
+    if kind == "縦型" and project in SHORT_REUSE2:  # 荒木承認 2026-11-27: 題材の写真が少ない時、切り抜きを変えて2回まで
+        limit = 2
     over3 = {k: c for k, c in used.items() if c > limit}
     person_only = sum(d for s, d in zip(shots, durs) if s.get("person_label") or s.get("compare")) / max(1e-9, sum(durs))
     # 第4-3章: ナレーションが語る物(subject)の写真も「映る割合」に数える。ただし人物の写真だけで75%以上
