@@ -767,11 +767,18 @@ def build(project: str, kind: str = "縦型") -> Path:
                 crop = c0  # 別の画像に切り替わるときは指定どおりの切り抜き
             else:
                 crop = crops[(crops.index(c0) + k) % 3]
-            motion = s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
+            # 2026-11-27(SHORT_REUSE2): カットごとの切り抜きと主役の位置を指定できる(同じ写真を別の切り抜きで使う時)。
+            # cut_crops[k] = "顔の寄り|全身|全体表示|…"、cut_focus[k] = [x, y](幅・高さの割合)。null は従来どおり
+            cc, cf = (s.get("cut_crops") or [])[k:k + 1], (s.get("cut_focus") or [])[k:k + 1]
+            if cc and cc[0]:
+                crop = cc[0]
+            main_k = cf[0] if cf and cf[0] else None
+            motion =s.get("motion", "ゆっくり拡大") if k == 0 else motions[(motions.index(s.get("motion", "ゆっくり拡大")) + k) % 4]
             s0 = cuts_at[k] if cuts_at else a + (b - a) * k / n
             s1 = cuts_at[k + 1] if cuts_at else a + (b - a) * (k + 1) / n
             shots.append({"scene": s["scene"], "start": s0, "end": s1,
                           "image": img, "crop": crop, "motion": motion, "compare": s.get("compare"),
+                          **({"main": main_k} if main_k else {}),
                           # 写真ごとの人物名(例: 人物の写らない会場写真は "")。無ければ場面の人物名
                           "person_label": (s.get("labels") or {}).get(img, s.get("person_label", "")),
                           "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
@@ -832,7 +839,7 @@ def build(project: str, kind: str = "縦型") -> Path:
                 gen = video_frames(src, sh["clip_start"], n, W, H)
             else:
                 sh["media"] = "写真"
-                pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=mains.get(sh["image"]))
+                pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=sh.get("main") or mains.get(sh["image"]))
                 gen = frames_for(pl, fo, n, W, H, sh["motion"], band=LAST_BAND)
             for fr in gen:
                 ff.stdin.write(blend(fr, ov).tobytes())
