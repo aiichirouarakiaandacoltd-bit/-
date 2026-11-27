@@ -155,7 +155,7 @@ def parse_activity(s: str) -> list[dict]:
 
 # ---------- 詳細ページ: 写真の枚数と提供者表記 ----------
 
-def count_photos(s: str) -> dict:
+def count_photos(s: str, page_url: str = "") -> dict:
     main = _main(s)
     imgs = list(re.finditer(r'<img[^>]+src="([^"]+\.(?:jpe?g|png))"[^>]*>', main, re.I))
     imgs = [m for m in imgs if re.search(r"/(?:wp-content/uploads|data|activity|about)/", m.group(1)) and "/common/" not in m.group(1)]
@@ -170,7 +170,14 @@ def count_photos(s: str) -> dict:
         prov = re.search(r"写真[：:]\s*([^）)」<\s]+)", win)
         photos.append({"src": src, "provider": prov.group(1) if prov else ""})
     h1 = re.search(r"<h1[^>]*>(.*?)</h1>", main, re.S)
-    return {"photos": len(photos), "no_credit": sum(1 for p in photos if not p["provider"]),
+    # ご活動の報告ページ(info/26aichi2-1.html)は写真が「〜日目」の子ページ(-2, -3 …)にもある
+    subs = []
+    m = re.search(r"/info/([A-Za-z0-9\-]+?)-?(\d+)\.html", page_url or "")
+    if m:
+        stem = m.group(1)
+        subs = sorted({urllib.parse.urljoin(BASE, x) for x in re.findall(rf'href="([^"#]*/info/{re.escape(stem)}-?\d+\.html)', main)}
+                      - {page_url})
+    return {"subpages": subs, "photos": len(photos), "no_credit": sum(1 for p in photos if not p["provider"]),
             "providers": sorted({p["provider"] for p in photos if p["provider"]}),
             "h1": _txt(h1.group(1)) if h1 else "", "srcs": [p["src"] for p in photos]}
 
@@ -302,16 +309,29 @@ def run(a) -> int:
             skipped.append(u)
             continue
         s = f.get(u)
-        if s:
-            info = count_photos(s)
-            info["checked_at"] = now.isoformat(timespec="seconds")
-            pages[u] = info
+        if not s:
+            continue
+        info = count_photos(s, u)
+        for sub in info.pop("subpages")[:a.max_sub]:  # 報告ページの子ページの写真も合算する
+            if f.count >= f.limit:
+                info["note"] = "子ページの一部は上限のため未計数"
+                break
+            ss = f.get(sub)
+            if ss:
+                si = count_photos(ss, sub)
+                new_srcs = [x for x in si["srcs"] if x not in info["srcs"]]
+                info["srcs"] += new_srcs
+                info["photos"] += len(new_srcs)
+                info["no_credit"] += min(si["no_credit"], len(new_srcs))
+                info["providers"] = sorted(set(info["providers"]) | set(si["providers"]))
+                info.setdefault("pages_counted", [u]).append(sub)
+        info["checked_at"] = now.isoformat(timespec="seconds")
+        pages[u] = info
 
     # 4) 条件の判定
     cond_res = []
     for c in conds:
         if "error" in c:
-            cond_res.append({**c, "met": None, "why": c["error"]})
             continue
         w = c["watch"]
         if not w.get("date") or not w.get("min_photos"):
@@ -411,6 +431,9 @@ def write_report(now, a, merged, pages, fetched, f, cond_res, skipped, first_run
                          "templates/sokuhou_short.md の工程で G1 から進める")
         L.append("")
 
+    bad = [c for c in conditional_items() if "error" in c]
+    if bad:
+        L += ["- 読めなかった企画ファイル(YAML の書き方の誤り。条件の照合から外した): " + " / ".join(f"{c['batch']} {c['error']}" for c in bad), ""]
     L += ["## 3. 速報にするか(G0 の判断材料)", "",
           "- 写真が5枚以上・提供者表記なし・主役の方の寄りがある行事ページ、またはおことばの全文が載ったものが速報の候補。",
           "- 候補にする時は templates/sokuhou_short.md の「G0 で荒木さんに出すもの」を作り、承認を1回だけもらう(第2章)。",
@@ -427,6 +450,7 @@ def main(argv=None):
     ap.add_argument("--interval", type=float, default=3.0, help="アクセスの間隔(秒)")
     ap.add_argument("--max-index", type=int, default=8, help="一覧ページの上限")
     ap.add_argument("--max-detail", type=int, default=10, help="詳細ページ(写真を数える)の上限")
+    ap.add_argument("--max-sub", type=int, default=3, help="報告ページ1件あたりに開く子ページの上限")
     ap.add_argument("--news-limit", type=int, default=40, help="新着情報の先頭から比べる件数")
     a = ap.parse_args(argv)
     sys.exit(run(a))

@@ -489,38 +489,85 @@ def frames_for(pl: np.ndarray, focus, n: int, W: int, H: int, motion: str, band=
         yield cv2.warpAffine(pl, M, (W, H), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REPLICATE)
 
 
-VIDEO_EXT = (".mp4", ".mov", ".webm", ".m4v", ".mkv")
+VIDEO_EXT = (".mp4", ".mov", ".webm", ".m4v", ".mkv", ".ogv")
+# 実写映像の拡大の上限(第4-2章・荒木承認 2026-11-27)。元の映像をこれ以上に引き伸ばすと粗くなるため、
+# 枠を埋めるのに足りない時は、この倍率で枠の中央に置き、まわりはその映像のぼかし背景にする
+MAX_UPSCALE = 1.5
 
 
 def is_video(path: str) -> bool:
     return Path(path).suffix.lower() in VIDEO_EXT
 
 
-def video_frames(path: str, start: float, n: int, W: int, H: int):
-    """実写映像(第4-2章): 指定区間を30fpsで読み、歪めずに画面いっぱいへ切り抜く。短ければ区間の頭に戻る。"""
-    cap = cv2.VideoCapture(path)
-    fps = cap.get(cv2.CAP_PROP_FPS) or 30.0
-    total = int(cap.get(cv2.CAP_PROP_FRAME_COUNT) or 0)
-    first = int(start * fps)
-    cache, last = {}, None
+def video_info(path: str) -> dict:
+    """映像の幅・高さ・長さ(秒)。ffprobe で測る。"""
+    r = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height:format=duration",
+                        "-of", "json", str(path)], capture_output=True, text=True)
+    j = json.loads(r.stdout or "{}")
+    st = (j.get("streams") or [{}])[0]
+    return {"w": int(st.get("width") or 0), "h": int(st.get("height") or 0), "duration": float((j.get("format") or {}).get("duration") or 0)}
+
+
+def video_box(W: int, H: int) -> tuple[int, int, int, int]:
+    """映像を置く枠(x0, y0, x1, y1)。写真と同じ割り付け: 縦型は上・中・下の「中」、横型は上下の文字の帯の間。"""
+    if W < H:
+        return 0, int(H * BOX_TOP), W, int(H * BOX_BOTTOM)
+    if W > H:
+        return 0, int(H * HBOX_TOP), W, int(H * HBOX_BOTTOM)
+    return 0, 0, W, H
+
+
+def video_scale(sw: int, sh: int, W: int, H: int, crop: str = "") -> float:
+    """枠に収める倍率。縦型は枠いっぱい(左右を切る)、横型と「全体表示」は全体を枠に収める。上限 MAX_UPSCALE。"""
+    x0, y0, x1, y1 = video_box(W, H)
+    bw, bh = x1 - x0, y1 - y0
+    fill, fit = max(bw / sw, bh / sh), min(bw / sw, bh / sh)
+    s = fill if (W < H and crop not in ("全体表示", "全体")) else fit
+    return min(s, MAX_UPSCALE)
+
+
+def video_frames(path: str, start: float, n: int, W: int, H: int, end: float | None = None, crop: str = "",
+                 focus_x: float = 0.5, stats: dict | None = None):
+    """実写映像(第4-2章): start 秒から n コマ(30fps)を切り出し、写真と同じ枠に歪めずに収める。
+    元の音声は読まない(-an)。完成の音声はナレーションとBGMだけ。end(使ってよい区間の終わり)や映像の終わりに
+    達したら最後のコマで止める(頭に戻さない。区間が足りないことは qa_rules が検査する)。"""
+    info = video_info(path)
+    sw, sh = info["w"], info["h"]
+    s = video_scale(sw, sh, W, H, crop)
+    x0, y0, x1, y1 = video_box(W, H)
+    bw, bh = x1 - x0, y1 - y0
+    tw, th = max(1, int(sw * s + 0.5)), max(1, int(sh * s + 0.5))
+    avail = (min(end, info["duration"]) if end else info["duration"]) - start
+    dur = max(0.0, min(n / 30.0, avail))
+    if stats is not None:
+        stats.update({"scale": round(s, 3), "src": f"{sw}x{sh}", "clip_avail": round(avail, 3), "clip_short": avail + 0.05 < n / 30.0})
+    cmd = ["ffmpeg", "-v", "error", "-ss", f"{start:.3f}", "-t", f"{max(dur, 1 / 30):.3f}", "-i", str(path), "-an",
+           "-vf", f"fps=30,scale={tw}:{th}:flags=lanczos", "-f", "rawvideo", "-pix_fmt", "bgr24", "-"]
+    pr = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+    size = tw * th * 3
+    cw, ch = min(tw, bw), min(th, bh)  # 枠に入る範囲(はみ出す側を切る。主役の位置 focus_x を中心に)
+    cx0 = int(min(max(focus_x * tw - cw / 2, 0), tw - cw))
+    cy0 = (th - ch) // 2
+    px, py = x0 + (bw - cw) // 2, y0 + (bh - ch) // 2
+    last = None
     for k in range(n):
-        idx = first + int(k * fps / 30.0)
-        if total and idx >= total:
-            idx = first + (idx - first) % max(1, total - first)
-        if idx not in cache:
-            cap.set(cv2.CAP_PROP_POS_FRAMES, idx)
-            ok, fr = cap.read()
-            cache = {idx: fr if ok else last}
-        fr = cache[idx]
-        if fr is None:
-            fr = np.zeros((H, W, 3), np.uint8)
-        h, w = fr.shape[:2]
-        s = max(W / w, H / h)
-        fr = cv2.resize(fr, (int(w * s + 0.5), int(h * s + 0.5)), interpolation=cv2.INTER_AREA if s < 1 else cv2.INTER_CUBIC)
-        y0, x0 = (fr.shape[0] - H) // 2, (fr.shape[1] - W) // 2
-        last = fr[y0:y0 + H, x0:x0 + W]
+        buf = pr.stdout.read(size) if last is None or k < int(dur * 30 + 0.5) else b""
+        if len(buf) == size:
+            fr = np.frombuffer(buf, np.uint8).reshape(th, tw, 3)
+            # 背景: その映像を画面いっぱいに広げてぼかし、暗くする(写真の枠と同じ見た目。小さくしてからぼかして速く)
+            sm = cv2.resize(fr, (max(1, W // 8), max(1, int(th * (W // 8) / tw))), interpolation=cv2.INTER_AREA)
+            sc = max(W / 8 / sm.shape[1], H / 8 / sm.shape[0])
+            sm = cv2.resize(sm, (max(W // 8, int(sm.shape[1] * sc + 1)), max(H // 8, int(sm.shape[0] * sc + 1))))
+            oy, ox = (sm.shape[0] - H // 8) // 2, (sm.shape[1] - W // 8) // 2
+            bg = cv2.GaussianBlur(sm[oy:oy + H // 8, ox:ox + W // 8], (0, 0), 3)
+            out = (cv2.resize(bg, (W, H), interpolation=cv2.INTER_LINEAR) * 0.45).astype(np.uint8)
+            out[py:py + ch, px:px + cw] = fr[cy0:cy0 + ch, cx0:cx0 + cw]
+            last = out
+        elif last is None:
+            last = np.zeros((H, W, 3), np.uint8)
         yield last
-    cap.release()
+    pr.stdout.close()
+    pr.wait()
 
 
 def overlay(W: int, H: int, labels: list[tuple[str, int]], caption: str, credit: str) -> np.ndarray:
@@ -697,6 +744,17 @@ def blend(fr: np.ndarray, ov: np.ndarray) -> np.ndarray:
     return (fr.astype(np.float32) * (1 - a) + rgb * a).astype(np.uint8)
 
 
+def _clip_fields(s: dict, img, offset: float) -> dict:
+    """場面の clip / clips から、このカットの映像の区間(開始秒・使ってよい終わりの秒)を求める。"""
+    c = (s.get("clips") or {}).get(img) or s.get("clip") or {}
+    st = float(c.get("start", 0))
+    end = c.get("end")
+    if end is None and c.get("dur") is not None:
+        end = st + float(c["dur"])
+    return {"clip_start": round(st + offset, 3), "clip_end": None if end is None else float(end),
+            "clip_x": float(c.get("x", 0.5))}
+
+
 # ---------------- 本体 ----------------
 def build(project: str, kind: str = "縦型") -> Path:
     sp = SPEC[kind]
@@ -748,6 +806,27 @@ def build(project: str, kind: str = "縦型") -> Path:
         if imgs and shots and len(imgs) > 1 and imgs[0] == shots[-1]["image"]:
             off = 1  # 第4-2章: 隣り合うカットに同じ画像を使わない
         cuts_at = None
+        vid = {i: is_video(ledger[i]["ファイル名"]) for i in imgs if i in ledger}
+        if len(imgs) == 1 and vid.get(imgs[0]):
+            n = 1  # 映像1本だけの場面は切らずに1カットで流す(長さは qa_rules が最長表示で検査)
+        if len(imgs) > 1 and any(vid.values()) and not s.get("switch_subs"):
+            # 写真と映像の切替は字幕の切れ目で(荒木承認 2026-11-27)。switch_subs が無い時は、
+            # 等分した位置にいちばん近い字幕の切れ目を自動で選ぶ(1つの素材は1回ずつ。切れ目が足りなければ素材を減らす)
+            from .tts import mora_count
+            ch = s.get("subtitle_lines") or split_sub(s["narration"], sp["line"])
+            ms_ = [max(1, mora_count("".join(c))) for c in ch]
+            a_, b_ = s["start_sec"], s["end_sec"] - 0.06
+            bounds = [(j, a_ + (b_ - a_) * sum(ms_[:j]) / sum(ms_)) for j in range(1, len(ch))]
+            m = min(len(imgs), len(bounds) + 1)
+            if m < len(imgs):
+                print(f"注意: {s['scene']} は字幕の切れ目が {len(bounds)} か所しかないため、素材 {imgs[m:]} を使わない")
+            pick = []
+            for k in range(1, m):
+                want_t = a + (b - a) * k / m
+                cand = [j for j, _ in bounds if (not pick or j > pick[-1]) and len(bounds) - [x for x, _ in bounds].index(j) >= m - k]
+                pick.append(min(cand, key=lambda j: abs(dict(bounds)[j] - want_t)))
+            s["switch_subs"] = pick
+            s["_switch_auto"] = True
         if len(imgs) > 1 and s.get("switch_subs"):
             # 第4-3章(2026-11-24): 写真の切り替えを字幕の区切り(言葉の切れ目)に合わせる。音声・字幕は変えない。
             # switch_subs = 次の写真に替える字幕のかたまりの番号(0始まり)。字幕の時刻と同じ計算(モーラ比)で求める
@@ -784,7 +863,11 @@ def build(project: str, kind: str = "縦型") -> Path:
                           "caption": (s.get("captions") or {}).get(img) or s.get("caption", ""),
                           # 人物以外を語る場面で写っている物(例: 黒鳥)。第4-3章
                           "subject": (s.get("subjects") or {}).get(img, s.get("subject", "")),
-                          "clip_start": float((s.get("clip") or {}).get("start", 0)) + (s0 - a),
+                          # 実写映像: clips[画像番号] = {"start": 秒, "end": 秒} を優先、無ければ場面の clip。
+                          # 同じ映像が場面の中で続く時は前のカットの続きから(区間の頭には戻さない)
+                          **_clip_fields(s, img, sum(x["end"] - x["start"] for x in shots
+                                                     if x["scene"] == s["scene"] and x["image"] == img)),
+                          "media": "映像" if vid.get(img) else "写真",
                           "diagram": bool(s.get("diagram")),
                           # 第5-3章(2026-11-25): お言葉の一節を大きく見せるカット(at_cut は1始まり)。写真と文字は重ねない
                           "big_quote": s["big_quote"] if (s.get("big_quote")  # 横型・縦型(縦型は 2026-11-26 から quote_card_v)
@@ -833,10 +916,18 @@ def build(project: str, kind: str = "縦型") -> Path:
             multi = sh["crop"] == "全体" or many
             src = str(ROOT / ledger[sh["image"]]["ファイル名"])
             labels = [(sh["person_label"], W // 2)] if sh["person_label"] else []
+            # 出典・ライセンス(台帳の「クレジット表記」)を撮影情報と同じ位置に続けて出す(映像は必須・qa_rules で検査)
+            cr = (ledger[sh["image"]].get("クレジット表記") or "").strip()
+            if cr and cr not in sh["caption"]:
+                sh["caption"] = f"{sh['caption']} / {cr}" if sh["caption"] else cr
             ov = overlay(W, H, labels, sh["caption"], credit)
             if is_video(src):
                 sh["media"] = "映像"
-                gen = video_frames(src, sh["clip_start"], n, W, H)
+                st_ = {}
+                gen = video_frames(src, sh["clip_start"], n, W, H, end=sh.get("clip_end"), crop=sh["crop"],
+                                   focus_x=sh.get("clip_x", 0.5), stats=st_)
+                gen = list(gen)
+                sh.update(st_)
             else:
                 sh["media"] = "写真"
                 pl, fo = plate(src, sh["crop"], W, H, keep_all=multi, main=sh.get("main") or mains.get(sh["image"]))
@@ -888,7 +979,9 @@ def build(project: str, kind: str = "縦型") -> Path:
     save_json(pdir / "scenes.json", scenes)
     save_json(out_dir / "shots.json", shots)
     save_json(out_dir / "render_info.json", {"kind": kind, "speaker_id": sid, "speed": voice["speed"], "intonation": voice["intonation"], "pitch": voice["pitch"], "gap": gap, "duration": round(total, 3),
-                                             "font": FONT_B, "bgm": str(bgm.relative_to(ROOT)), "bgm_gain_db": -37})
+                                             "font": FONT_B, "bgm": str(bgm.relative_to(ROOT)), "bgm_gain_db": -37,
+                                             # 実写映像の元の音は使わない(映像は音声なしで読み込み、音声はナレーションとBGMだけ)
+                                             "clip_audio": "不使用"})
     print(f"書き出し: {final} ({total:.2f}秒, {len(shots)}カット)")
     return final
 
