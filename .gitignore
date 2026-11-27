@@ -30,3 +30,16 @@ delivery/**/*.png
 
 # 見張り役の状態(実行のたびに変わる)
 data/watch_state.json
+
+# 保管庫は一般公開のため、宮内庁の写真と、それを使った表紙画像は今後コミットしない(荒木指示 2026-11-27)
+# ※すでにコミット済みのファイルはこの設定では消えない
+assets/KB-*/**/*.jpg
+assets/KB-*/**/*.jpeg
+assets/KB-*/**/*.png
+assets/KB-*/**/*.webp
+assets/KB-*/*.jpg
+assets/KB-*/*.jpeg
+assets/KB-*/*.png
+assets/KB-*/*.webp
+projects/*/thumb_*/
+projects/*/cover_*/
