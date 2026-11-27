@@ -13,6 +13,8 @@
   bin/kabu fail <工程> --note "直し指示"            採点で不合格 → 差し戻し先に戻す
   bin/kabu approve <テーマ|確認1|確認2|公開>         荒木さんの承認
   bin/kabu run <工程>                               機械的な工程(調査・音声・字幕・書き出し等)を実行
+  bin/kabu run watch [--since YYYY-MM-DD]           速報の見張り: 宮内庁の新着を前回と比べる → data/watch_report.md
+                                                    (終了コード 0=なし 2=新着 3=条件付き企画が条件を満たした)
   bin/kabu measure                                  書き出し結果の計測(尺・音量・一致度など)
 """
 from __future__ import annotations
@@ -244,6 +246,9 @@ def _py(*args):
 
 
 def cmd_run(a):
+    if a.step == "watch":  # 速報ショートの見張り(案件に属さない): bin/kabu run watch [--since 2026-11-19]
+        _py("pipeline.watch_kunaicho", *(["--since", a.since] if a.since else []))
+        return
     st = load(current_job(a.job))
     j = st["job_id"]
     kind = st.get("kind", "縦型")
@@ -299,6 +304,7 @@ def main(argv=None):
     p = sp.add_parser("run"); p.add_argument("step"); p.add_argument("--job"); p.add_argument("--days", type=int)
     p.add_argument("--pages", nargs="*"); p.add_argument("--commons", nargs="*")
     p.add_argument("--auto"); p.add_argument("--months", nargs="*")
+    p.add_argument("--since", help="run watch: この日付以降を新着として一覧にする(YYYY-MM-DD)")
     p.add_argument("--video-id"); p.add_argument("--ctr", type=float); p.add_argument("--impressions", type=int); p.add_argument("--views", type=int)
     a = ap.parse_args(argv)
     {"new": cmd_new, "status": cmd_status, "next": cmd_next, "done": cmd_done, "fail": cmd_fail,

@@ -107,6 +107,13 @@ items:
   approved_at: '2026-11-27T10:43:19+09:00'
   approved_by: 荒木さん
   note: '荒木さん「2は条件付きで承認します」2026-11-27。条件: 宮内庁に11/20のご会見の写真が5枚以上載ってから着手'
+  watch:
+    date: '2026-11-20'
+    keywords:
+    - ペルー
+    - チリ
+    min_photos: 5
+    schedule: schedule01
 - id: N1
   rank: 3(予備)
   kind: 新企画(R1 最新の動向)
