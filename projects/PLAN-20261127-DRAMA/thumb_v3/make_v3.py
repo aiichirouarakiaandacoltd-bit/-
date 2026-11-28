@@ -163,6 +163,17 @@ if len(sys.argv) > 1 and sys.argv[1] == "l2fonts":
     for tag, fp in [("a_mincho_noto", SERIF), ("b_dela_gothic", EX + "DelaGothicOne.ttf"), ("c_zen_old_mincho", EX + "ZenOldMincho.ttf"), ("d_kaisei_tokumin", EX + "KaiseiTokumin.ttf")]:
         L2FONT[0] = fp; L2().convert("RGB").save(f"l2_font_{tag}.png"); print(tag)
     sys.exit()
+def S_raised():
+    """カバー1と同じ画像を、これまでのショートの表紙(パターンB・上寄せ型)と同じ比率に引き上げる:
+    中身を y=60〜1400 に収め(縦横比はそのまま縮小)、1400より下は空ける。荒木指示 2026-11-28"""
+    import numpy as np
+    im = S().convert("RGB"); a = np.asarray(im.convert("L"))
+    rows = np.where(a.max(axis=1) > 30)[0]; top, bot = int(rows.min()), int(rows.max()) + 1
+    part = im.crop((0, top, 1080, bot)); k = (1400 - 60) / (bot - top)
+    part = part.resize((round(1080 * k), 1400 - 60), Image.LANCZOS)
+    out = Image.new("RGB", (1080, 1920), (0, 0, 0)); out.paste(part, ((1080 - part.width) // 2, 60))
+    return out.convert("RGBA")
+
 # 長尺のABテスト: A=明朝の型(L1)・B=見本の型(L2)・C=大写しの型(L3)。題名は ab_tests.yaml
-for n, f in [("thumb_A", L1), ("thumb_B", L2), ("thumb_C", L3), ("short_cover_1", S), ("short_cover_2_raised", lambda: S(raised=True))]:
+for n, f in [("thumb_A", L1), ("thumb_B", L2), ("thumb_C", L3), ("short_cover_1", S), ("short_cover_2_raised", S_raised)]:
     f().convert("RGB").save(n + ".png"); print(n)
