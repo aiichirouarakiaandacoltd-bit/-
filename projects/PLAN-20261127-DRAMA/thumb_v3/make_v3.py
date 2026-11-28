@@ -59,13 +59,15 @@ def L1():
     check("L1"); return im
 
 # ---- 長尺② 場面+3段の極太ゴシック型: 一場面を全面、上に黄色の「」、下に白と黄の2行 ----
+EX = "/home/user/-/templates/fonts/extra/"
+L2FONT = [SERIF]  # 長尺の型の決まり(Noto Serif CJK Black)にそろえる。荒木指示 2026-11-28「長尺②の書体がダサい」
 def L2():
     im = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
     im.paste(photo("shokuju", (0, 60, 920, 484), (1280, 590)), (0, 130))
     vgrad(im, 430, 720, color=(0, 0, 0), a1=235)
-    T(im, (640, 66), "「" + QUOTE + "」", fit("「" + QUOTE + "」", SANS, 86, 1230), fill=YEL, stroke=10, stroke_fill=BLK)
-    T(im, (640, 548), "63歳 雅子さまのお誕生日", fit("63歳 雅子さまのお誕生日", SANS, 80, 1200), fill=BLUE, stroke=10, stroke_fill=BLK)
-    T(im, (640, 650), "戦後80年に綴られた想いとは…", fit("戦後80年に綴られた想いとは…", SANS, 84, 1230), fill=PINK, stroke=10, stroke_fill=BLK)
+    T(im, (640, 66), "「" + QUOTE + "」", fit("「" + QUOTE + "」", L2FONT[0], 86, 1230), fill=WHITE, stroke=10, stroke_fill=BLK)
+    T(im, (640, 548), "63歳 雅子さまのお誕生日", fit("63歳 雅子さまのお誕生日", L2FONT[0], 80, 1200), fill=BLUE, stroke=10, stroke_fill=BLK)
+    T(im, (640, 650), "戦後80年に綴られた想いとは…", fit("戦後80年に綴られた想いとは…", L2FONT[0], 84, 1230), fill=PINK, stroke=10, stroke_fill=BLK)
     credit(im, (1272, 138), ["写真:宮内庁 " + P["shokuju"][1], SRCQ], 13, anchor="ra")
     check("L2"); return im
 
@@ -91,5 +93,9 @@ def S():
     credit(im, (1064, 1620), ["写真:宮内庁 " + P["tobe"][1], SRCQ], 22)
     BOXES.clear(); return im
 
+if len(sys.argv) > 1 and sys.argv[1] == "l2fonts":
+    for tag, fp in [("a_mincho_noto", SERIF), ("b_dela_gothic", EX + "DelaGothicOne.ttf"), ("c_zen_old_mincho", EX + "ZenOldMincho.ttf"), ("d_kaisei_tokumin", EX + "KaiseiTokumin.ttf")]:
+        L2FONT[0] = fp; L2().convert("RGB").save(f"l2_font_{tag}.png"); print(tag)
+    sys.exit()
 for n, f in [("long_1_mincho", L1), ("long_2_scene3dan", L2), ("long_3_closeup", L3), ("short_blackband", S)]:
     f().convert("RGB").save(n + ".png"); print(n)
