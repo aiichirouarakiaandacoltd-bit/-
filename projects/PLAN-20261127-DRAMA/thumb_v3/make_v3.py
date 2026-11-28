@@ -143,20 +143,26 @@ def L3():
     check("L3"); return im
 
 # ---- ショート: 黒の帯の型(上に白の3行、中央に一場面、下に黄色の極太2行) ----
-def S():
+def S(raised=False):
+    # raised=True: 同じ内容を全体に上へ引き上げた版(荒木指示 2026-11-28)。下の約230pxを空け、ショートの画面下の表示(題名・ボタン)と重ならないようにする
     im = Image.new("RGBA", (1080, 1920), (0, 0, 0, 255))
-    im.paste(photo("tobe", (380, 0, 990, 666), (1080, 1180)), (0, 450))
-    T(im, (540, 120), "63歳を迎える雅子さま", fit("63歳を迎える雅子さま", SANS, 96, 1020), fill=WHITE, stroke=0, shadow=False)
-    T(im, (540, 255), "「あと20年で", F(SANS, 112), fill=YEL, stroke=0, shadow=False)
-    T(im, (540, 380), "100年もの月日が」", fit("100年もの月日が」", SANS, 112, 1040), fill=YEL, stroke=0, shadow=False)
-    T(im, (540, 1700), "戦後80年の", F(SANS, 140), fill=YEL, stroke=0, shadow=False)
-    T(im, (540, 1840), "想いとは…", F(SANS, 130), fill=WHITE, stroke=0, shadow=False)
-    credit(im, (1064, 1620), ["写真:宮内庁 " + P["tobe"][1], SRCQ], 22)
+    if not raised:
+        y = dict(t1=120, t2=255, t3=380, ph=450, phh=1180, cr=1620, b1=1700, b2=1840); crop = (380, 0, 990, 666)
+    else:
+        y = dict(t1=80, t2=205, t3=325, ph=400, phh=1000, cr=1392, b1=1480, b2=1615); crop = (380, 0, 990, 565)
+    im.paste(photo("tobe", crop, (1080, y["phh"])), (0, y["ph"]))
+    T(im, (540, y["t1"]), "63歳を迎える雅子さま", fit("63歳を迎える雅子さま", SANS, 96, 1020), fill=WHITE, stroke=0, shadow=False)
+    T(im, (540, y["t2"]), "「あと20年で", F(SANS, 112), fill=YEL, stroke=0, shadow=False)
+    T(im, (540, y["t3"]), "100年もの月日が」", fit("100年もの月日が」", SANS, 112, 1040), fill=YEL, stroke=0, shadow=False)
+    T(im, (540, y["b1"]), "戦後80年の", F(SANS, 140), fill=YEL, stroke=0, shadow=False)
+    T(im, (540, y["b2"]), "想いとは…", F(SANS, 130), fill=WHITE, stroke=0, shadow=False)
+    credit(im, (1064, y["cr"]), ["写真:宮内庁 " + P["tobe"][1], SRCQ], 22)
     BOXES.clear(); return im
 
 if len(sys.argv) > 1 and sys.argv[1] == "l2fonts":
     for tag, fp in [("a_mincho_noto", SERIF), ("b_dela_gothic", EX + "DelaGothicOne.ttf"), ("c_zen_old_mincho", EX + "ZenOldMincho.ttf"), ("d_kaisei_tokumin", EX + "KaiseiTokumin.ttf")]:
         L2FONT[0] = fp; L2().convert("RGB").save(f"l2_font_{tag}.png"); print(tag)
     sys.exit()
-for n, f in [("long_1_mincho", L1), ("long_2_scene3dan", L2), ("long_3_closeup", L3), ("short_blackband", S)]:
+# 長尺のABテスト: A=明朝の型(L1)・B=見本の型(L2)・C=大写しの型(L3)。題名は ab_tests.yaml
+for n, f in [("thumb_A", L1), ("thumb_B", L2), ("thumb_C", L3), ("short_cover_1", S), ("short_cover_2_raised", lambda: S(raised=True))]:
     f().convert("RGB").save(n + ".png"); print(n)
