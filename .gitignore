@@ -43,3 +43,19 @@ assets/KB-*/*.png
 assets/KB-*/*.webp
 projects/*/thumb_*/
 projects/*/cover_*/
+# 映像・音声のファイルは git に入れない(2026-11-28 指示)
+assets/KB-*/**/*.mp4
+assets/KB-*/**/*.mov
+assets/KB-*/**/*.webm
+assets/KB-*/**/*.m4v
+assets/KB-*/**/*.mkv
+assets/KB-*/**/*.ogv
+assets/KB-*/*.mp4
+assets/KB-*/*.mov
+assets/KB-*/*.webm
+assets/KB-*/*.m4v
+assets/KB-*/*.mkv
+assets/KB-*/*.ogv
+projects/*/*.wav
+projects/*/*.mp3
+projects/*/*.mp4
