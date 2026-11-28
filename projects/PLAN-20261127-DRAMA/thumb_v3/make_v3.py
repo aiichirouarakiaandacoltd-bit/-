@@ -91,7 +91,7 @@ def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bo
     return (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
 
 
-def stack(im, items, top, bottom=714, maxw=1256, gap=4, stroke=10, cmin=0.72, path=None, bold=1):
+def stack(im, items, top, bottom=714, maxw=1256, gap=4, stroke=10, cmin=0.72, path=None, bold=1, shrink=1.0):
     """荒木指示 2026-11-28「出来る限り大きく」: 決められた範囲(top〜bottom)に、各段を重ねずに入る最大の大きさで置く。
     各段は横幅いっぱい(maxw)まで使い、足りなければ横を詰める(長体、最小 cmin)。見本(JAPANマインドの表紙)の型。"""
     from PIL import ImageFont
@@ -104,6 +104,9 @@ def stack(im, items, top, bottom=714, maxw=1256, gap=4, stroke=10, cmin=0.72, pa
             if c < cmin: ok = False; break
             hs.append(bt - tp); cs.append(c)
         if ok and sum(hs) + gap * (len(items) - 1) <= bottom - top: break
+    if shrink < 1.0:  # 最大から一回り小さくして釣り合いをとる(荒木指示 2026-11-28「長尺③はやりすぎ」)
+        size = int(size * shrink); f = ImageFont.truetype(path, size)
+        cs = [min(1.0, maxw / (f.getbbox(t, stroke_width=stroke)[2] - f.getbbox(t, stroke_width=stroke)[0] + 20)) for t, _ in items]
     y = bottom; boxes = []
     for (t, col), c in reversed(list(zip(items, cs))):
         b = ctext(im, (640, 0), t, path, col, size / 1.18, 99999, condense=c, stroke=stroke, bold=bold, bottom=y)
@@ -133,7 +136,7 @@ def L3():
     im = photo("chakai", (90, 120, 1000, 640), (1280, 720))
     top = max(b[3] for b in HEADS["L3"]) + MARGIN + 1
     vgrad(im, top - 60, 720, color=(0, 0, 0), a1=235)
-    stack(im, [("12月9日 63歳のお誕生日", BLUE), ("「" + QUOTE + "」", WHITE), ("雅子さまの願いとは…", YEL)], top=top)
+    stack(im, [("12月9日 63歳のお誕生日", BLUE), ("「" + QUOTE + "」", WHITE), ("雅子さまの願いとは…", YEL)], top=top, bottom=702, gap=10, shrink=0.8)
     cr = ["写真:宮内庁", "令和8年11月4日 茶会(宮殿)", "「」:宮内庁 令和7年", "皇后陛下お誕生日のご感想より"]
     credit(im, (1272, 8), cr, 12, anchor="ra")
     BOXES.append(("出典", (1272 - 12 * 15, 8, 1272, 8 + 4 * 16)))
