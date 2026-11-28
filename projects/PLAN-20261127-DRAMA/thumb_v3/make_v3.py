@@ -19,7 +19,7 @@ BLUE = (95, 211, 255); PINK = (255, 126, 182)   # 3段の時は3色(荒木指示
 # お顔・頭の範囲(書き出し後の座標。目視で登録し、余白30pxを足して検査する)
 HEADS = {
  "L1": [(265, 60, 450, 305), (715, 90, 885, 285), (1120, 20, 1280, 245)],
- "L2": [(265, 254, 475, 469), (985, 259, 1195, 454)],
+ "L2": [(177, 205, 464, 498), (921, 205, 1208, 472)],
  "L3": [(235, 79, 435, 309), (735, 109, 955, 359)],
  "S":  [],  # ショートは写真の上に文字を置かない(帯の中だけ)
 }
@@ -79,17 +79,23 @@ def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bo
     x = int(center[0] - lay.width / 2); y = int(center[1] - lay.height / 2)
     sh = Image.new("RGBA", lay.size, (0, 0, 0, 0)); sh.putalpha(lay.split()[-1].point(lambda v: int(v * 0.7)))
     im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5)), (x + 4, y + 6)); im.alpha_composite(lay, (x, y))
-    BOXES.append((s, (x, y, x + lay.width, y + lay.height)))
+    bb = lay.split()[-1].getbbox()
+    BOXES.append((s, (x + bb[0], y + bb[1], x + bb[2], y + bb[3])))
 
 def L2():
     # 荒木指示 2026-11-28: 見本(JAPANマインドの表紙)の書体と文字の大きさに合わせる。上段は白。3段3色(白・水色・ピンク)
     im = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
-    im.paste(photo("shokuju", (0, 60, 920, 463), (1280, 560)), (0, 160))
+    # 荒木指示 2026-11-28: お顔を見本(画面の高さの約4割)まで大きく → 陛下と雅子さまを左右2枚に分けて約2倍に
+    im.paste(photo("shokuju", (97, 104, 434, 399), (640, 560)), (0, 160))
+    im.paste(photo("shokuju", (560, 107, 897, 402), (640, 560)), (640, 160))
+    ImageDraw.Draw(im).line((640, 160, 640, 720), fill=WHITE, width=4)
     vgrad(im, 480, 720, color=(0, 0, 0), a1=235)
     ctext(im, (640, 80), "「" + QUOTE + "」", SANS, WHITE, 112, 1265, condense=0.68, bold=1)
-    ctext(im, (640, 584), "63歳 雅子さまのお誕生日", SANS, BLUE, 90, 1250, condense=0.80, bold=0)
-    ctext(im, (640, 671), "戦後80年に綴られた想いとは…", SANS, PINK, 90, 1250, condense=0.80, bold=0)
-    credit(im, (1272, 168), ["写真:宮内庁 " + P["shokuju"][1], SRCQ], 13, anchor="ra")
+    ctext(im, (640, 592), "63歳 雅子さまのお誕生日", SANS, BLUE, 80, 1250, condense=0.80, bold=0)
+    ctext(im, (640, 670), "戦後80年に綴られた想いとは…", SANS, PINK, 80, 1250, condense=0.80, bold=0)
+    cr = ["写真:宮内庁", "令和8年5月17日 全国植樹祭", "「」:宮内庁 令和7年", "皇后陛下お誕生日のご感想より"]
+    credit(im, (650, 170), cr, 12, anchor="la")
+    BOXES.append(("出典", (650, 170, 650 + 12 * 15, 170 + 4 * 16)))
     check("L2"); return im
 
 # ---- 長尺③ 一場面の大写し+短い一言: 両陛下を大きく、文字は右下に寄せて短く ----
