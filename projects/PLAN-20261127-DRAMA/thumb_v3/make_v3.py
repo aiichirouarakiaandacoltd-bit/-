@@ -19,7 +19,7 @@ BLUE = (95, 211, 255); PINK = (255, 126, 182)   # 3段の時は3色(荒木指示
 # お顔・頭の範囲(書き出し後の座標。目視で登録し、余白30pxを足して検査する)
 HEADS = {
  "L1": [(265, 60, 450, 305), (715, 90, 885, 285), (1120, 20, 1280, 245)],
- "L2": [(177, 205, 464, 498), (921, 205, 1208, 472)],
+ "L2": [(177, 190, 464, 483), (921, 190, 1208, 457)],
  "L3": [(235, 79, 435, 309), (735, 109, 955, 359)],
  "S":  [],  # ショートは写真の上に文字を置かない(帯の中だけ)
 }
@@ -30,12 +30,17 @@ def T(im, xy, s, font, stroke=8, **kw):
     if bb: BOXES.append((s, (bb[0] - stroke, bb[1] - stroke, bb[2] + stroke, bb[3] + stroke)))
     return bb
 def check(name):
-    bad = []
+    bad = []; global BOXES_LAST; BOXES_LAST = list(BOXES)
     for s, (a, b, c, d) in BOXES:
         for (x0, y0, x1, y1) in HEADS[name]:
             if a < x1 + MARGIN and c > x0 - MARGIN and b < y1 + MARGIN and d > y0 - MARGIN: bad.append((s, (x0, y0, x1, y1)))
+    # 文字どうしの重なりも検査する(荒木指示 2026-11-28「中段と下段の文字が重なっている」)
+    for i in range(len(BOXES)):
+        for j in range(i + 1, len(BOXES)):
+            (s1, (a, b, c, d)), (s2, (e, f, g, h)) = BOXES[i], BOXES[j]
+            if a < g and c > e and b < h and d > f: bad.append(("文字どうし", s1, s2))
     BOXES.clear()
-    assert not bad, f"{name}: 文字がお顔・頭に掛かる {bad}"
+    assert not bad, f"{name}: 文字がお顔・頭に掛かる {bad} 文字の範囲={BOXES_LAST}"
     print(name, "お顔・頭への重なり: なし")
 SRCQ = "「」:宮内庁 令和7年 皇后陛下お誕生日のご感想より"
 
@@ -61,7 +66,7 @@ def L1():
 # ---- 長尺② 場面+3段の極太ゴシック型: 一場面を全面、上に黄色の「」、下に白と黄の2行 ----
 EX = "/home/user/-/templates/fonts/extra/"
 L2FONT = [SERIF]  # 長尺の型の決まり(Noto Serif CJK Black)にそろえる。荒木指示 2026-11-28「長尺②の書体がダサい」
-def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bold=2):
+def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bold=2, bottom=None):
     """競合の表紙(荒木さん指定の見本)に合わせた極太ゴシック: 文字の高さで大きさを決め、横を少し詰める(長体)。
     幅が足りなければ小さくする。黒の太い縁取り+影。戻り値は縁取りを含む範囲(お顔の検査用)。"""
     from PIL import ImageFont, ImageFilter
@@ -77,25 +82,29 @@ def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bo
     d.text((10 - l, 10 - t), s, font=f, fill=fill, stroke_width=bold, stroke_fill=fill)  # 少し太らせて見本の極太に近づける
     lay = lay.resize((int(lay.width * condense), lay.height), Image.LANCZOS)
     x = int(center[0] - lay.width / 2); y = int(center[1] - lay.height / 2)
+    if bottom is not None:  # 縁取りを含めた文字の下端を bottom にそろえる
+        y = bottom - lay.split()[-1].getbbox()[3]
     sh = Image.new("RGBA", lay.size, (0, 0, 0, 0)); sh.putalpha(lay.split()[-1].point(lambda v: int(v * 0.7)))
     im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5)), (x + 4, y + 6)); im.alpha_composite(lay, (x, y))
     bb = lay.split()[-1].getbbox()
     BOXES.append((s, (x + bb[0], y + bb[1], x + bb[2], y + bb[3])))
+    return (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
 
 def L2():
     # 荒木指示 2026-11-28: 見本(JAPANマインドの表紙)の書体と文字の大きさに合わせる。上段は白。3段3色(白・水色・ピンク)
     im = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
     # 荒木指示 2026-11-28: お顔を見本(画面の高さの約4割)まで大きく → 陛下と雅子さまを左右2枚に分けて約2倍に
-    im.paste(photo("shokuju", (97, 104, 434, 399), (640, 560)), (0, 160))
-    im.paste(photo("shokuju", (560, 107, 897, 402), (640, 560)), (640, 160))
+    im.paste(photo("shokuju", (97, 112, 434, 407), (640, 560)), (0, 160))
+    im.paste(photo("shokuju", (560, 115, 897, 410), (640, 560)), (640, 160))
     ImageDraw.Draw(im).line((640, 160, 640, 720), fill=WHITE, width=4)
     vgrad(im, 480, 720, color=(0, 0, 0), a1=235)
     ctext(im, (640, 80), "「" + QUOTE + "」", SANS, WHITE, 112, 1265, condense=0.68, bold=1)
-    ctext(im, (640, 592), "63歳 雅子さまのお誕生日", SANS, BLUE, 80, 1250, condense=0.80, bold=0)
-    ctext(im, (640, 670), "戦後80年に綴られた想いとは…", SANS, PINK, 80, 1250, condense=0.80, bold=0)
+    # 中段と下段は重ねない: 下段の下端を712に置き、中段は下段の上端から16px空けて置く(荒木指示 2026-11-28)
+    b3 = ctext(im, (640, 0), "戦後80年に綴られた想いとは…", SANS, PINK, 66, 1250, condense=0.84, bold=0, bottom=712)
+    ctext(im, (640, 0), "63歳 雅子さまのお誕生日", SANS, BLUE, 66, 1250, condense=0.84, bold=0, bottom=b3[1] - 6)
     cr = ["写真:宮内庁", "令和8年5月17日 全国植樹祭", "「」:宮内庁 令和7年", "皇后陛下お誕生日のご感想より"]
-    credit(im, (650, 170), cr, 12, anchor="la")
-    BOXES.append(("出典", (650, 170, 650 + 12 * 15, 170 + 4 * 16)))
+    credit(im, (650, 168), cr, 12, anchor="la")
+    BOXES.append(("出典", (650, 168, 650 + 12 * 15, 168 + 4 * 16)))
     check("L2"); return im
 
 # ---- 長尺③ 一場面の大写し+短い一言: 両陛下を大きく、文字は右下に寄せて短く ----
