@@ -19,8 +19,8 @@ BLUE = (95, 211, 255); PINK = (255, 126, 182)   # 3段の時は3色(荒木指示
 # お顔・頭の範囲(書き出し後の座標。目視で登録し、余白30pxを足して検査する)
 HEADS = {
  "L1": [(265, 60, 450, 305), (715, 90, 885, 285), (1120, 20, 1280, 245)],
- "L2": [(177, 190, 464, 483), (921, 190, 1208, 457)],
- "L3": [(235, 79, 435, 309), (735, 109, 955, 359)],
+ "L2": [(177, 181, 464, 474), (921, 181, 1208, 448)],
+ "L3": [(235, 23, 435, 253), (735, 53, 955, 303)],
  "S":  [],  # ショートは写真の上に文字を置かない(帯の中だけ)
 }
 MARGIN = 30
@@ -90,18 +90,38 @@ def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bo
     BOXES.append((s, (x + bb[0], y + bb[1], x + bb[2], y + bb[3])))
     return (x + bb[0], y + bb[1], x + bb[2], y + bb[3])
 
+
+def stack(im, items, top, bottom=714, maxw=1256, gap=4, stroke=10, cmin=0.72, path=None, bold=1):
+    """荒木指示 2026-11-28「出来る限り大きく」: 決められた範囲(top〜bottom)に、各段を重ねずに入る最大の大きさで置く。
+    各段は横幅いっぱい(maxw)まで使い、足りなければ横を詰める(長体、最小 cmin)。見本(JAPANマインドの表紙)の型。"""
+    from PIL import ImageFont
+    path = path or SANS
+    for size in range(200, 20, -2):
+        f = ImageFont.truetype(path, size); hs = []; cs = []; ok = True
+        for t, _ in items:
+            l, tp, r, bt = f.getbbox(t, stroke_width=stroke)
+            c = min(1.0, maxw / (r - l + 20))
+            if c < cmin: ok = False; break
+            hs.append(bt - tp); cs.append(c)
+        if ok and sum(hs) + gap * (len(items) - 1) <= bottom - top: break
+    y = bottom; boxes = []
+    for (t, col), c in reversed(list(zip(items, cs))):
+        b = ctext(im, (640, 0), t, path, col, size / 1.18, 99999, condense=c, stroke=stroke, bold=bold, bottom=y)
+        boxes.append(b); y = b[1] - gap
+    return size
+
 def L2():
     # 荒木指示 2026-11-28: 見本(JAPANマインドの表紙)の書体と文字の大きさに合わせる。上段は白。3段3色(白・水色・ピンク)
     im = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
     # 荒木指示 2026-11-28: お顔を見本(画面の高さの約4割)まで大きく → 陛下と雅子さまを左右2枚に分けて約2倍に
-    im.paste(photo("shokuju", (97, 112, 434, 407), (640, 560)), (0, 160))
-    im.paste(photo("shokuju", (560, 115, 897, 410), (640, 560)), (640, 160))
+    im.paste(photo("shokuju", (97, 117, 434, 412), (640, 560)), (0, 160))
+    im.paste(photo("shokuju", (560, 120, 897, 415), (640, 560)), (640, 160))
     ImageDraw.Draw(im).line((640, 160, 640, 720), fill=WHITE, width=4)
     vgrad(im, 480, 720, color=(0, 0, 0), a1=235)
     ctext(im, (640, 80), "「" + QUOTE + "」", SANS, WHITE, 112, 1265, condense=0.68, bold=1)
     # 中段と下段は重ねない: 下段の下端を712に置き、中段は下段の上端から16px空けて置く(荒木指示 2026-11-28)
-    b3 = ctext(im, (640, 0), "戦後80年に綴られた想いとは…", SANS, PINK, 66, 1250, condense=0.84, bold=0, bottom=712)
-    ctext(im, (640, 0), "63歳 雅子さまのお誕生日", SANS, BLUE, 66, 1250, condense=0.84, bold=0, bottom=b3[1] - 6)
+    # 中段と下段: お顔の下(お顔の枠+30px)から下端までに、重ねずに入る最大の大きさ
+    stack(im, [("63歳 雅子さまのお誕生日", BLUE), ("戦後80年に綴られた想いとは…", PINK)], top=max(b[3] for b in HEADS["L2"]) + MARGIN + 1)
     cr = ["写真:宮内庁", "令和8年5月17日 全国植樹祭", "「」:宮内庁 令和7年", "皇后陛下お誕生日のご感想より"]
     credit(im, (650, 168), cr, 12, anchor="la")
     BOXES.append(("出典", (650, 168, 650 + 12 * 15, 168 + 4 * 16)))
@@ -109,12 +129,14 @@ def L2():
 
 # ---- 長尺③ 一場面の大写し+短い一言: 両陛下を大きく、文字は右下に寄せて短く ----
 def L3():
-    im = photo("chakai", (90, 80, 1000, 600), (1280, 720))
-    vgrad(im, 400, 720, color=(0, 0, 0), a1=225)
-    T(im, (640, 462), "12月9日 63歳のお誕生日", F(SANS, 50), fill=BLUE, stroke=8, stroke_fill=BLK)
-    T(im, (640, 545), "「" + QUOTE + "」", fit("「" + QUOTE + "」", SERIF, 62, 1100), fill=WHITE, stroke=8, stroke_fill=BLK)
-    T(im, (640, 648), "雅子さまの願いとは…", F(SERIF, 104), fill=YEL, stroke=11, stroke_fill=BLK)
-    credit(im, (1272, 714), ["写真:宮内庁 " + P["chakai"][1], SRCQ], 13)
+    # 荒木指示 2026-11-28: 文字を出来る限り大きく(見本の極太ゴシック)。3段3色(水色・白・黄)
+    im = photo("chakai", (90, 120, 1000, 640), (1280, 720))
+    top = max(b[3] for b in HEADS["L3"]) + MARGIN + 1
+    vgrad(im, top - 60, 720, color=(0, 0, 0), a1=235)
+    stack(im, [("12月9日 63歳のお誕生日", BLUE), ("「" + QUOTE + "」", WHITE), ("雅子さまの願いとは…", YEL)], top=top)
+    cr = ["写真:宮内庁", "令和8年11月4日 茶会(宮殿)", "「」:宮内庁 令和7年", "皇后陛下お誕生日のご感想より"]
+    credit(im, (1272, 8), cr, 12, anchor="ra")
+    BOXES.append(("出典", (1272 - 12 * 15, 8, 1272, 8 + 4 * 16)))
     check("L3"); return im
 
 # ---- ショート: 黒の帯の型(上に白の3行、中央に一場面、下に黄色の極太2行) ----
