@@ -1,0 +1,16 @@
+# 納品の材料(荒木指示 2026-11-28 の順番 ①〜⑧で並べる)。python -m pipeline.delivery <このファイル>
+name: 雅子さま63歳_納品_20261209          # delivery/ の下のフォルダ名
+long:
+  video: projects/<制作番号>/output/<制作番号>_横型_internal.mp4     # ①
+  ab_tests:                                                          # ②タイトル と ③連動したサムネイル
+    - {id: A, title: "【主役】… #タグ", thumb: projects/<制作番号>/thumb/thumb_A.png}
+    - {id: B, title: "【主役】… #タグ", thumb: projects/<制作番号>/thumb/thumb_B.png}
+    - {id: C, title: "【主役】… #タグ", thumb: projects/<制作番号>/thumb/thumb_C.png}
+  description: projects/<制作番号>/publish/description.txt            # ④(ファイルの場所か本文)
+shorts:                                                              # 複数本なら並べる(5-1, 5-2 …)
+  - video: projects/<制作番号>/output/<制作番号>_縦型_internal.mp4   # ⑤
+    title: "【主役】… #タグ"                                          # ⑥
+    covers:                                                          # ⑦ 2種類
+      - {file: projects/<制作番号>/thumb/short_cover_1.png, label: 黒い帯の型}
+      - {file: projects/<制作番号>/thumb/short_cover_2_raised.png, label: これまでの比率に引き上げた版}
+    description: projects/<制作番号>/publish/description.txt         # ⑧

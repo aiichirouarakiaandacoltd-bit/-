@@ -53,6 +53,7 @@ STEPS = [
     ("thumb_render", "デザイナー(重要)", "tool", "表紙画像PNGとCanvaの編集可能デザイン", "thumb_title"),
     ("pub_desc", "説明文係", "agent", "G6③ 説明文: タイトルから本文・参考資料を書き、templates/description_template.md でフルバージョンに組み立て → publish/description.txt", "pub_title"),
     ("pub_check", "確認係", "tool", "G6 検査: python -m pipeline.publish_text(99文字・3段の流用・末尾カンマ・5000文字)→ publish/check.md", "pub_desc"),
+    ("deliver", "確認係", "tool", "G6 納品: ①長尺動画②タイトル③連動したサムネイル④説明文⑤ショート動画⑥タイトル⑦カバー2種類⑧説明文の順に並べる → delivery/<名前>/0_納品ページ.html(材料 projects/<番号>/delivery.yaml、書き方 templates/delivery_template.yaml)", "pub_check"),
 ]
 STEP_IDS = [s[0] for s in STEPS]
 GATES = {"G0": "gate_G0", "企画": "gate_G0", "タイトル": "gate_G0"}
@@ -276,6 +277,8 @@ def cmd_run(a):
             "--out", str(ROOT / "projects" / j / "output" / "frames"))
     elif step == "pub_check":
         _py("pipeline.publish_text", "--project", j)
+    elif step == "deliver":  # 荒木指示 2026-11-28: 納品は①〜⑧の順
+        _py("pipeline.delivery", str(ROOT / "projects" / j / "delivery.yaml"))
     else:
         sys.exit(f"{step} は機械処理ではありません(係が判断する工程)")
 
