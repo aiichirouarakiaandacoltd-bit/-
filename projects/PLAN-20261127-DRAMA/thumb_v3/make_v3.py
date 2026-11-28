@@ -19,7 +19,7 @@ BLUE = (95, 211, 255); PINK = (255, 126, 182)   # 3段の時は3色(荒木指示
 # お顔・頭の範囲(書き出し後の座標。目視で登録し、余白30pxを足して検査する)
 HEADS = {
  "L1": [(265, 60, 450, 305), (715, 90, 885, 285), (1120, 20, 1280, 245)],
- "L2": [(265, 224, 475, 439), (985, 229, 1195, 424)],
+ "L2": [(265, 254, 475, 469), (985, 259, 1195, 454)],
  "L3": [(235, 79, 435, 309), (735, 109, 955, 359)],
  "S":  [],  # ショートは写真の上に文字を置かない(帯の中だけ)
 }
@@ -61,14 +61,35 @@ def L1():
 # ---- 長尺② 場面+3段の極太ゴシック型: 一場面を全面、上に黄色の「」、下に白と黄の2行 ----
 EX = "/home/user/-/templates/fonts/extra/"
 L2FONT = [SERIF]  # 長尺の型の決まり(Noto Serif CJK Black)にそろえる。荒木指示 2026-11-28「長尺②の書体がダサい」
+def ctext(im, center, s, path, fill, glyph_h, maxw, condense=0.76, stroke=10, bold=2):
+    """競合の表紙(荒木さん指定の見本)に合わせた極太ゴシック: 文字の高さで大きさを決め、横を少し詰める(長体)。
+    幅が足りなければ小さくする。黒の太い縁取り+影。戻り値は縁取りを含む範囲(お顔の検査用)。"""
+    from PIL import ImageFont, ImageFilter
+    size = int(glyph_h * 1.18)
+    while True:
+        f = ImageFont.truetype(path, size)
+        l, t, r, bt = f.getbbox(s, stroke_width=stroke)
+        w = (r - l) * condense
+        if w <= maxw or size < 20: break
+        size -= 2
+    lay = Image.new("RGBA", (r - l + 20, bt - t + 20), (0, 0, 0, 0)); d = ImageDraw.Draw(lay)
+    d.text((10 - l, 10 - t), s, font=f, fill=BLK, stroke_width=stroke, stroke_fill=BLK)
+    d.text((10 - l, 10 - t), s, font=f, fill=fill, stroke_width=bold, stroke_fill=fill)  # 少し太らせて見本の極太に近づける
+    lay = lay.resize((int(lay.width * condense), lay.height), Image.LANCZOS)
+    x = int(center[0] - lay.width / 2); y = int(center[1] - lay.height / 2)
+    sh = Image.new("RGBA", lay.size, (0, 0, 0, 0)); sh.putalpha(lay.split()[-1].point(lambda v: int(v * 0.7)))
+    im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(5)), (x + 4, y + 6)); im.alpha_composite(lay, (x, y))
+    BOXES.append((s, (x, y, x + lay.width, y + lay.height)))
+
 def L2():
+    # 荒木指示 2026-11-28: 見本(JAPANマインドの表紙)の書体と文字の大きさに合わせる。上段は白。3段3色(白・水色・ピンク)
     im = Image.new("RGBA", (1280, 720), (0, 0, 0, 255))
-    im.paste(photo("shokuju", (0, 60, 920, 484), (1280, 590)), (0, 130))
-    vgrad(im, 430, 720, color=(0, 0, 0), a1=235)
-    T(im, (640, 66), "「" + QUOTE + "」", fit("「" + QUOTE + "」", L2FONT[0], 86, 1230), fill=WHITE, stroke=10, stroke_fill=BLK)
-    T(im, (640, 548), "63歳 雅子さまのお誕生日", fit("63歳 雅子さまのお誕生日", L2FONT[0], 80, 1200), fill=BLUE, stroke=10, stroke_fill=BLK)
-    T(im, (640, 650), "戦後80年に綴られた想いとは…", fit("戦後80年に綴られた想いとは…", L2FONT[0], 84, 1230), fill=PINK, stroke=10, stroke_fill=BLK)
-    credit(im, (1272, 138), ["写真:宮内庁 " + P["shokuju"][1], SRCQ], 13, anchor="ra")
+    im.paste(photo("shokuju", (0, 60, 920, 463), (1280, 560)), (0, 160))
+    vgrad(im, 480, 720, color=(0, 0, 0), a1=235)
+    ctext(im, (640, 80), "「" + QUOTE + "」", SANS, WHITE, 112, 1265, condense=0.68, bold=1)
+    ctext(im, (640, 584), "63歳 雅子さまのお誕生日", SANS, BLUE, 90, 1250, condense=0.80, bold=0)
+    ctext(im, (640, 671), "戦後80年に綴られた想いとは…", SANS, PINK, 90, 1250, condense=0.80, bold=0)
+    credit(im, (1272, 168), ["写真:宮内庁 " + P["shokuju"][1], SRCQ], 13, anchor="ra")
     check("L2"); return im
 
 # ---- 長尺③ 一場面の大写し+短い一言: 両陛下を大きく、文字は右下に寄せて短く ----
